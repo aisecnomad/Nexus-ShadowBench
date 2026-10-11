@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0001BENCH",
+    "name": "oidc_client",
+    "label": "Claude",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://claude.ai"
+      }
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "id": "code-007",
+  "surface": "code",
+  "index": 6,
+  "polarity": "positive",
+  "title": "Code signal google-gemini",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "google-gemini",
+      "path": "src/gem.py",
+      "quote": "import google.generativeai as genai"
+    }
+  ],
+  "forbidden": []
+}

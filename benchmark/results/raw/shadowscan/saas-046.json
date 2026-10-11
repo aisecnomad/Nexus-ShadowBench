@@ -1,0 +1,176 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:02:16+00:00",
+  "finished_at": "2026-10-11T17:02:17+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "2c803a9f5cf0fd6080c237d240f4bc23ad62a1c5947edf30f98c2333b669ec58",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "saas": 1
+    },
+    "by_kind": {
+      "bot-app": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {},
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "saas.slack",
+      "started_at": "2026-10-11T17:02:17+00:00",
+      "finished_at": "2026-10-11T17:02:17+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "saas",
+      "connector": "saas.slack",
+      "kind": "bot-app",
+      "title": "Slack app: Agent Provocateur HR",
+      "resource": "slack:app:A80045",
+      "resource_type": "slack-app",
+      "provider": "slack",
+      "account": "T000BENCH",
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [
+        "chat:write",
+        "users:read"
+      ],
+      "evidence": [
+        {
+          "signal": "name:identity-app.generic-ai-name",
+          "description": "display name matched Generic AI / bot naming: Agent",
+          "location": null,
+          "snippet": null,
+          "weight": 0.35,
+          "signature": "identity-app.generic-ai-name",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Agent"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: chat:write",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "chat:write"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "users:read"
+          }
+        },
+        {
+          "signal": "slack:app",
+          "description": "App 'Agent Provocateur HR' (approved); scopes: chat:write, users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.2,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.688,
+      "likelihood": "likely",
+      "risk": {
+        "score": 26,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "bot-app finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:policy.data-access-scopes",
+            "description": "holds broad data-read permissions (mail, files, chat, repos)",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.88 because confidence is 0.69; this only ever lowers risk",
+            "weight": -4
+          }
+        ],
+        "danger_score": 18
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "ai-name-hint",
+        "policy.data-access-scopes"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "app_id": "A80045",
+        "status": "approved",
+        "scopes": [
+          "chat:write",
+          "users:read"
+        ],
+        "bot_user_id": null,
+        "is_directory_approved": null,
+        "install_logs": 0,
+        "homepage": null,
+        "evidence_counts": {
+          "identity-app.generic-ai-name|name": 1,
+          "policy.data-access-scopes|scope": 2
+        },
+        "technologies": [],
+        "workspace_name": null,
+        "workspace_scope_source": "operator-configured"
+      },
+      "id": "ss-75268f568df4943c",
+      "identity_discriminator": "slack-app",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

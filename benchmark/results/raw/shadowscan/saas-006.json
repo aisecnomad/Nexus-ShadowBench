@@ -1,0 +1,212 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:01:31+00:00",
+  "finished_at": "2026-10-11T17:01:31+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "6820b73b20de88d8b6c70f4a7400908189824875125cb1472b0cfabea8b03196",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "saas": 1
+    },
+    "by_kind": {
+      "bot-app": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "identity-app.microsoft-copilot": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "saas.slack",
+      "started_at": "2026-10-11T17:01:31+00:00",
+      "finished_at": "2026-10-11T17:01:31+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "saas",
+      "connector": "saas.slack",
+      "kind": "bot-app",
+      "title": "Slack app: Microsoft Copilot",
+      "resource": "slack:app:A0005",
+      "resource_type": "slack-app",
+      "provider": "slack",
+      "account": "T000BENCH",
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.microsoft-copilot"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [
+        "chat:write",
+        "users:read"
+      ],
+      "evidence": [
+        {
+          "signal": "name:identity-app.microsoft-copilot",
+          "description": "display name matched Microsoft Copilot / M365 Copilot: Microsoft Copilot",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "identity-app.microsoft-copilot",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Microsoft Copilot"
+          }
+        },
+        {
+          "signal": "name:identity-app.generic-ai-name",
+          "description": "display name matched Generic AI / bot naming: Copilot",
+          "location": null,
+          "snippet": null,
+          "weight": 0.35,
+          "signature": "identity-app.generic-ai-name",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Copilot"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: chat:write",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "chat:write"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "users:read"
+          }
+        },
+        {
+          "signal": "slack:app",
+          "description": "App 'Microsoft Copilot' (approved); scopes: chat:write, users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.2,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.938,
+      "likelihood": "strong",
+      "risk": {
+        "score": 37,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "bot-app finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "tag:agent-platform",
+            "description": "hosted agent platform",
+            "weight": 5
+          },
+          {
+            "id": "tag:policy.data-access-scopes",
+            "description": "holds broad data-read permissions (mail, files, chat, repos)",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.94; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 27
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant",
+        "agent-platform",
+        "ai-name-hint",
+        "policy.data-access-scopes"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "app_id": "A0005",
+        "status": "approved",
+        "scopes": [
+          "chat:write",
+          "users:read"
+        ],
+        "bot_user_id": null,
+        "is_directory_approved": null,
+        "install_logs": 0,
+        "homepage": null,
+        "evidence_counts": {
+          "identity-app.microsoft-copilot|name": 1,
+          "identity-app.generic-ai-name|name": 1,
+          "policy.data-access-scopes|scope": 2
+        },
+        "technologies": [
+          {
+            "id": "identity-app.microsoft-copilot",
+            "name": "Microsoft Copilot / M365 Copilot",
+            "category": "identity-app",
+            "vendor": "Microsoft"
+          }
+        ],
+        "workspace_name": null,
+        "workspace_scope_source": "operator-configured"
+      },
+      "id": "ss-1b6860fb1573d156",
+      "identity_discriminator": "slack-app",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

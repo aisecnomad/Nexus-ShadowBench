@@ -1,0 +1,9 @@
+{
+  "id": "A80044",
+  "name": "Bedrock Landscaping",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

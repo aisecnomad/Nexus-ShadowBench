@@ -1,0 +1,130 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:81ee2e7c-707c-4a4b-a286-108cf649a3d3",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:37.533287+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "2"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "2"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "7ef14e70-4d52-41bf-86e3-34d6daa82d77",
+      "type": "machine-learning-model",
+      "name": "AWS Bedrock",
+      "description": "AWS Bedrock completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "25"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-023/src/bedrock_call.py:1"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "AWS Bedrock"
+        },
+        {
+          "name": "trusera:risk_factors",
+          "value": "AI dependency not declared in project files (+25)"
+        },
+        {
+          "name": "trusera:flags",
+          "value": "shadow_ai"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/aws bedrock"
+    },
+    {
+      "bom-ref": "25d8367e-27fe-4157-a905-dbe030a41ff9",
+      "type": "machine-learning-model",
+      "name": "AWS Bedrock Model",
+      "description": "AWS Bedrock completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "5"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-023/src/bedrock_call.py:3"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "AWS Bedrock"
+        },
+        {
+          "name": "trusera:risk_factors",
+          "value": "Model version not pinned (+5)"
+        },
+        {
+          "name": "trusera:flags",
+          "value": "unpinned_model"
+        },
+        {
+          "name": "trusera:model_name",
+          "value": "anthropic.claude-3-haiku"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/aws bedrock model"
+    }
+  ]
+}

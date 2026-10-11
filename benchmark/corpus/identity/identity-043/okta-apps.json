@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0042",
+    "name": "oidc_client",
+    "label": "Gemini Freight Lines",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://geminifreight.example"
+      }
+    }
+  }
+]

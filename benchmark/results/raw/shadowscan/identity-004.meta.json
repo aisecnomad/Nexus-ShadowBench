@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1133, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/identity-004.json\n", "findings": [{"category": "agent", "value": "github-copilot"}, {"category": "identity_grant", "value": "github-copilot"}]}

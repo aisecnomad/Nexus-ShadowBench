@@ -1,0 +1,12 @@
+{
+  "id": "code-030",
+  "surface": "code",
+  "index": 29,
+  "polarity": "negative",
+  "title": "Ordinary fastapi service",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

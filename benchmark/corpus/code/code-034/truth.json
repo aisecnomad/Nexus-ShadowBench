@@ -1,0 +1,12 @@
+{
+  "id": "code-034",
+  "surface": "code",
+  "index": 33,
+  "polarity": "negative",
+  "title": "Ordinary httpx service",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

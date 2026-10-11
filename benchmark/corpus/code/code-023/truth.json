@@ -1,0 +1,25 @@
+{
+  "id": "code-023",
+  "surface": "code",
+  "index": 22,
+  "polarity": "positive",
+  "title": "Code signal aws-bedrock",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "aws-bedrock",
+      "path": "src/bedrock_call.py",
+      "quote": "boto3.client('bedrock-runtime')"
+    },
+    {
+      "category": "provider",
+      "value": "anthropic",
+      "path": "src/bedrock_call.py",
+      "quote": "anthropic.claude-3-haiku"
+    }
+  ],
+  "forbidden": []
+}

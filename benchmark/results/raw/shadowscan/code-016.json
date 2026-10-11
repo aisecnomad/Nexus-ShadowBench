@@ -1,0 +1,173 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:05+00:00",
+  "finished_at": "2026-10-11T16:55:05+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "e057e6c4e90a87c26b517070e672cbb419b424e6dab0fd67f12e2cc39448bc0d",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.groq": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:05+00:00",
+      "finished_at": "2026-10-11T16:55:05+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Groq",
+      "resource": "/workspace/benchmark/corpus/code/code-016",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.groq"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:provider.groq",
+          "description": "dependency matched Groq: groq",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: groq ==0.9.0",
+          "weight": 0.8,
+          "signature": "provider.groq",
+          "attributes": {
+            "category": "provider",
+            "value": "groq",
+            "confidence_group": "provider.groq"
+          }
+        },
+        {
+          "signal": "import:provider.groq",
+          "description": "import matched Groq: from groq",
+          "location": "src/g.py:1",
+          "snippet": "from groq import Groq",
+          "weight": 0.8,
+          "signature": "provider.groq",
+          "attributes": {
+            "category": "provider",
+            "value": "from groq",
+            "confidence_group": "provider.groq"
+          }
+        },
+        {
+          "signal": "import:provider.groq",
+          "description": "import matched Groq: groq",
+          "location": "src/g.py:1",
+          "snippet": "from groq import Groq",
+          "weight": 0.8,
+          "signature": "provider.groq",
+          "attributes": {
+            "category": "provider",
+            "value": "groq",
+            "confidence_group": "provider.groq"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 17,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.groq",
+            "description": "third-party model host",
+            "weight": 3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 7
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-016",
+        "agent_indicators": 0,
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:groq"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "provider.groq|dependency": 1,
+          "provider.groq|import": 2
+        },
+        "technologies": [
+          {
+            "id": "provider.groq",
+            "name": "Groq",
+            "category": "provider",
+            "vendor": "Groq"
+          }
+        ]
+      },
+      "id": "ss-fad3cc75f9e3bf6a",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:54+00:00",
+  "finished_at": "2026-10-11T16:54:54+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "1a3f20c7d020e35ee047c12745650c7d36dd2b9854661c2281053856320497d0",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.anthropic": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:54+00:00",
+      "finished_at": "2026-10-11T16:54:54+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Anthropic",
+      "resource": "/workspace/benchmark/corpus/code/code-006",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.anthropic"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:provider.anthropic",
+          "description": "dependency matched Anthropic: anthropic",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: anthropic ==0.34.0",
+          "weight": 0.8,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "anthropic",
+            "confidence_group": "provider.anthropic"
+          }
+        },
+        {
+          "signal": "import:provider.anthropic",
+          "description": "import matched Anthropic: import anthropic",
+          "location": "src/ask.py:1",
+          "snippet": "import anthropic",
+          "weight": 0.8,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "import anthropic",
+            "confidence_group": "provider.anthropic"
+          }
+        },
+        {
+          "signal": "code:provider.anthropic",
+          "description": "code pattern matched Anthropic: Anthropic()",
+          "location": "src/ask.py:2",
+          "snippet": "client = anthropic.Anthropic()",
+          "weight": 0.7,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "Anthropic()",
+            "confidence_group": "provider.anthropic"
+          }
+        },
+        {
+          "signal": "import:provider.anthropic",
+          "description": "import matched Anthropic: anthropic",
+          "location": "src/ask.py:1",
+          "snippet": "import anthropic",
+          "weight": 0.8,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "anthropic",
+            "confidence_group": "provider.anthropic"
+          }
+        },
+        {
+          "signal": "code:provider.anthropic",
+          "description": "code pattern matched Anthropic: Anthropic(",
+          "location": "src/ask.py:2",
+          "snippet": "client = anthropic.Anthropic()",
+          "weight": 0.7,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "Anthropic(",
+            "confidence_group": "provider.anthropic"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-006",
+        "agent_indicators": 0,
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:anthropic"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "provider.anthropic|dependency": 1,
+          "provider.anthropic|import": 2,
+          "provider.anthropic|code": 2
+        },
+        "technologies": [
+          {
+            "id": "provider.anthropic",
+            "name": "Anthropic",
+            "category": "provider",
+            "vendor": "Anthropic"
+          }
+        ]
+      },
+      "id": "ss-79a8d15838a6bd45",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

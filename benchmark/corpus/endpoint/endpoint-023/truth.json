@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-023",
+  "surface": "endpoint",
+  "index": 22,
+  "polarity": "positive",
+  "title": "Endpoint claude-desktop",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "claude-desktop",
+      "path": "home/.config/Claude/claude_desktop_config.json",
+      "quote": "server-slack"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-slack",
+      "path": "home/.config/Claude/claude_desktop_config.json",
+      "quote": "server-slack"
+    }
+  ],
+  "forbidden": []
+}

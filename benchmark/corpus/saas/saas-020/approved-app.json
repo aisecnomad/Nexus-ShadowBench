@@ -1,0 +1,9 @@
+{
+  "id": "A0019",
+  "name": "Sourcegraph Cody",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

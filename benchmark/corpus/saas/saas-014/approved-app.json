@@ -1,0 +1,9 @@
+{
+  "id": "A0013",
+  "name": "Runway",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

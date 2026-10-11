@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0046",
+    "name": "oidc_client",
+    "label": "Einstein Bros Catering",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://einsteinbros.example"
+      }
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "id": "identity-025",
+  "surface": "identity",
+  "index": 24,
+  "polarity": "positive",
+  "title": "Okta grant Hugging Face",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "huggingface",
+      "path": "okta-apps.json",
+      "quote": "Hugging Face"
+    }
+  ],
+  "forbidden": []
+}

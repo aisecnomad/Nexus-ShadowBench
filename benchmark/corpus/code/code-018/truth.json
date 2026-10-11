@@ -1,0 +1,19 @@
+{
+  "id": "code-018",
+  "surface": "code",
+  "index": 17,
+  "polarity": "positive",
+  "title": "Code signal ollama",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "ollama",
+      "path": "src/local.py",
+      "quote": "import ollama"
+    }
+  ],
+  "forbidden": []
+}

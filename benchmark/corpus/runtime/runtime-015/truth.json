@@ -1,0 +1,19 @@
+{
+  "id": "runtime-015",
+  "surface": "runtime",
+  "index": 14,
+  "polarity": "positive",
+  "title": "Process windsurf",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "windsurf",
+      "path": "processes.json",
+      "quote": "windsurf"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,203 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "AgentDiscover",
+          "version": "1.0.0",
+          "informationUri": "https://defendai.ai/agentdiscover",
+          "rules": [
+            {
+              "id": "DAI001",
+              "name": "AutoGenAgentDetection",
+              "shortDescription": {
+                "text": "AutoGen AssistantAgent detected"
+              },
+              "fullDescription": {
+                "text": "Detects AutoGen AssistantAgent instances. High risk if code execution is enabled."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "AutoGen agents with code execution capabilities can execute arbitrary code. Ensure proper sandboxing and monitoring."
+              }
+            },
+            {
+              "id": "DAI002",
+              "name": "CrewAIAgentDetection",
+              "shortDescription": {
+                "text": "CrewAI Agent detected"
+              },
+              "fullDescription": {
+                "text": "Detects CrewAI Agent instances. High risk if code execution is enabled via allow_code_execution or CodeInterpreterTool."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "CrewAI agents with code execution should be monitored and contained using DefendAI ContainIQ."
+              }
+            },
+            {
+              "id": "DAI003",
+              "name": "LangChainAgentDetection",
+              "shortDescription": {
+                "text": "LangChain/LangGraph agent pattern detected"
+              },
+              "fullDescription": {
+                "text": "Detects LangChain agent initialization and LangGraph StateGraph workflows."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "LangChain agents should be cataloged in AgentWatch. StateGraph workflows benefit from deep tracing."
+              }
+            },
+            {
+              "id": "DAI004",
+              "name": "ShadowAIDetection",
+              "shortDescription": {
+                "text": "Unmanaged LLM client detected (Shadow AI)"
+              },
+              "fullDescription": {
+                "text": "Detects direct instantiation of OpenAI or Anthropic clients without DefendAI Gateway routing."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "help": {
+                "text": "All LLM access should route through DefendAI Gateway for policy enforcement, observability, and cost tracking."
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "DAI007",
+          "level": "note",
+          "message": {
+            "text": "AWS Bedrock model/endpoint string detected: 'bedrock-runtime'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/bedrock_call.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 23
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "DAI007",
+          "level": "note",
+          "message": {
+            "text": "AWS Bedrock model/endpoint string detected: 'anthropic.claude-'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/bedrock_call.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "declared_model": "anthropic.claude-3-haiku",
+            "declared_model_source": "literal"
+          }
+        },
+        {
+          "ruleId": "DAI007",
+          "level": "warning",
+          "message": {
+            "text": "AWS Bedrock boto3 client instantiation detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/bedrock_call.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 10
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "DAI007",
+          "level": "warning",
+          "message": {
+            "text": "AWS Bedrock invoke_model call detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/bedrock_call.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "DAI008",
+          "level": "note",
+          "message": {
+            "text": "Declared model identifier detected: 'anthropic.claude-3-haiku'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/bedrock_call.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "declared_model": "anthropic.claude-3-haiku",
+            "declared_model_source": "literal",
+            "wrapper_hint": "bedrock"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-10-11T17:06:44.614377Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4019,
+    "name": "ollama",
+    "path": "/usr/local/bin/ollama",
+    "cmdline": "ollama serve",
+    "username": "dev"
+  }
+]

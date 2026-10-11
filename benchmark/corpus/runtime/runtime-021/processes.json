@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4020,
+    "name": "gemini",
+    "path": "/usr/bin/gemini",
+    "cmdline": "gemini",
+    "username": "dev"
+  }
+]

@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:38Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-023",
+  "nodes": [
+    {
+      "id": "e80ddacf-b3e5-4a49-9e69-3ff3b28c82e7",
+      "name": "LLM Clients",
+      "component_type": "FRAMEWORK",
+      "confidence": 0.95,
+      "metadata": {
+        "framework": "llm_clients",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "loc": 4,
+        "extras": {
+          "canonical_name": "framework_llm_clients",
+          "adapter": "llm_clients",
+          "evidence_count": 1,
+          "framework": "llm_clients"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_import",
+          "confidence": 0.95,
+          "detail": "llm_clients: import llm_clients",
+          "location": {
+            "path": "src/bedrock_call.py"
+          }
+        }
+      ]
+    },
+    {
+      "id": "6216cb5b-9e29-4df3-9a4b-8a9d3f21b4d0",
+      "name": "anthropic.claude-3-haiku",
+      "component_type": "MODEL",
+      "confidence": 0.95,
+      "metadata": {
+        "framework": "anthropic",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "loc": 30,
+        "extras": {
+          "canonical_name": "anthropic_claude_3_haiku",
+          "adapter": "llm_clients",
+          "evidence_count": 3,
+          "framework": "anthropic",
+          "source": "api_call",
+          "api_method": "invoke_model",
+          "provider": "anthropic",
+          "version": "3-haiku",
+          "api_endpoint": "https://api.anthropic.com",
+          "model_card_url": "https://docs.anthropic.com/en/docs/about-claude/models",
+          "model_family": "claude"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_call",
+          "confidence": 0.95,
+          "detail": "llm_clients: invoke_model(model='anthropic.claude-3-haiku')",
+          "location": {
+            "path": "src/bedrock_call.py",
+            "line": 3
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "model_generic: claude-3-haiku",
+          "location": {
+            "path": "truth.json",
+            "line": 21
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "model_generic: claude-3-haiku",
+          "location": {
+            "path": "src/bedrock_call.py",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "36bc5a62-9f90-4646-9545-6a2f4b8681d4",
+      "name": "Code 023 Assistant",
+      "component_type": "AGENT",
+      "confidence": 0.55,
+      "metadata": {
+        "description": "Code 023 Assistant agent",
+        "injection_risk_score": 0.1,
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "extras": {
+          "source": "auto_enrichment"
+        }
+      },
+      "evidence": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "e80ddacf-b3e5-4a49-9e69-3ff3b28c82e7",
+      "target": "6216cb5b-9e29-4df3-9a4b-8a9d3f21b4d0",
+      "relationship_type": "USES",
+      "derivation": "fallback_heuristic",
+      "confidence": 0.5
+    }
+  ],
+  "deps": [],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 1 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [
+      "AWS"
+    ],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "AGENT": 1,
+      "FRAMEWORK": 1,
+      "MODEL": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 30,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

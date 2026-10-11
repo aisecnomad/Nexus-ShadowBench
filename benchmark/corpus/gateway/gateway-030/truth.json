@@ -1,0 +1,12 @@
+{
+  "id": "gateway-030",
+  "surface": "gateway",
+  "index": 29,
+  "polarity": "negative",
+  "title": "Gateway call to GitHub REST",
+  "provenance": "synthetic-realistic",
+  "format": "LiteLLM-style JSONL spend log (one record).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 449, "error": null, "stderr_tail": "Code scanning completed. Run vet scan with code context using --code flag\n\nSafeDep cloud sync available; run `vet auth configure` or set SAFEDEP_API_KEY and SAFEDEP_TENANT_ID to enable.\n", "findings": []}

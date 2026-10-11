@@ -1,0 +1,224 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:56:43+00:00",
+  "finished_at": "2026-10-11T16:56:43+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": false,
+    "reason": "gateway identities are scan-local; set SHADOWSCAN_IDENTITY_KEY",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "gateway": 1
+    },
+    "by_kind": {
+      "gateway-caller": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.google-gemini": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "gateway.logs",
+      "started_at": "2026-10-11T16:56:43+00:00",
+      "finished_at": "2026-10-11T16:56:43+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "gateway",
+      "connector": "gateway.logs",
+      "kind": "gateway-caller",
+      "title": "LLM caller 'anonymous' (service): 1 requests to gemini-1.5-pro",
+      "resource": "litellm-alias:anonymous",
+      "resource_type": "caller/service",
+      "provider": "litellm",
+      "account": null,
+      "region": null,
+      "owner": "svc-2@example.com",
+      "frameworks": [],
+      "model_providers": [
+        "provider.google-gemini"
+      ],
+      "models": [
+        "gemini-1.5-pro"
+      ],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "model:provider.google-gemini",
+          "description": "model id matched Google Gemini API (AI Studio): gemini-",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "provider.google-gemini",
+          "attributes": {
+            "category": "provider",
+            "value": "gemini-"
+          }
+        },
+        {
+          "signal": "domain:provider.google-gemini",
+          "description": "endpoint matched Google Gemini API (AI Studio): generativelanguage.googleapis.com",
+          "location": null,
+          "snippet": null,
+          "weight": 0.54,
+          "signature": "provider.google-gemini",
+          "attributes": {
+            "category": "provider",
+            "value": "generativelanguage.googleapis.com"
+          }
+        },
+        {
+          "signal": "gateway:service",
+          "description": "1 LLM request(s) by service 'anonymous' to models gemini-1.5-pro",
+          "location": null,
+          "snippet": null,
+          "weight": 0.45,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.848,
+      "likelihood": "likely",
+      "risk": {
+        "score": 19,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "gateway-caller finding",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.google-gemini",
+            "description": "uses the consumer Gemini API (API keys outside cloud IAM)",
+            "weight": 5
+          },
+          {
+            "id": "vendor-notes",
+            "description": "Gemini API keys bypass Cloud IAM and are often created in personal AI Studio accounts.",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.94 because confidence is 0.85; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 19
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": "2026-06-01T12:00:00+00:00",
+      "last_seen": "2026-06-01T12:00:00+00:00",
+      "metadata": {
+        "agent_indicators": 0,
+        "caller_kind": "service",
+        "caller": "anonymous",
+        "events": 1,
+        "records": 1,
+        "aggregate_records": 0,
+        "usage_intervals": [],
+        "usage_intervals_dropped": 0,
+        "usage_interval_requests_dropped": 0,
+        "event_counting": "Request totals within this source; aggregate bucket counts are preserved. Distinct sources are not deduplicated against each other.",
+        "models": {
+          "gemini-1.5-pro": 1
+        },
+        "providers": {
+          "gemini": 1
+        },
+        "hosts": {
+          "generativelanguage.googleapis.com": 1
+        },
+        "user_agents": {},
+        "source_ips": {},
+        "end_users": {
+          "svc-2@example.com": 1
+        },
+        "teams": {},
+        "operations": {},
+        "distribution_events_dropped": {},
+        "distribution_limit": 2000,
+        "classification_incomplete": false,
+        "tool_requests": 0,
+        "tool_call_responses": 0,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost": 0.0,
+        "errors": 0,
+        "schemas": {
+          "litellm": 1
+        },
+        "samples": {},
+        "correlation_scope": {},
+        "correlation_scope_redacted": false,
+        "runtime_observations": [
+          {
+            "code_resources": [],
+            "frameworks": [],
+            "environment": null,
+            "scope": {},
+            "events": 1,
+            "timestamped_events": 1,
+            "first_seen": "2026-06-01T12:00:00+00:00",
+            "last_seen": "2026-06-01T12:00:00+00:00",
+            "identity_basis": "configured-exact-caller-and-scope",
+            "identity_assurance": "unverified",
+            "environment_assurance": "absent"
+          }
+        ],
+        "runtime_observations_dropped": 0,
+        "runtime_source": {
+          "id": "60fda0f29e6e2ed452e944e485ef78c73a00e3d59896c50957ca82eba0e6b02b",
+          "input": "/workspace/benchmark/corpus/gateway/gateway-003/spend.jsonl",
+          "label": null,
+          "schemas": [
+            "litellm"
+          ]
+        },
+        "identity_scope": "run",
+        "evidence_counts": {
+          "provider.google-gemini|model": 1,
+          "provider.google-gemini|domain": 1
+        },
+        "technologies": [
+          {
+            "id": "provider.google-gemini",
+            "name": "Google Gemini API (AI Studio)",
+            "category": "provider",
+            "vendor": "Google"
+          }
+        ]
+      },
+      "id": "ss-de56d401fbf1b51c",
+      "identity_discriminator": "caller",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

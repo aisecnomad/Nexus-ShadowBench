@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:16Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-010",
+  "nodes": [
+    {
+      "id": "1b627750-9a8c-4d3e-a298-9182604514e5",
+      "name": "Llamaindex",
+      "component_type": "FRAMEWORK",
+      "confidence": 0.98,
+      "metadata": {
+        "framework": "llamaindex",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "dependency_names": [
+          "llama_index"
+        ],
+        "loc": 22,
+        "extras": {
+          "canonical_name": "framework_llamaindex",
+          "adapter": "llamaindex",
+          "evidence_count": 3,
+          "detected_by_tiers": [
+            "code",
+            "iac"
+          ],
+          "framework": "llamaindex",
+          "implementation": "vela_builtin"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_import",
+          "confidence": 0.95,
+          "detail": "llamaindex: import llamaindex",
+          "location": {
+            "path": "src/idx.py"
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.65,
+          "detail": "llamaindex: llamaindex",
+          "location": {
+            "path": "truth.json",
+            "line": 6
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "llamaindex: llama_index",
+          "location": {
+            "path": "src/idx.py",
+            "line": 1
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "deps": [
+    {
+      "name": "llama-index",
+      "version_spec": "==0.10.55",
+      "purl": "pkg:pypi/llama-index@0.10.55",
+      "group": "runtime",
+      "source_file": "requirements.txt"
+    }
+  ],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [
+      "llamaindex"
+    ],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "FRAMEWORK": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 22,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

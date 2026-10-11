@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0022BENCH",
+    "name": "oidc_client",
+    "label": "Copy.ai",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.copy.ai"
+      }
+    }
+  }
+]

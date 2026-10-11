@@ -1,0 +1,12 @@
+{
+  "id": "code-032",
+  "surface": "code",
+  "index": 31,
+  "polarity": "negative",
+  "title": "Ordinary pyyaml service",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

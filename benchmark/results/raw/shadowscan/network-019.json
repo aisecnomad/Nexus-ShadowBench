@@ -1,0 +1,139 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:59:51+00:00",
+  "finished_at": "2026-10-11T16:59:51+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "79c750cffa0a87ca666a1d12f286b83699017d83d991bfdd3253ed6308adc25a",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "network": 1
+    },
+    "by_kind": {
+      "network-contact": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.groq": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "network.logs",
+      "started_at": "2026-10-11T16:59:51+00:00",
+      "finished_at": "2026-10-11T16:59:51+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "network",
+      "connector": "network.logs",
+      "kind": "network-contact",
+      "title": "AI service contacted: Groq (api.groq.com) from 10.1.0.19",
+      "resource": "network:network:10.1.0.19:provider.groq",
+      "resource_type": "network-contact",
+      "provider": "network",
+      "account": "network",
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.groq"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "network:dns",
+          "description": "1 DNS quer(ies) for api.groq.com",
+          "location": null,
+          "snippet": null,
+          "weight": 0.5,
+          "signature": "provider.groq",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.5,
+      "likelihood": "possible",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "network-contact finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.groq",
+            "description": "third-party model host",
+            "weight": 3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.80 because confidence is 0.50; this only ever lowers risk",
+            "weight": -4
+          }
+        ],
+        "danger_score": 6
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": "2024-06-01T00:00:18+00:00",
+      "last_seen": "2024-06-01T00:00:18+00:00",
+      "metadata": {
+        "client": "10.1.0.19",
+        "service": "provider.groq",
+        "hosts": {
+          "api.groq.com": 1
+        },
+        "dns_queries": 1,
+        "tls_connections": 0,
+        "flows": 0,
+        "bytes_out": 0,
+        "bytes_in": 0,
+        "network": "network",
+        "technologies": [
+          {
+            "id": "provider.groq",
+            "name": "Groq",
+            "category": "provider",
+            "vendor": "Groq"
+          }
+        ]
+      },
+      "id": "ss-cb860b50e4004684",
+      "identity_discriminator": "network-contact",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

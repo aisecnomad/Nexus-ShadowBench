@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4006,
+    "name": "windsurf",
+    "path": "/usr/bin/windsurf",
+    "cmdline": "windsurf",
+    "username": "dev"
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "id": "network-002",
+  "surface": "network",
+  "index": 1,
+  "polarity": "positive",
+  "title": "DNS query api.anthropic.com",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "anthropic",
+      "path": "dns.jsonl",
+      "quote": "api.anthropic.com"
+    }
+  ],
+  "forbidden": []
+}

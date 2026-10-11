@@ -1,0 +1,1 @@
+{"artifacts_scanned":0,"diagnostics":2,"endpoint":{"hostname":"hds-haj7cysy7yog","os":"linux","arch":"amd64","username":"root","uid":"0"},"events_emitted":0,"findings_emitted":0,"indicators_emitted":0,"record_type":"scan_summary","run_id":"run-20261011T170429.610299391-f100f67d90b67204","schema_version":"0.3.0","status":"error"}

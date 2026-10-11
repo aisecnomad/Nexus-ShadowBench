@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1121, "error": null, "stderr_tail": "wrote json report to /workspace/benchmark/results/raw/shadowscan/saas-001.json\n", "findings": [{"category": "provider", "value": "openai"}, {"category": "saas_ai", "value": "chatgpt"}]}

@@ -1,0 +1,1 @@
+{"_kind": "bedrock-agent", "agentName": "agent-009", "agentId": "A0009AGENT", "agentStatus": "PREPARED", "foundationModel": "cohere.command-r-plus-v1:0", "agentArn": "arn:aws:bedrock:us-east-1:123456789012:agent/A0009AGENT", "_region": "us-east-1"}

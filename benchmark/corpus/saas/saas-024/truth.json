@@ -1,0 +1,19 @@
+{
+  "id": "saas-024",
+  "surface": "saas",
+  "index": 23,
+  "polarity": "positive",
+  "title": "Slack app You.com",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "you-com",
+      "path": "approved-app.json",
+      "quote": "You.com"
+    }
+  ],
+  "forbidden": []
+}

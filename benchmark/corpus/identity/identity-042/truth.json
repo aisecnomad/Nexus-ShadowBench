@@ -1,0 +1,17 @@
+{
+  "id": "identity-042",
+  "surface": "identity",
+  "index": 41,
+  "polarity": "near_miss",
+  "title": "Okta near-miss Cursor Manufacturing ERP",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "identity_grant",
+      "value": "cursor"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "Kind": 1,
+    "ItemIdentity": "e274f2da703fbba3",
+    "SourceID": "e97d5bfa2acad9d4",
+    "Name": "memory",
+    "App": "gemini_cli",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/endpoint/endpoint-024/home/.gemini/settings.json",
+    "Enabled": null,
+    "MCPServer": {
+      "Transport": 1,
+      "Command": "npx",
+      "Args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "URL": "",
+      "EnvVarNames": null,
+      "HeaderNames": null,
+      "AllowedTools": null,
+      "AllowedResources": null
+    },
+    "Agent": null,
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "Gemini CLI"
+    }
+  }
+]

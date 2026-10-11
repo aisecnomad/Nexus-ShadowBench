@@ -1,0 +1,12 @@
+{
+  "id": "saas-033",
+  "surface": "saas",
+  "index": 32,
+  "polarity": "negative",
+  "title": "Slack app Datadog",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

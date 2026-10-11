@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0035",
+    "name": "oidc_client",
+    "label": "Okta Dashboard",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.okta.com"
+      }
+    }
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "id": "saas-023",
+  "surface": "saas",
+  "index": 22,
+  "polarity": "positive",
+  "title": "Slack app Copy.ai",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "copy-ai",
+      "path": "approved-app.json",
+      "quote": "Copy.ai"
+    }
+  ],
+  "forbidden": []
+}

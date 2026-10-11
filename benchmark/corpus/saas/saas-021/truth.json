@@ -1,0 +1,19 @@
+{
+  "id": "saas-021",
+  "surface": "saas",
+  "index": 20,
+  "polarity": "positive",
+  "title": "Slack app Amazon Q",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "amazon-q",
+      "path": "approved-app.json",
+      "quote": "Amazon Q"
+    }
+  ],
+  "forbidden": []
+}

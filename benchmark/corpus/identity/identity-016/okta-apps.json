@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0015BENCH",
+    "name": "oidc_client",
+    "label": "Poe",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://poe.com"
+      }
+    }
+  }
+]

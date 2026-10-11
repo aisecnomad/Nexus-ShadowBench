@@ -1,0 +1,19 @@
+{
+  "id": "code-006",
+  "surface": "code",
+  "index": 5,
+  "polarity": "positive",
+  "title": "Code signal anthropic",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "anthropic",
+      "path": "src/ask.py",
+      "quote": "import anthropic"
+    }
+  ],
+  "forbidden": []
+}

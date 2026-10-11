@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1155, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/runtime-005.json\n", "findings": [{"category": "agent", "value": "gemini-cli"}]}

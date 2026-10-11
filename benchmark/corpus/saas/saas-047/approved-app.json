@@ -1,0 +1,9 @@
+{
+  "id": "A80046",
+  "name": "Einstein Bros Catering",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

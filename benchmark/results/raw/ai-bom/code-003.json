@@ -1,0 +1,110 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:6cebcb0d-af1b-4e3a-a58f-eef0e552363f",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:31.976169+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "2"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "2"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "a5acb999-433b-4d11-86e0-2c649ebe8345",
+      "type": "framework",
+      "name": "langgraph",
+      "description": "LangGraph orchestration",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "orchestration"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "dependency files"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "LangGraph"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/langgraph"
+    },
+    {
+      "bom-ref": "91f97a01-15cb-4a4c-8f6e-3e6035dfa581",
+      "type": "framework",
+      "name": "LangGraph",
+      "description": "LangChain orchestration",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "orchestration"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-003/src/graph.py:1"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "LangChain"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/langgraph"
+    }
+  ]
+}

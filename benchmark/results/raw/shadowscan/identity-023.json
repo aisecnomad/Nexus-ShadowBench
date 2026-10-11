@@ -1,0 +1,155 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:02+00:00",
+  "finished_at": "2026-10-11T16:58:02+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "26482feb4b056c7f8376bdca81dc72c31e5a8f1b084c200cb86845160caba1ab",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "identity-app.writing-assistants": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:58:02+00:00",
+      "finished_at": "2026-10-11T16:58:02+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: Copy.ai",
+      "resource": "okta:app:0oa0022BENCH",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.writing-assistants"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:identity-app.writing-assistants",
+          "description": "display name matched AI writing assistants (Grammarly, Jasper, Writer, Copy.ai, QuillBot, Wordtune, DeepL Write, Notion AI, Gamma, Tome, Beautiful.ai): Copy.ai",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "identity-app.writing-assistants",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Copy.ai"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.83,
+      "likelihood": "likely",
+      "risk": {
+        "score": 21,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.93 because confidence is 0.83; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 12
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "identity-app.writing-assistants|name": 1
+        },
+        "technologies": [
+          {
+            "id": "identity-app.writing-assistants",
+            "name": "AI writing assistants (Grammarly, Jasper, Writer, Copy.ai, QuillBot, Wordtune, DeepL Write, Notion AI, Gamma, Tome, Beautiful.ai)",
+            "category": "identity-app",
+            "vendor": null
+          }
+        ]
+      },
+      "id": "ss-b9201c2b16ce0c9a",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

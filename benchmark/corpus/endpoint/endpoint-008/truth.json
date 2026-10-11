@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-008",
+  "surface": "endpoint",
+  "index": 7,
+  "polarity": "positive",
+  "title": "Endpoint continue",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "continue",
+      "path": "home/.continue/config.json",
+      "quote": "\"provider\": \"openai\""
+    },
+    {
+      "category": "provider",
+      "value": "openai",
+      "path": "home/.continue/config.json",
+      "quote": "\"provider\": \"openai\""
+    }
+  ],
+  "forbidden": []
+}

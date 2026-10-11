@@ -1,0 +1,17 @@
+{
+  "id": "wf-007",
+  "name": "flow-7",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Model",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

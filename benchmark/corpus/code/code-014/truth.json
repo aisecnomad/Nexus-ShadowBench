@@ -1,0 +1,19 @@
+{
+  "id": "code-014",
+  "surface": "code",
+  "index": 13,
+  "polarity": "positive",
+  "title": "Code signal smolagents",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "smolagents",
+      "path": "src/loop.py",
+      "quote": "from smolagents import CodeAgent"
+    }
+  ],
+  "forbidden": []
+}

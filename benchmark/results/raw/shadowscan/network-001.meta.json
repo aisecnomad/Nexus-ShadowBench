@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1128, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/network-001.json\n", "findings": [{"category": "egress", "value": "openai"}]}

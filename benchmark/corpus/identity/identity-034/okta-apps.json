@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0033",
+    "name": "oidc_client",
+    "label": "ServiceNow ITSM",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.servicenow.com"
+      }
+    }
+  }
+]

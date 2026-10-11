@@ -1,0 +1,211 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:51+00:00",
+  "finished_at": "2026-10-11T16:54:51+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "c9b455e2f68e05037e3faf85de6a408088ed5c589b6b85e3783a80786fdc150a",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.crewai": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:51+00:00",
+      "finished_at": "2026-10-11T16:54:51+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: CrewAI",
+      "resource": "/workspace/benchmark/corpus/code/code-004",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.crewai"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.crewai",
+          "description": "dependency matched CrewAI: crewai",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: crewai ==0.51.0",
+          "weight": 0.97,
+          "signature": "framework.crewai",
+          "attributes": {
+            "category": "framework",
+            "value": "crewai",
+            "confidence_group": "framework.crewai"
+          }
+        },
+        {
+          "signal": "import:framework.crewai",
+          "description": "import matched CrewAI: from crewai",
+          "location": "src/crew.py:1",
+          "snippet": "from crewai import Agent, Crew",
+          "weight": 0.97,
+          "signature": "framework.crewai",
+          "attributes": {
+            "category": "framework",
+            "value": "from crewai",
+            "confidence_group": "framework.crewai"
+          }
+        },
+        {
+          "signal": "file:framework.crewai",
+          "description": "config file matched CrewAI: src/crew.py",
+          "location": "src/crew.py",
+          "snippet": null,
+          "weight": 0.75,
+          "signature": "framework.crewai",
+          "attributes": {
+            "category": "framework",
+            "value": "src/crew.py",
+            "confidence_group": "framework.crewai"
+          }
+        },
+        {
+          "signal": "import:framework.crewai",
+          "description": "import matched CrewAI: crewai",
+          "location": "src/crew.py:1",
+          "snippet": "from crewai import Agent, Crew",
+          "weight": 0.97,
+          "signature": "framework.crewai",
+          "attributes": {
+            "category": "framework",
+            "value": "crewai",
+            "confidence_group": "framework.crewai"
+          }
+        },
+        {
+          "signal": "import:framework.crewai",
+          "description": "import matched CrewAI: crewai",
+          "location": "src/crew.py:1",
+          "snippet": "from crewai import Agent, Crew",
+          "weight": 0.97,
+          "signature": "framework.crewai",
+          "attributes": {
+            "category": "framework",
+            "value": "crewai",
+            "confidence_group": "framework.crewai"
+          }
+        }
+      ],
+      "confidence": 0.97,
+      "likelihood": "strong",
+      "risk": {
+        "score": 15,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.99 because confidence is 0.97; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-004",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "multi-agent",
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:crewai"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.crewai|dependency": 1,
+          "framework.crewai|import": 3,
+          "framework.crewai|file": 1
+        },
+        "technologies": [
+          {
+            "id": "framework.crewai",
+            "name": "CrewAI",
+            "category": "framework",
+            "vendor": "CrewAI Inc."
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-9427a564f7d88cb7",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

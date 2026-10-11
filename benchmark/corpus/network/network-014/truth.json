@@ -1,0 +1,19 @@
+{
+  "id": "network-014",
+  "surface": "network",
+  "index": 13,
+  "polarity": "positive",
+  "title": "DNS query openrouter.ai",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "openrouter",
+      "path": "dns.jsonl",
+      "quote": "openrouter.ai"
+    }
+  ],
+  "forbidden": []
+}

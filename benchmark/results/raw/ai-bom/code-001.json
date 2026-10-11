@@ -1,0 +1,110 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:e3d4703c-9862-48e1-afad-a9bc42f28c04",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:31.439377+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "2"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "2"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "a621a7e3-2de3-412e-9093-d5c91ee4ddf6",
+      "type": "machine-learning-model",
+      "name": "openai",
+      "description": "OpenAI completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "dependency files"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "OpenAI"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/openai"
+    },
+    {
+      "bom-ref": "fdc0a31c-7aa9-41ed-86f1-8ece28316941",
+      "type": "machine-learning-model",
+      "name": "OpenAI",
+      "description": "OpenAI completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-001/src/chat.py:1"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "OpenAI"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/openai"
+    }
+  ]
+}

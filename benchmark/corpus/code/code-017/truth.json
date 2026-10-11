@@ -1,0 +1,19 @@
+{
+  "id": "code-017",
+  "surface": "code",
+  "index": 16,
+  "polarity": "positive",
+  "title": "Code signal cohere",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "cohere",
+      "path": "src/c.py",
+      "quote": "import cohere"
+    }
+  ],
+  "forbidden": []
+}

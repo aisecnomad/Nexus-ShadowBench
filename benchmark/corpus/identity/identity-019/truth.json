@@ -1,0 +1,19 @@
+{
+  "id": "identity-019",
+  "surface": "identity",
+  "index": 18,
+  "polarity": "positive",
+  "title": "Okta grant Tabnine",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "tabnine",
+      "path": "okta-apps.json",
+      "quote": "Tabnine"
+    }
+  ],
+  "forbidden": []
+}

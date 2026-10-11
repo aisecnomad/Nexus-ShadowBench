@@ -1,0 +1,110 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:6a43a496-14bc-4cf6-9ea3-793e2c3cbe70",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:37.823966+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "2"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "2"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "3bd56835-ca0c-4ef8-8ef5-be3def2a7edb",
+      "type": "framework",
+      "name": "semantic-kernel",
+      "description": "Microsoft orchestration",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "orchestration"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "dependency files"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "Microsoft"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/semantic-kernel"
+    },
+    {
+      "bom-ref": "aee7997f-762b-40a4-aa63-9ce28449a29a",
+      "type": "framework",
+      "name": "Semantic Kernel",
+      "description": "Microsoft orchestration",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "orchestration"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-024/src/sk.py:1"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "Microsoft"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/semantic kernel"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "code-020",
+  "surface": "code",
+  "index": 19,
+  "polarity": "positive",
+  "title": "Code signal mcp-filesystem",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "mcp",
+      "value": "mcp-filesystem",
+      "path": ".vscode/mcp.json",
+      "quote": "@modelcontextprotocol/server-filesystem"
+    }
+  ],
+  "forbidden": []
+}

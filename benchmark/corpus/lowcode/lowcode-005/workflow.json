@@ -1,0 +1,17 @@
+{
+  "id": "wf-004",
+  "name": "flow-4",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Model",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

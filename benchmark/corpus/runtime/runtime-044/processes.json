@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 9,
+    "name": "cursor-blink",
+    "path": "/usr/bin/cursor-blink",
+    "cmdline": "cursor-blink --demo",
+    "username": "dev"
+  }
+]

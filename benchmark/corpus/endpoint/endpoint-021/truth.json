@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-021",
+  "surface": "endpoint",
+  "index": 20,
+  "polarity": "positive",
+  "title": "Endpoint cursor",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "cursor",
+      "path": "home/.cursor/mcp.json",
+      "quote": "@modelcontextprotocol/server-github"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-github",
+      "path": "home/.cursor/mcp.json",
+      "quote": "@modelcontextprotocol/server-github"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1132, "error": null, "stderr_tail": "wrote json report to /workspace/benchmark/results/raw/shadowscan/saas-023.json\n", "findings": [{"category": "saas_ai", "value": "copy-ai"}, {"category": "saas_ai", "value": "jasper"}, {"category": "saas_ai", "value": "notion-ai"}]}

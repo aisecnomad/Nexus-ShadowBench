@@ -1,0 +1,12 @@
+{
+  "id": "network-026",
+  "surface": "network",
+  "index": 25,
+  "polarity": "negative",
+  "title": "DNS query for Microsoft login",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

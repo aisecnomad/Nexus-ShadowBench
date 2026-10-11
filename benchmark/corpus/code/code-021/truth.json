@@ -1,0 +1,19 @@
+{
+  "id": "code-021",
+  "surface": "code",
+  "index": 20,
+  "polarity": "positive",
+  "title": "Code signal cursor",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "cursor",
+      "path": ".cursor/mcp.json",
+      "quote": "@modelcontextprotocol/server-memory"
+    }
+  ],
+  "forbidden": []
+}

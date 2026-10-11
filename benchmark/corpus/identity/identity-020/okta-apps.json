@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0019BENCH",
+    "name": "oidc_client",
+    "label": "Sourcegraph Cody",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://sourcegraph.com/cody"
+      }
+    }
+  }
+]

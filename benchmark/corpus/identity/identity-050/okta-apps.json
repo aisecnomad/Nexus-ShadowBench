@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0049",
+    "name": "oidc_client",
+    "label": "AI Book Club",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://aibookclub.example"
+      }
+    }
+  }
+]

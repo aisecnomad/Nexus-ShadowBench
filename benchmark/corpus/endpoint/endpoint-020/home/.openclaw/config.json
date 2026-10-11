@@ -1,0 +1,4 @@
+{
+  "agent": "openclaw",
+  "model": "openai/gpt-4o"
+}

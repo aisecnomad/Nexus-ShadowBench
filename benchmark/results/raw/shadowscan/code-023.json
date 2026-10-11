@@ -1,0 +1,152 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:13+00:00",
+  "finished_at": "2026-10-11T16:55:13+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "3015a916638770e7a15a269d45ed215904ab1a0fce8bfb3409201bde6bea3c40",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.aws-bedrock": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:13+00:00",
+      "finished_at": "2026-10-11T16:55:13+00:00",
+      "findings": 1,
+      "objects_examined": 2,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Amazon Bedrock",
+      "resource": "/workspace/benchmark/corpus/code/code-023",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.aws-bedrock"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "code:provider.aws-bedrock",
+          "description": "code pattern matched Amazon Bedrock: .client('bedrock-runtime'",
+          "location": "src/bedrock_call.py:2",
+          "snippet": "client = boto3.client('bedrock-runtime')",
+          "weight": 0.8,
+          "signature": "provider.aws-bedrock",
+          "attributes": {
+            "category": "provider",
+            "value": ".client('bedrock-runtime'",
+            "confidence_group": "provider.aws-bedrock"
+          }
+        },
+        {
+          "signal": "code:provider.aws-bedrock",
+          "description": "code pattern matched Amazon Bedrock: invoke_model(",
+          "location": "src/bedrock_call.py:3",
+          "snippet": "client.invoke_model(modelId='anthropic.claude-3-haiku')",
+          "weight": 0.8,
+          "signature": "provider.aws-bedrock",
+          "attributes": {
+            "category": "provider",
+            "value": "invoke_model(",
+            "confidence_group": "provider.aws-bedrock"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-023",
+        "agent_indicators": 0,
+        "files_scanned": 2,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [],
+        "models": [],
+        "evidence_counts": {
+          "provider.aws-bedrock|code": 2
+        },
+        "technologies": [
+          {
+            "id": "provider.aws-bedrock",
+            "name": "Amazon Bedrock",
+            "category": "provider",
+            "vendor": "Amazon Web Services"
+          }
+        ]
+      },
+      "id": "ss-094119135c1c5cb7",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0004BENCH",
+    "name": "oidc_client",
+    "label": "Notion AI",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.notion.so/product/ai"
+      }
+    }
+  }
+]

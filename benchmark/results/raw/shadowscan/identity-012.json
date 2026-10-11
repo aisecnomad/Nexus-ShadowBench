@@ -1,0 +1,155 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:57:49+00:00",
+  "finished_at": "2026-10-11T16:57:50+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "b01edab2f766388226795aa2e0a9938f4b42c06602ac3f1d27de47373197ae00",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "identity-app.creative-media": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:57:50+00:00",
+      "finished_at": "2026-10-11T16:57:50+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: Midjourney",
+      "resource": "okta:app:0oa0011BENCH",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.creative-media"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:identity-app.creative-media",
+          "description": "display name matched AI media generation (Midjourney, Runway, ElevenLabs, Synthesia, Descript, HeyGen, Pika, Luma, Suno, Udio, Stability, Ideogram, Leonardo, Canva Magic, Adobe Firefly, D-ID, Captions, Opus Clip): Midjourney",
+          "location": null,
+          "snippet": null,
+          "weight": 0.75,
+          "signature": "identity-app.creative-media",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Midjourney"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.787,
+      "likelihood": "likely",
+      "risk": {
+        "score": 21,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.91 because confidence is 0.79; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 12
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "identity-app.creative-media|name": 1
+        },
+        "technologies": [
+          {
+            "id": "identity-app.creative-media",
+            "name": "AI media generation (Midjourney, Runway, ElevenLabs, Synthesia, Descript, HeyGen, Pika, Luma, Suno, Udio, Stability, Ideogram, Leonardo, Canva Magic, Adobe Firefly, D-ID, Captions, Opus Clip)",
+            "category": "identity-app",
+            "vendor": null
+          }
+        ]
+      },
+      "id": "ss-53569a8e72bb3831",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

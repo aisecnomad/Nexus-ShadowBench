@@ -1,0 +1,19 @@
+{
+  "id": "gateway-021",
+  "surface": "gateway",
+  "index": 20,
+  "polarity": "positive",
+  "title": "Gateway call openai/gpt-4o",
+  "provenance": "synthetic-realistic",
+  "format": "LiteLLM-style JSONL spend log (one record).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "openrouter",
+      "path": "spend.jsonl",
+      "quote": "openai/gpt-4o"
+    }
+  ],
+  "forbidden": []
+}

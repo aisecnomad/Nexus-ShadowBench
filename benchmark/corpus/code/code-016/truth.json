@@ -1,0 +1,19 @@
+{
+  "id": "code-016",
+  "surface": "code",
+  "index": 15,
+  "polarity": "positive",
+  "title": "Code signal groq",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "groq",
+      "path": "src/g.py",
+      "quote": "from groq import Groq"
+    }
+  ],
+  "forbidden": []
+}

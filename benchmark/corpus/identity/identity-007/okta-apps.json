@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0006BENCH",
+    "name": "oidc_client",
+    "label": "Perplexity",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.perplexity.ai"
+      }
+    }
+  }
+]

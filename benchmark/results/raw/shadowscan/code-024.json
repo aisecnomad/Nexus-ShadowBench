@@ -1,0 +1,183 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:14+00:00",
+  "finished_at": "2026-10-11T16:55:14+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "f9ac7dd5e8fb878077e83b19b9188d4d6c47e097c432ab481b29f307ff540a7e",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.semantic-kernel": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:14+00:00",
+      "finished_at": "2026-10-11T16:55:14+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Semantic Kernel",
+      "resource": "/workspace/benchmark/corpus/code/code-024",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.semantic-kernel"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.semantic-kernel",
+          "description": "dependency matched Semantic Kernel: semantic-kernel",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: semantic-kernel ==1.9.0",
+          "weight": 0.9,
+          "signature": "framework.semantic-kernel",
+          "attributes": {
+            "category": "framework",
+            "value": "semantic-kernel",
+            "confidence_group": "framework.semantic-kernel"
+          }
+        },
+        {
+          "signal": "import:framework.semantic-kernel",
+          "description": "import matched Semantic Kernel: import semantic_kernel",
+          "location": "src/sk.py:1",
+          "snippet": "import semantic_kernel",
+          "weight": 0.9,
+          "signature": "framework.semantic-kernel",
+          "attributes": {
+            "category": "framework",
+            "value": "import semantic_kernel",
+            "confidence_group": "framework.semantic-kernel"
+          }
+        },
+        {
+          "signal": "import:framework.semantic-kernel",
+          "description": "import matched Semantic Kernel: semantic_kernel",
+          "location": "src/sk.py:1",
+          "snippet": "import semantic_kernel",
+          "weight": 0.9,
+          "signature": "framework.semantic-kernel",
+          "attributes": {
+            "category": "framework",
+            "value": "semantic_kernel",
+            "confidence_group": "framework.semantic-kernel"
+          }
+        }
+      ],
+      "confidence": 0.9,
+      "likelihood": "strong",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.96 because confidence is 0.90; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-024",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:semantic-kernel"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.semantic-kernel|dependency": 1,
+          "framework.semantic-kernel|import": 2
+        },
+        "technologies": [
+          {
+            "id": "framework.semantic-kernel",
+            "name": "Semantic Kernel",
+            "category": "framework",
+            "vendor": "Microsoft"
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-e7d001f4abc9ace0",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

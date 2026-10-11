@@ -1,0 +1,161 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:24+00:00",
+  "finished_at": "2026-10-11T16:58:24+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "695247b5b6581909960aaa3c3f5a14d1513f425f1ea389a02604775ca653fc7b",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "identity-app.coding-assistants-saas": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:58:24+00:00",
+      "finished_at": "2026-10-11T16:58:24+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: Cursor Manufacturing ERP",
+      "resource": "okta:app:0oaM0041",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.coding-assistants-saas"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:identity-app.coding-assistants-saas",
+          "description": "display name matched AI coding products (Cursor, Windsurf, Replit, Lovable, Bolt, v0, Devin, Cognition, Factory, Tabnine, Augment, Sourcegraph, Warp, Zed AI, Codeium, Qodo, Snyk DeepCode AI, GitLab Duo, JetBrains AI): Cursor",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "identity-app.coding-assistants-saas",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Cursor"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.83,
+      "likelihood": "likely",
+      "risk": {
+        "score": 28,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:coding",
+            "description": "acts on source code",
+            "weight": 5
+          },
+          {
+            "id": "tag:agent-platform",
+            "description": "hosted agent platform",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.93 because confidence is 0.83; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 19
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "coding",
+        "agent-platform"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "identity-app.coding-assistants-saas|name": 1
+        },
+        "technologies": [
+          {
+            "id": "identity-app.coding-assistants-saas",
+            "name": "AI coding products (Cursor, Windsurf, Replit, Lovable, Bolt, v0, Devin, Cognition, Factory, Tabnine, Augment, Sourcegraph, Warp, Zed AI, Codeium, Qodo, Snyk DeepCode AI, GitLab Duo, JetBrains AI)",
+            "category": "identity-app",
+            "vendor": null
+          }
+        ]
+      },
+      "id": "ss-71e81a8fbb3e38d2",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "cloud-044",
+  "surface": "cloud",
+  "index": 43,
+  "polarity": "near_miss",
+  "title": "Lambda that polls a game host",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL record in the AWS inventory dump shape (agent or lambda).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "cloud_agent",
+      "value": "bedrock-agent"
+    },
+    {
+      "category": "provider",
+      "value": "aws-bedrock"
+    }
+  ]
+}

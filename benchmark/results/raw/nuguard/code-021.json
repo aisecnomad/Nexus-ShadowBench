@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:35Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-021",
+  "nodes": [
+    {
+      "id": "cd6298ec-d948-4918-b702-12aba97f0b5e",
+      "name": "Memory",
+      "component_type": "TOOL",
+      "confidence": 0.9,
+      "metadata": {
+        "high_privilege": false,
+        "sql_injectable": false,
+        "ssrf_possible": false,
+        "accepts_external_url": false,
+        "reads_external_content": false,
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "loc": 6,
+        "extras": {
+          "canonical_name": "mcp_memory",
+          "adapter": "mcp_server_json",
+          "evidence_count": 1,
+          "source": "mcp_config",
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-memory"
+          ],
+          "env": null
+        }
+      },
+      "evidence": [
+        {
+          "kind": "json",
+          "confidence": 0.9,
+          "detail": "mcp_server_json: memory: npx -y @modelcontextprotocol/server-memory",
+          "location": {
+            "path": ".cursor/mcp.json",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "672d4a62-4ad7-4892-8fe9-67f91062e523",
+      "name": "Code 021 Assistant",
+      "component_type": "AGENT",
+      "confidence": 0.55,
+      "metadata": {
+        "description": "Code 021 Assistant agent",
+        "injection_risk_score": 0.1,
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "extras": {
+          "source": "auto_enrichment"
+        }
+      },
+      "evidence": []
+    }
+  ],
+  "edges": [],
+  "deps": [],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 1 agent(s), 1 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "AGENT": 1,
+      "TOOL": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 31,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": true,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

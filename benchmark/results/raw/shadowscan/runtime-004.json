@@ -1,0 +1,138 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:00:31+00:00",
+  "finished_at": "2026-10-11T17:00:31+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "1e5a1675962550093962a4571fcd866bdd0d45432a98098e0db5140fbc9f9bd4",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "runtime": 1
+    },
+    "by_kind": {
+      "runtime-process": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.ollama": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "runtime.processes",
+      "started_at": "2026-10-11T17:00:31+00:00",
+      "finished_at": "2026-10-11T17:00:31+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "runtime",
+      "connector": "runtime.processes",
+      "kind": "runtime-process",
+      "title": "Ollama running on hds-haj7cysy7yog (dev)",
+      "resource": "runtime:hds-haj7cysy7yog:dev:ollama",
+      "resource_type": "process/model-server",
+      "provider": "runtime",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "dev",
+      "frameworks": [],
+      "model_providers": [
+        "provider.ollama"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "runtime:process:model-server",
+          "description": "1 running process(es) of Ollama (ollama)",
+          "location": "hds-haj7cysy7yog",
+          "snippet": null,
+          "weight": 0.85,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.85,
+      "likelihood": "strong",
+      "risk": {
+        "score": 7,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "runtime-process finding",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.ollama",
+            "description": "local / self-hosted inference",
+            "weight": -3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.94 because confidence is 0.85; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 7
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "observed-running"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "tool": "ollama",
+        "product": "Ollama",
+        "role": "model-server",
+        "host": "hds-haj7cysy7yog",
+        "user": "dev",
+        "processes": 1,
+        "pids": [
+          4003
+        ],
+        "executables": {
+          "ollama": 1
+        },
+        "mcp_packages": {},
+        "technologies": [
+          {
+            "id": "provider.ollama",
+            "name": "Ollama",
+            "category": "provider",
+            "vendor": "Ollama"
+          }
+        ]
+      },
+      "id": "ss-92902411a894c65f",
+      "identity_discriminator": "process",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

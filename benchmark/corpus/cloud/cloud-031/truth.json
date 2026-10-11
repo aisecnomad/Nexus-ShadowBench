@@ -1,0 +1,12 @@
+{
+  "id": "cloud-031",
+  "surface": "cloud",
+  "index": 30,
+  "polarity": "negative",
+  "title": "Lambda billing-csv-30",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL record in the AWS inventory dump shape (agent or lambda).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

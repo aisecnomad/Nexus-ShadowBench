@@ -1,0 +1,9 @@
+{
+  "id": "A80045",
+  "name": "Agent Provocateur HR",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

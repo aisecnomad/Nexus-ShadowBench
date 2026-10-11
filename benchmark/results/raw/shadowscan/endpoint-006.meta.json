@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1103, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/endpoint-006.json\n", "findings": [{"category": "agent", "value": "codex-cli"}, {"category": "mcp", "value": "mcp-github"}, {"category": "provider", "value": "openai"}]}

@@ -1,0 +1,176 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:57:40+00:00",
+  "finished_at": "2026-10-11T16:57:40+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "4bc5ce305697b265d173268921d3fd5699575d202aa4ff1af0a50a44e6c25670",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "coding-agent.github-copilot": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:57:40+00:00",
+      "finished_at": "2026-10-11T16:57:40+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: GitHub Copilot",
+      "resource": "okta:app:0oa0003BENCH",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "coding-agent.github-copilot"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "code-exec",
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:coding-agent.github-copilot",
+          "description": "display name matched GitHub Copilot (coding agent / custom agents): GitHub Copilot",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "coding-agent.github-copilot",
+          "attributes": {
+            "category": "coding-agent",
+            "value": "GitHub Copilot"
+          }
+        },
+        {
+          "signal": "name:identity-app.generic-ai-name",
+          "description": "display name matched Generic AI / bot naming: Copilot",
+          "location": null,
+          "snippet": null,
+          "weight": 0.35,
+          "signature": "identity-app.generic-ai-name",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Copilot"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.89,
+      "likelihood": "strong",
+      "risk": {
+        "score": 38,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:code-exec",
+            "description": "can execute code or shell commands",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.96 because confidence is 0.89; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 29
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "ai-name-hint"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "coding-agent.github-copilot|name": 1,
+          "identity-app.generic-ai-name|name": 1
+        },
+        "technologies": [
+          {
+            "id": "coding-agent.github-copilot",
+            "name": "GitHub Copilot (coding agent / custom agents)",
+            "category": "coding-agent",
+            "vendor": "GitHub"
+          }
+        ]
+      },
+      "id": "ss-df5250cf35f671c1",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

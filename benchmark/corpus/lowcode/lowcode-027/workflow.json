@@ -1,0 +1,17 @@
+{
+  "id": "wf-n-26",
+  "name": "Nightly CSV",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Sheet",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4002,
+    "name": "cursor",
+    "path": "/usr/bin/cursor",
+    "cmdline": "cursor .",
+    "username": "dev"
+  }
+]

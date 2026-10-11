@@ -1,0 +1,192 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:01:51+00:00",
+  "finished_at": "2026-10-11T17:01:51+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "e2db32164bb16980f4777a58aba155cf24d19c820ac83571a66dfc4faea4c852",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "saas": 1
+    },
+    "by_kind": {
+      "bot-app": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "identity-app.ai-search-research": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "saas.slack",
+      "started_at": "2026-10-11T17:01:51+00:00",
+      "finished_at": "2026-10-11T17:01:51+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "saas",
+      "connector": "saas.slack",
+      "kind": "bot-app",
+      "title": "Slack app: You.com",
+      "resource": "slack:app:A0023",
+      "resource_type": "slack-app",
+      "provider": "slack",
+      "account": "T000BENCH",
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.ai-search-research"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [
+        "chat:write",
+        "users:read"
+      ],
+      "evidence": [
+        {
+          "signal": "name:identity-app.ai-search-research",
+          "description": "display name matched AI research / search assistants (Elicit, Consensus, Scite, You.com, Andi, Kagi, Exa, Hebbia, Harvey, Legora, Spellbook, CoCounsel, Lexis+ AI): You.com",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "identity-app.ai-search-research",
+          "attributes": {
+            "category": "identity-app",
+            "value": "You.com"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: chat:write",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "chat:write"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "users:read"
+          }
+        },
+        {
+          "signal": "slack:app",
+          "description": "App 'You.com' (approved); scopes: chat:write, users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.2,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.904,
+      "likelihood": "strong",
+      "risk": {
+        "score": 32,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "bot-app finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "tag:policy.data-access-scopes",
+            "description": "holds broad data-read permissions (mail, files, chat, repos)",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.96 because confidence is 0.90; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 22
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant",
+        "policy.data-access-scopes"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "app_id": "A0023",
+        "status": "approved",
+        "scopes": [
+          "chat:write",
+          "users:read"
+        ],
+        "bot_user_id": null,
+        "is_directory_approved": null,
+        "install_logs": 0,
+        "homepage": null,
+        "evidence_counts": {
+          "identity-app.ai-search-research|name": 1,
+          "policy.data-access-scopes|scope": 2
+        },
+        "technologies": [
+          {
+            "id": "identity-app.ai-search-research",
+            "name": "AI research / search assistants (Elicit, Consensus, Scite, You.com, Andi, Kagi, Exa, Hebbia, Harvey, Legora, Spellbook, CoCounsel, Lexis+ AI)",
+            "category": "identity-app",
+            "vendor": null
+          }
+        ],
+        "workspace_name": null,
+        "workspace_scope_source": "operator-configured"
+      },
+      "id": "ss-32f986aceb355d31",
+      "identity_discriminator": "slack-app",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "identity-031",
+  "surface": "identity",
+  "index": 30,
+  "polarity": "negative",
+  "title": "Okta grant Box",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

@@ -1,0 +1,266 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:56:12+00:00",
+  "finished_at": "2026-10-11T16:56:12+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": false,
+    "reason": "live collection scope is not attested",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 2,
+    "shadow": 0,
+    "by_surface": {
+      "endpoint": 2
+    },
+    "by_kind": {
+      "mcp-server": 1,
+      "agent-config": 1
+    },
+    "by_risk_level": {
+      "medium": 2
+    },
+    "frameworks": {
+      "protocol.mcp": 1,
+      "coding-agent.windsurf": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "endpoint.inventory",
+      "started_at": "2026-10-11T16:56:12+00:00",
+      "finished_at": "2026-10-11T16:56:12+00:00",
+      "findings": 2,
+      "objects_examined": 2,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "endpoint",
+      "connector": "endpoint.inventory",
+      "kind": "mcp-server",
+      "title": "MCP servers configured for Windsurf on hds-haj7cysy7yog (~home)",
+      "resource": "endpoint:hds-haj7cysy7yog:home:mcp-config:windsurf",
+      "resource_type": "mcp-config",
+      "provider": "endpoint",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "home",
+      "frameworks": [
+        "protocol.mcp"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "endpoint:mcp-config",
+          "description": "1 MCP server(s) configured for Windsurf",
+          "location": "~/.codeium/windsurf/mcp_config.json",
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "protocol.mcp",
+          "attributes": {}
+        },
+        {
+          "signal": "mcp-risk:mcp-unpinned-package",
+          "description": "MCP server 'github' fetches its package or image without an exact version (@modelcontextprotocol/server-github)",
+          "location": "~/.codeium/windsurf/mcp_config.json",
+          "snippet": null,
+          "weight": 0.0,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 39,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "mcp-server finding",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "tag:mcp-unpinned-package",
+            "description": "MCP server package or image is not pinned to an exact version",
+            "weight": 10
+          },
+          {
+            "id": "vendor-notes",
+            "description": "MCP servers frequently expose local filesystem / shell / database access; verify auth and transport.; Client configs commonly embed API keys and tokens in plain text.",
+            "weight": 5
+          },
+          {
+            "id": "mcp-stdio",
+            "description": "local stdio MCP servers run with the user's full privileges",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 39
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "mcp-unpinned-package"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "client": "Windsurf",
+        "servers": [
+          {
+            "name": "github",
+            "transport": "stdio",
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-github"
+            ],
+            "url": null,
+            "urls": [],
+            "env_names": [],
+            "headers": [],
+            "auto_approve": null,
+            "secrets_inline": false,
+            "disabled": false,
+            "location": "~/.codeium/windsurf/mcp_config.json",
+            "risks": [
+              "mcp-unpinned-package"
+            ]
+          }
+        ],
+        "server_count": 1,
+        "disabled_server_count": 0,
+        "remote_urls": [],
+        "files": [
+          "~/.codeium/windsurf/mcp_config.json"
+        ],
+        "technologies": [
+          {
+            "id": "protocol.mcp",
+            "name": "Model Context Protocol (MCP)",
+            "category": "protocol",
+            "vendor": "Anthropic / Linux Foundation (Agentic AI Foundation)"
+          }
+        ]
+      },
+      "id": "ss-a2d4331eac4d612a",
+      "identity_discriminator": "mcp-config",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    },
+    {
+      "surface": "endpoint",
+      "connector": "endpoint.inventory",
+      "kind": "agent-config",
+      "title": "Windsurf configured on hds-haj7cysy7yog (~home)",
+      "resource": "endpoint:hds-haj7cysy7yog:home:agent-config:windsurf",
+      "resource_type": "agent-config",
+      "provider": "endpoint",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "home",
+      "frameworks": [
+        "coding-agent.windsurf"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "code-exec",
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "endpoint:config:windsurf",
+          "description": "Windsurf configuration at ~/.codeium/windsurf/mcp_config.json",
+          "location": "~/.codeium/windsurf/mcp_config.json",
+          "snippet": null,
+          "weight": 0.9,
+          "signature": "coding-agent.windsurf",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.9,
+      "likelihood": "strong",
+      "risk": {
+        "score": 29,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "agent-config finding",
+            "weight": 10
+          },
+          {
+            "id": "capability:code-exec",
+            "description": "can execute code or shell commands",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.96 because confidence is 0.90; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 29
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "client": "Windsurf",
+        "files": [
+          "~/.codeium/windsurf/mcp_config.json"
+        ],
+        "technologies": [
+          {
+            "id": "coding-agent.windsurf",
+            "name": "Windsurf (Codeium)",
+            "category": "coding-agent",
+            "vendor": "Cognition (formerly Codeium)"
+          }
+        ]
+      },
+      "id": "ss-8c62ae292bba174d",
+      "identity_discriminator": "agent-config",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "code-008",
+  "surface": "code",
+  "index": 7,
+  "polarity": "positive",
+  "title": "Code signal mcp-github",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "mcp",
+      "value": "mcp-github",
+      "path": ".cursor/mcp.json",
+      "quote": "@modelcontextprotocol/server-github"
+    }
+  ],
+  "forbidden": []
+}

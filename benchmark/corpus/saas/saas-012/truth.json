@@ -1,0 +1,19 @@
+{
+  "id": "saas-012",
+  "surface": "saas",
+  "index": 11,
+  "polarity": "positive",
+  "title": "Slack app Midjourney",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "midjourney",
+      "path": "approved-app.json",
+      "quote": "Midjourney"
+    }
+  ],
+  "forbidden": []
+}

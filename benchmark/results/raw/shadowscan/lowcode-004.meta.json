@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1124, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/lowcode-004.json\n", "findings": [{"category": "framework", "value": "langchain"}, {"category": "lowcode", "value": "n8n-mistral"}]}

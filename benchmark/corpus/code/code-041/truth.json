@@ -1,0 +1,21 @@
+{
+  "id": "code-041",
+  "surface": "code",
+  "index": 40,
+  "polarity": "near_miss",
+  "title": "Minecraft Bedrock notes",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "provider",
+      "value": "aws-bedrock"
+    },
+    {
+      "category": "cloud_agent",
+      "value": "bedrock-agent"
+    }
+  ]
+}

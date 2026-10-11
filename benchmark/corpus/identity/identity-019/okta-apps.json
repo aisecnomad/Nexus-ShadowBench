@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0018BENCH",
+    "name": "oidc_client",
+    "label": "Tabnine",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.tabnine.com"
+      }
+    }
+  }
+]

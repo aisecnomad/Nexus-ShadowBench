@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:06Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-005",
+  "nodes": [
+    {
+      "id": "8f41f1c9-f02a-4cd2-847c-1d5da6111eec",
+      "name": "Autogen",
+      "component_type": "FRAMEWORK",
+      "confidence": 0.98,
+      "metadata": {
+        "framework": "autogen",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "loc": 22,
+        "extras": {
+          "canonical_name": "framework_autogen",
+          "adapter": "autogen",
+          "evidence_count": 3,
+          "detected_by_tiers": [
+            "code",
+            "iac"
+          ],
+          "framework": "autogen",
+          "implementation": "vela_builtin"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_import",
+          "confidence": 0.95,
+          "detail": "autogen: import autogen",
+          "location": {
+            "path": "src/team.py"
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.65,
+          "detail": "autogen: autogen",
+          "location": {
+            "path": "truth.json",
+            "line": 6
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "autogen: autogen",
+          "location": {
+            "path": "src/team.py",
+            "line": 1
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "deps": [
+    {
+      "name": "pyautogen",
+      "version_spec": "==0.2.35",
+      "purl": "pkg:pypi/pyautogen@0.2.35",
+      "group": "runtime",
+      "source_file": "requirements.txt"
+    }
+  ],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [
+      "autogen"
+    ],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "FRAMEWORK": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 22,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "wf-005",
+  "name": "flow-5",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Model",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

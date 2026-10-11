@@ -1,0 +1,168 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:06+00:00",
+  "finished_at": "2026-10-11T16:55:07+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "50b0b636a437eb08abf32d32c8464463b6faa89b400b00d94a7015f609ec1f52",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.cohere": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:06+00:00",
+      "finished_at": "2026-10-11T16:55:07+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Cohere",
+      "resource": "/workspace/benchmark/corpus/code/code-017",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.cohere"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:provider.cohere",
+          "description": "dependency matched Cohere: cohere",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: cohere ==5.8.0",
+          "weight": 0.8,
+          "signature": "provider.cohere",
+          "attributes": {
+            "category": "provider",
+            "value": "cohere",
+            "confidence_group": "provider.cohere"
+          }
+        },
+        {
+          "signal": "import:provider.cohere",
+          "description": "import matched Cohere: import cohere",
+          "location": "src/c.py:1",
+          "snippet": "import cohere",
+          "weight": 0.8,
+          "signature": "provider.cohere",
+          "attributes": {
+            "category": "provider",
+            "value": "import cohere",
+            "confidence_group": "provider.cohere"
+          }
+        },
+        {
+          "signal": "import:provider.cohere",
+          "description": "import matched Cohere: cohere",
+          "location": "src/c.py:1",
+          "snippet": "import cohere",
+          "weight": 0.8,
+          "signature": "provider.cohere",
+          "attributes": {
+            "category": "provider",
+            "value": "cohere",
+            "confidence_group": "provider.cohere"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-017",
+        "agent_indicators": 0,
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:cohere"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "provider.cohere|dependency": 1,
+          "provider.cohere|import": 2
+        },
+        "technologies": [
+          {
+            "id": "provider.cohere",
+            "name": "Cohere",
+            "category": "provider",
+            "vendor": "Cohere"
+          }
+        ]
+      },
+      "id": "ss-54e4c5cb48bb83b6",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

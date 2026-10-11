@@ -1,0 +1,180 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:34+00:00",
+  "finished_at": "2026-10-11T16:58:34+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "c4ff91e50b2194d4870e2fbf1568e04dcdbfe0d235fcc6ffcd81c483d403c868",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "lowcode": 1
+    },
+    "by_kind": {
+      "workflow": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "platform.n8n": 1
+    },
+    "model_providers": {
+      "provider.openai": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "lowcode.n8n",
+      "started_at": "2026-10-11T16:58:34+00:00",
+      "finished_at": "2026-10-11T16:58:34+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "lowcode",
+      "connector": "lowcode.n8n",
+      "kind": "workflow",
+      "title": "n8n workflow with AI steps: flow-0",
+      "resource": "n8n:workflow:wf-000",
+      "resource_type": "workflow",
+      "provider": "n8n",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "platform.n8n"
+      ],
+      "model_providers": [
+        "provider.openai"
+      ],
+      "models": [],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "code:platform.n8n",
+          "description": "code pattern matched n8n: @n8n/n8n-nodes-langchain.openAi",
+          "location": null,
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "platform.n8n",
+          "attributes": {
+            "category": "platform",
+            "value": "@n8n/n8n-nodes-langchain.openAi"
+          }
+        },
+        {
+          "signal": "code:provider.openai",
+          "description": "code pattern matched n8n model node: n8n-nodes-langchain.openAi",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "provider.openai",
+          "attributes": {
+            "category": "provider",
+            "value": "n8n-nodes-langchain.openAi"
+          }
+        },
+        {
+          "signal": "n8n:ai-steps",
+          "description": "AI steps: Model (@n8n/n8n-nodes-langchain.openAi)",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "platform.n8n",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.998,
+      "likelihood": "strong",
+      "risk": {
+        "score": 25,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "workflow finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 1.00 because confidence is 1.00; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 15
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "active": null,
+        "triggers": [],
+        "ai_steps": [
+          "Model (@n8n/n8n-nodes-langchain.openAi)"
+        ],
+        "url": null,
+        "node_count": 1,
+        "node_types": [
+          "@n8n/n8n-nodes-langchain.openAi"
+        ],
+        "tags": [],
+        "evidence_counts": {
+          "platform.n8n|code": 1,
+          "provider.openai|code": 1
+        },
+        "technologies": [
+          {
+            "id": "platform.n8n",
+            "name": "n8n",
+            "category": "platform",
+            "vendor": "n8n"
+          },
+          {
+            "id": "provider.openai",
+            "name": "OpenAI",
+            "category": "provider",
+            "vendor": "OpenAI"
+          }
+        ]
+      },
+      "id": "ss-b4e21b2b1cbce558",
+      "identity_discriminator": "workflow",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

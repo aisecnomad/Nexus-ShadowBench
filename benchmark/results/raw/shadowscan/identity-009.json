@@ -1,0 +1,161 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:57:46+00:00",
+  "finished_at": "2026-10-11T16:57:46+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "46816639dec09c855997d08281aac2579a6901d1b0eb68b74923658e54528f73",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "identity-app.mistral-le-chat": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:57:46+00:00",
+      "finished_at": "2026-10-11T16:57:46+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: Mistral",
+      "resource": "okta:app:0oa0008BENCH",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.mistral-le-chat"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:identity-app.mistral-le-chat",
+          "description": "display name matched Mistral Le Chat: Mistral",
+          "location": null,
+          "snippet": null,
+          "weight": 0.85,
+          "signature": "identity-app.mistral-le-chat",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Mistral"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.873,
+      "likelihood": "strong",
+      "risk": {
+        "score": 27,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "tag:agent-platform",
+            "description": "hosted agent platform",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.95 because confidence is 0.87; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 17
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant",
+        "agent-platform"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "identity-app.mistral-le-chat|name": 1
+        },
+        "technologies": [
+          {
+            "id": "identity-app.mistral-le-chat",
+            "name": "Mistral Le Chat",
+            "category": "identity-app",
+            "vendor": "Mistral AI"
+          }
+        ]
+      },
+      "id": "ss-9aec885074760909",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-016",
+  "surface": "endpoint",
+  "index": 15,
+  "polarity": "positive",
+  "title": "Endpoint codex-cli",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "codex-cli",
+      "path": "home/.codex/config.toml",
+      "quote": "mcp_servers.github"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-github",
+      "path": "home/.codex/config.toml",
+      "quote": "mcp_servers.github"
+    }
+  ],
+  "forbidden": []
+}

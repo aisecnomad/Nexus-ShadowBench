@@ -1,0 +1,12 @@
+{
+  "id": "endpoint-035",
+  "surface": "endpoint",
+  "index": 34,
+  "polarity": "negative",
+  "title": "Quiet home directory",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

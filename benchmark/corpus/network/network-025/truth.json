@@ -1,0 +1,19 @@
+{
+  "id": "network-025",
+  "surface": "network",
+  "index": 24,
+  "polarity": "positive",
+  "title": "DNS query api.mistral.ai",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "mistral",
+      "path": "dns.jsonl",
+      "quote": "api.mistral.ai"
+    }
+  ],
+  "forbidden": []
+}

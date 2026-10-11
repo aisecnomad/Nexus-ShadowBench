@@ -1,0 +1,81 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:a797ae3f-65a2-4161-aa98-49a840474871",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:51.609646+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "1"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "1"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "6e479c33-6fed-42eb-9a10-0a0946989b5c",
+      "type": "framework",
+      "name": "Model",
+      "description": "n8n agent",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "agent"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/lowcode/lowcode-025/workflow.json"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "n8n"
+        },
+        {
+          "name": "trusera:source",
+          "value": "n8n"
+        }
+      ],
+      "purl": "pkg:pypi/model"
+    }
+  ]
+}

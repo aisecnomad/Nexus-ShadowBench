@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:06:06Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-039",
+  "nodes": [
+    {
+      "id": "8f1ca983-0f4f-48cc-a9d9-f9e4f8681acf",
+      "name": "Uvicorn",
+      "component_type": "DEPLOYMENT",
+      "confidence": 0.5800000000000001,
+      "metadata": {
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "loc": 18,
+        "extras": {
+          "canonical_name": "uvicorn",
+          "adapter": "deployment_generic",
+          "evidence_count": 2,
+          "detected_by_tiers": [
+            "code",
+            "iac"
+          ]
+        }
+      },
+      "evidence": [
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "deployment_generic: uvicorn",
+          "location": {
+            "path": "truth.json",
+            "line": 6
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "deployment_generic: uvicorn",
+          "location": {
+            "path": "src/app.py",
+            "line": 4
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "deps": [
+    {
+      "name": "uvicorn",
+      "version_spec": "==0.30.6",
+      "purl": "pkg:pypi/uvicorn@0.30.6",
+      "group": "runtime",
+      "source_file": "requirements.txt"
+    }
+  ],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "DEPLOYMENT": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 21,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

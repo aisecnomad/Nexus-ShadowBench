@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0023BENCH",
+    "name": "oidc_client",
+    "label": "You.com",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://you.com"
+      }
+    }
+  }
+]

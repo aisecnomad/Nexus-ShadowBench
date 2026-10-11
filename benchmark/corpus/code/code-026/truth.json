@@ -1,0 +1,12 @@
+{
+  "id": "code-026",
+  "surface": "code",
+  "index": 25,
+  "polarity": "negative",
+  "title": "Ordinary flask service",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

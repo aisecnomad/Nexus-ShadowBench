@@ -1,0 +1,9 @@
+{
+  "id": "A90026",
+  "name": "DocuSign",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

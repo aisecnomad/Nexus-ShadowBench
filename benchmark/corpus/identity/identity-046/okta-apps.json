@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0045",
+    "name": "oidc_client",
+    "label": "Agent Provocateur HR",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://agent-hr.example"
+      }
+    }
+  }
+]

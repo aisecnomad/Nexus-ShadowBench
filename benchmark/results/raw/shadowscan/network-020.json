@@ -1,0 +1,134 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:59:52+00:00",
+  "finished_at": "2026-10-11T16:59:52+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "04250c66c16257fca6cebfe8e672c2137687985276e3d9ace05c302d2a166002",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "network": 1
+    },
+    "by_kind": {
+      "network-contact": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.cohere": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "network.logs",
+      "started_at": "2026-10-11T16:59:52+00:00",
+      "finished_at": "2026-10-11T16:59:52+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "network",
+      "connector": "network.logs",
+      "kind": "network-contact",
+      "title": "AI service contacted: Cohere (api.cohere.ai) from 10.1.0.20",
+      "resource": "network:network:10.1.0.20:provider.cohere",
+      "resource_type": "network-contact",
+      "provider": "network",
+      "account": "network",
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.cohere"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "network:dns",
+          "description": "1 DNS quer(ies) for api.cohere.ai",
+          "location": null,
+          "snippet": null,
+          "weight": 0.5,
+          "signature": "provider.cohere",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.5,
+      "likelihood": "possible",
+      "risk": {
+        "score": 12,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "network-contact finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.80 because confidence is 0.50; this only ever lowers risk",
+            "weight": -3
+          }
+        ],
+        "danger_score": 4
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": "2024-06-01T00:00:19+00:00",
+      "last_seen": "2024-06-01T00:00:19+00:00",
+      "metadata": {
+        "client": "10.1.0.20",
+        "service": "provider.cohere",
+        "hosts": {
+          "api.cohere.ai": 1
+        },
+        "dns_queries": 1,
+        "tls_connections": 0,
+        "flows": 0,
+        "bytes_out": 0,
+        "bytes_in": 0,
+        "network": "network",
+        "technologies": [
+          {
+            "id": "provider.cohere",
+            "name": "Cohere",
+            "category": "provider",
+            "vendor": "Cohere"
+          }
+        ]
+      },
+      "id": "ss-0d4826c1800b9323",
+      "identity_discriminator": "network-contact",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "code-025",
+  "surface": "code",
+  "index": 24,
+  "polarity": "positive",
+  "title": "Code signal a2a-card",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "a2a",
+      "value": "a2a-card",
+      "path": "agent-card.json",
+      "quote": "\"protocol\": \"a2a\""
+    }
+  ],
+  "forbidden": []
+}

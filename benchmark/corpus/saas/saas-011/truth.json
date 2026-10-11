@@ -1,0 +1,19 @@
+{
+  "id": "saas-011",
+  "surface": "saas",
+  "index": 10,
+  "polarity": "positive",
+  "title": "Slack app Cohere",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "cohere",
+      "path": "approved-app.json",
+      "quote": "Cohere"
+    }
+  ],
+  "forbidden": []
+}

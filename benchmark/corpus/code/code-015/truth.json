@@ -1,0 +1,19 @@
+{
+  "id": "code-015",
+  "surface": "code",
+  "index": 14,
+  "polarity": "positive",
+  "title": "Code signal mistral",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "mistral",
+      "path": "src/m.py",
+      "quote": "from mistralai.client import MistralClient"
+    }
+  ],
+  "forbidden": []
+}

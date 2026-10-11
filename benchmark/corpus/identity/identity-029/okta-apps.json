@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0028",
+    "name": "oidc_client",
+    "label": "PagerDuty",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.pagerduty.com"
+      }
+    }
+  }
+]

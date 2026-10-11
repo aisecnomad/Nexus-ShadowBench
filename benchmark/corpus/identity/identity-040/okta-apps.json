@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0039",
+    "name": "oidc_client",
+    "label": "GitHub",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://github.com"
+      }
+    }
+  }
+]

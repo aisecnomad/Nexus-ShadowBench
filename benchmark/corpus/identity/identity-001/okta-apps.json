@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0000BENCH",
+    "name": "oidc_client",
+    "label": "ChatGPT",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://chat.openai.com"
+      }
+    }
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-010",
+  "surface": "endpoint",
+  "index": 9,
+  "polarity": "positive",
+  "title": "Endpoint openclaw",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "openclaw",
+      "path": "home/.openclaw/config.json",
+      "quote": "\"agent\": \"openclaw\""
+    },
+    {
+      "category": "provider",
+      "value": "openai",
+      "path": "home/.openclaw/config.json",
+      "quote": "\"agent\": \"openclaw\""
+    }
+  ],
+  "forbidden": []
+}

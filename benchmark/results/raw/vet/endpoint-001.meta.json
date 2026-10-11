@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 40190, "error": "timeout", "stderr_tail": "timeout\nSafeDep cloud sync available; run `vet auth configure` or set SAFEDEP_API_KEY and SAFEDEP_TENANT_ID to enable.\n", "findings": []}

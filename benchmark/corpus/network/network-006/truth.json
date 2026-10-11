@@ -1,0 +1,19 @@
+{
+  "id": "network-006",
+  "surface": "network",
+  "index": 5,
+  "polarity": "positive",
+  "title": "DNS query api.cohere.ai",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "cohere",
+      "path": "dns.jsonl",
+      "quote": "api.cohere.ai"
+    }
+  ],
+  "forbidden": []
+}

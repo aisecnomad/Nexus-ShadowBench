@@ -1,0 +1,19 @@
+{
+  "id": "code-002",
+  "surface": "code",
+  "index": 1,
+  "polarity": "positive",
+  "title": "Code signal langchain",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "langchain",
+      "path": "src/chain.py",
+      "quote": "from langchain.chat_models import ChatOpenAI"
+    }
+  ],
+  "forbidden": []
+}

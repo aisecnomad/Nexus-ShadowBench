@@ -1,0 +1,19 @@
+{
+  "id": "code-012",
+  "surface": "code",
+  "index": 11,
+  "polarity": "positive",
+  "title": "Code signal pydantic-ai",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "pydantic-ai",
+      "path": "src/agent.py",
+      "quote": "from pydantic_ai import Agent"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "code-013",
+  "surface": "code",
+  "index": 12,
+  "polarity": "positive",
+  "title": "Code signal haystack",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "haystack",
+      "path": "src/pipe.py",
+      "quote": "from haystack import Pipeline"
+    }
+  ],
+  "forbidden": []
+}

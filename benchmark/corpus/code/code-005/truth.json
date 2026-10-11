@@ -1,0 +1,19 @@
+{
+  "id": "code-005",
+  "surface": "code",
+  "index": 4,
+  "polarity": "positive",
+  "title": "Code signal autogen",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "autogen",
+      "path": "src/team.py",
+      "quote": "from autogen import AssistantAgent"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,21 @@
+{
+  "id": "network-045",
+  "surface": "network",
+  "index": 44,
+  "polarity": "near_miss",
+  "title": "DNS query for a game host",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "egress",
+      "value": "aws-bedrock"
+    },
+    {
+      "category": "provider",
+      "value": "aws-bedrock"
+    }
+  ]
+}

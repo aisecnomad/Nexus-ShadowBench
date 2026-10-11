@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1133, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/identity-019.json\n", "findings": [{"category": "agent", "value": "cursor"}, {"category": "agent", "value": "windsurf"}, {"category": "identity_grant", "value": "codeium"}, {"category": "identity_grant", "value": "tabnine"}]}

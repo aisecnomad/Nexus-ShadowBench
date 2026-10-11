@@ -1,0 +1,192 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:01:32+00:00",
+  "finished_at": "2026-10-11T17:01:32+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "c729eb36b1f182f7e82f84815b73f42fb8ff3e36be5d431a8b28f8f1dea66bfe",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "saas": 1
+    },
+    "by_kind": {
+      "bot-app": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "identity-app.perplexity": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "saas.slack",
+      "started_at": "2026-10-11T17:01:32+00:00",
+      "finished_at": "2026-10-11T17:01:32+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "saas",
+      "connector": "saas.slack",
+      "kind": "bot-app",
+      "title": "Slack app: Perplexity",
+      "resource": "slack:app:A0006",
+      "resource_type": "slack-app",
+      "provider": "slack",
+      "account": "T000BENCH",
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "identity-app.perplexity"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [
+        "chat:write",
+        "users:read"
+      ],
+      "evidence": [
+        {
+          "signal": "name:identity-app.perplexity",
+          "description": "display name matched Perplexity: Perplexity",
+          "location": null,
+          "snippet": null,
+          "weight": 0.9,
+          "signature": "identity-app.perplexity",
+          "attributes": {
+            "category": "identity-app",
+            "value": "Perplexity"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: chat:write",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "chat:write"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "users:read"
+          }
+        },
+        {
+          "signal": "slack:app",
+          "description": "App 'Perplexity' (approved); scopes: chat:write, users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.2,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.952,
+      "likelihood": "strong",
+      "risk": {
+        "score": 32,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "bot-app finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:assistant",
+            "description": "general-purpose assistant receives enterprise data",
+            "weight": 3
+          },
+          {
+            "id": "tag:policy.data-access-scopes",
+            "description": "holds broad data-read permissions (mail, files, chat, repos)",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 23
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "assistant",
+        "policy.data-access-scopes"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "app_id": "A0006",
+        "status": "approved",
+        "scopes": [
+          "chat:write",
+          "users:read"
+        ],
+        "bot_user_id": null,
+        "is_directory_approved": null,
+        "install_logs": 0,
+        "homepage": null,
+        "evidence_counts": {
+          "identity-app.perplexity|name": 1,
+          "policy.data-access-scopes|scope": 2
+        },
+        "technologies": [
+          {
+            "id": "identity-app.perplexity",
+            "name": "Perplexity",
+            "category": "identity-app",
+            "vendor": "Perplexity AI"
+          }
+        ],
+        "workspace_name": null,
+        "workspace_scope_source": "operator-configured"
+      },
+      "id": "ss-07d309773136aeaf",
+      "identity_discriminator": "slack-app",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

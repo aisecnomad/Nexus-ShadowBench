@@ -1,0 +1,206 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:10+00:00",
+  "finished_at": "2026-10-11T16:55:10+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "fb8cb221b80f1d7535428e9cd01a1192c26502aef4e9e3560ffc19b2ff9f267c",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "mcp-server": 1
+    },
+    "by_risk_level": {
+      "high": 1
+    },
+    "frameworks": {
+      "protocol.mcp": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:10+00:00",
+      "finished_at": "2026-10-11T16:55:10+00:00",
+      "findings": 1,
+      "objects_examined": 2,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "mcp-server",
+      "title": "MCP configuration: .vscode/mcp.json",
+      "resource": "/workspace/benchmark/corpus/code/code-020/.vscode/mcp.json",
+      "resource_type": "mcp-config",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "protocol.mcp"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "tool-use",
+        "data-access"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "file:protocol.mcp",
+          "description": "MCP client/server configuration file .vscode/mcp.json",
+          "location": ".vscode/mcp.json",
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "protocol.mcp",
+          "attributes": {}
+        },
+        {
+          "signal": "mcp-risk:mcp-unpinned-package",
+          "description": "MCP server 'filesystem' fetches its package or image without an exact version (@modelcontextprotocol/server-filesystem)",
+          "location": ".vscode/mcp.json",
+          "snippet": null,
+          "weight": 0.0,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 59,
+        "level": "high",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "mcp-server finding",
+            "weight": 15
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "capability:data-access",
+            "description": "reads or writes files and databases directly (exfiltration / tampering surface)",
+            "weight": 10
+          },
+          {
+            "id": "tag:mcp-unpinned-package",
+            "description": "MCP server package or image is not pinned to an exact version",
+            "weight": 10
+          },
+          {
+            "id": "vendor-notes",
+            "description": "MCP servers frequently expose local filesystem / shell / database access; verify auth and transport.; Client configs commonly embed API keys and tokens in plain text.",
+            "weight": 5
+          },
+          {
+            "id": "mcp-stdio",
+            "description": "local stdio MCP servers run with the user's full privileges",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 49
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "mcp-unpinned-package"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".vscode/mcp.json",
+        "scan_root": "/workspace/benchmark/corpus/code/code-020",
+        "servers": [
+          {
+            "name": "filesystem",
+            "transport": "stdio",
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-filesystem",
+              "."
+            ],
+            "url": null,
+            "urls": [],
+            "env_names": [],
+            "headers": [],
+            "auto_approve": null,
+            "secrets_inline": false,
+            "disabled": false,
+            "risks": [
+              "mcp-unpinned-package"
+            ]
+          }
+        ],
+        "server_count": 1,
+        "disabled_server_count": 0,
+        "remote_urls": [],
+        "client": "VS Code / Copilot",
+        "technologies": [
+          {
+            "id": "protocol.mcp",
+            "name": "Model Context Protocol (MCP)",
+            "category": "protocol",
+            "vendor": "Anthropic / Linux Foundation (Agentic AI Foundation)"
+          }
+        ],
+        "risk_notes": [
+          "MCP servers frequently expose local filesystem / shell / database access; verify auth and transport.",
+          "Client configs commonly embed API keys and tokens in plain text."
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-4bdcdde8bf67b7c1",
+      "identity_discriminator": "mcp-config",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

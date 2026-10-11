@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0009BENCH",
+    "name": "oidc_client",
+    "label": "Groq",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://groq.com"
+      }
+    }
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "id": "A80042",
+  "name": "Gemini Freight Lines",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-015",
+  "surface": "endpoint",
+  "index": 14,
+  "polarity": "positive",
+  "title": "Endpoint windsurf",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "windsurf",
+      "path": "home/.codeium/windsurf/mcp_config.json",
+      "quote": "server-github"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-github",
+      "path": "home/.codeium/windsurf/mcp_config.json",
+      "quote": "server-github"
+    }
+  ],
+  "forbidden": []
+}

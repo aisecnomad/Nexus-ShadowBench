@@ -1,0 +1,19 @@
+{
+  "id": "runtime-017",
+  "surface": "runtime",
+  "index": 16,
+  "polarity": "positive",
+  "title": "Process claude",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "claude-code",
+      "path": "processes.json",
+      "quote": "claude"
+    }
+  ],
+  "forbidden": []
+}

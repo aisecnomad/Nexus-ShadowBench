@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0011BENCH",
+    "name": "oidc_client",
+    "label": "Midjourney",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.midjourney.com"
+      }
+    }
+  }
+]

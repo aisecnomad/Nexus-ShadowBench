@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0037",
+    "name": "oidc_client",
+    "label": "Zoom Meetings",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://zoom.us"
+      }
+    }
+  }
+]

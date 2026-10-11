@@ -1,0 +1,144 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:59:57+00:00",
+  "finished_at": "2026-10-11T16:59:57+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "a4fce2322c5fef7e96dc096daaf25f031498bd6c787a40a24a61de0dd758e6cb",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "network": 1
+    },
+    "by_kind": {
+      "network-contact": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.google-gemini": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "network.logs",
+      "started_at": "2026-10-11T16:59:57+00:00",
+      "finished_at": "2026-10-11T16:59:57+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "network",
+      "connector": "network.logs",
+      "kind": "network-contact",
+      "title": "AI service contacted: Google Gemini API (AI Studio) (generativelanguage.googleapis.com) from 10.1.0.24",
+      "resource": "network:network:10.1.0.24:provider.google-gemini",
+      "resource_type": "network-contact",
+      "provider": "network",
+      "account": "network",
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.google-gemini"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "network:dns",
+          "description": "1 DNS quer(ies) for generativelanguage.googleapis.com",
+          "location": null,
+          "snippet": null,
+          "weight": 0.5,
+          "signature": "provider.google-gemini",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.5,
+      "likelihood": "possible",
+      "risk": {
+        "score": 20,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "network-contact finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.google-gemini",
+            "description": "uses the consumer Gemini API (API keys outside cloud IAM)",
+            "weight": 5
+          },
+          {
+            "id": "vendor-notes",
+            "description": "Gemini API keys bypass Cloud IAM and are often created in personal AI Studio accounts.",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.80 because confidence is 0.50; this only ever lowers risk",
+            "weight": -5
+          }
+        ],
+        "danger_score": 12
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": "2024-06-01T00:00:23+00:00",
+      "last_seen": "2024-06-01T00:00:23+00:00",
+      "metadata": {
+        "client": "10.1.0.24",
+        "service": "provider.google-gemini",
+        "hosts": {
+          "generativelanguage.googleapis.com": 1
+        },
+        "dns_queries": 1,
+        "tls_connections": 0,
+        "flows": 0,
+        "bytes_out": 0,
+        "bytes_in": 0,
+        "network": "network",
+        "technologies": [
+          {
+            "id": "provider.google-gemini",
+            "name": "Google Gemini API (AI Studio)",
+            "category": "provider",
+            "vendor": "Google"
+          }
+        ]
+      },
+      "id": "ss-6aadda18cd6eca44",
+      "identity_discriminator": "network-contact",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

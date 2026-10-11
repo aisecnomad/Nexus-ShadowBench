@@ -1,0 +1,5 @@
+{
+  "name": "support-agent",
+  "protocol": "a2a",
+  "url": "https://agents.internal.example/support"
+}

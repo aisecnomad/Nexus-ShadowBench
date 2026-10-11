@@ -1,0 +1,266 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:54+00:00",
+  "finished_at": "2026-10-11T16:55:54+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": false,
+    "reason": "live collection scope is not attested",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 2,
+    "shadow": 0,
+    "by_surface": {
+      "endpoint": 2
+    },
+    "by_kind": {
+      "mcp-server": 1,
+      "agent-config": 1
+    },
+    "by_risk_level": {
+      "medium": 2
+    },
+    "frameworks": {
+      "protocol.mcp": 1,
+      "coding-agent.github-copilot": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "endpoint.inventory",
+      "started_at": "2026-10-11T16:55:54+00:00",
+      "finished_at": "2026-10-11T16:55:54+00:00",
+      "findings": 2,
+      "objects_examined": 2,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "endpoint",
+      "connector": "endpoint.inventory",
+      "kind": "mcp-server",
+      "title": "MCP servers configured for VS Code on hds-haj7cysy7yog (~home)",
+      "resource": "endpoint:hds-haj7cysy7yog:home:mcp-config:vscode",
+      "resource_type": "mcp-config",
+      "provider": "endpoint",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "home",
+      "frameworks": [
+        "protocol.mcp"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "endpoint:mcp-config",
+          "description": "1 MCP server(s) configured for VS Code",
+          "location": "~/.config/Code/User/mcp.json",
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "protocol.mcp",
+          "attributes": {}
+        },
+        {
+          "signal": "mcp-risk:mcp-unpinned-package",
+          "description": "MCP server 'github' fetches its package or image without an exact version (@modelcontextprotocol/server-github)",
+          "location": "~/.config/Code/User/mcp.json",
+          "snippet": null,
+          "weight": 0.0,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 39,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "mcp-server finding",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "tag:mcp-unpinned-package",
+            "description": "MCP server package or image is not pinned to an exact version",
+            "weight": 10
+          },
+          {
+            "id": "vendor-notes",
+            "description": "MCP servers frequently expose local filesystem / shell / database access; verify auth and transport.; Client configs commonly embed API keys and tokens in plain text.",
+            "weight": 5
+          },
+          {
+            "id": "mcp-stdio",
+            "description": "local stdio MCP servers run with the user's full privileges",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 39
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "mcp-unpinned-package"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "client": "VS Code",
+        "servers": [
+          {
+            "name": "github",
+            "transport": "stdio",
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-github"
+            ],
+            "url": null,
+            "urls": [],
+            "env_names": [],
+            "headers": [],
+            "auto_approve": null,
+            "secrets_inline": false,
+            "disabled": false,
+            "location": "~/.config/Code/User/mcp.json",
+            "risks": [
+              "mcp-unpinned-package"
+            ]
+          }
+        ],
+        "server_count": 1,
+        "disabled_server_count": 0,
+        "remote_urls": [],
+        "files": [
+          "~/.config/Code/User/mcp.json"
+        ],
+        "technologies": [
+          {
+            "id": "protocol.mcp",
+            "name": "Model Context Protocol (MCP)",
+            "category": "protocol",
+            "vendor": "Anthropic / Linux Foundation (Agentic AI Foundation)"
+          }
+        ]
+      },
+      "id": "ss-532938ba58dc2e36",
+      "identity_discriminator": "mcp-config",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    },
+    {
+      "surface": "endpoint",
+      "connector": "endpoint.inventory",
+      "kind": "agent-config",
+      "title": "VS Code configured on hds-haj7cysy7yog (~home)",
+      "resource": "endpoint:hds-haj7cysy7yog:home:agent-config:vscode",
+      "resource_type": "agent-config",
+      "provider": "endpoint",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "home",
+      "frameworks": [
+        "coding-agent.github-copilot"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "code-exec",
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "endpoint:config:vscode",
+          "description": "VS Code configuration at ~/.config/Code/User/mcp.json",
+          "location": "~/.config/Code/User/mcp.json",
+          "snippet": null,
+          "weight": 0.9,
+          "signature": "coding-agent.github-copilot",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.9,
+      "likelihood": "strong",
+      "risk": {
+        "score": 29,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "agent-config finding",
+            "weight": 10
+          },
+          {
+            "id": "capability:code-exec",
+            "description": "can execute code or shell commands",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.96 because confidence is 0.90; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 29
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "client": "VS Code",
+        "files": [
+          "~/.config/Code/User/mcp.json"
+        ],
+        "technologies": [
+          {
+            "id": "coding-agent.github-copilot",
+            "name": "GitHub Copilot (coding agent / custom agents)",
+            "category": "coding-agent",
+            "vendor": "GitHub"
+          }
+        ]
+      },
+      "id": "ss-5ef34397b78b1ca8",
+      "identity_discriminator": "agent-config",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

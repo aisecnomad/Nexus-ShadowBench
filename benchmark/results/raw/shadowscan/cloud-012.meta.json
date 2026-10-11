@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1123, "error": null, "stderr_tail": "wrote json report to /workspace/benchmark/results/raw/shadowscan/cloud-012.json\n", "findings": [{"category": "cloud_agent", "value": "bedrock-agent"}, {"category": "provider", "value": "aws-bedrock"}]}

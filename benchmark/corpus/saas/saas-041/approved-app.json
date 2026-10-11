@@ -1,0 +1,9 @@
+{
+  "id": "A80040",
+  "name": "Claude Bernard Gallery",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

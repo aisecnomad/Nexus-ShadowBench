@@ -1,0 +1,12 @@
+{
+  "id": "runtime-039",
+  "surface": "runtime",
+  "index": 38,
+  "polarity": "negative",
+  "title": "nginx worker",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

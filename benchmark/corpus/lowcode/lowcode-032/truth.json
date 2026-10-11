@@ -1,0 +1,12 @@
+{
+  "id": "lowcode-032",
+  "surface": "lowcode",
+  "index": 31,
+  "polarity": "negative",
+  "title": "n8n spreadsheet workflow",
+  "provenance": "synthetic-realistic",
+  "format": "n8n workflow export JSON (id, name, nodes, connections).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

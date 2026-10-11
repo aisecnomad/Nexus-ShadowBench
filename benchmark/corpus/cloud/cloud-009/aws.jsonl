@@ -1,0 +1,1 @@
+{"_kind": "bedrock-agent", "agentName": "agent-008", "agentId": "A0008AGENT", "agentStatus": "PREPARED", "foundationModel": "mistral.mistral-large-2402-v1:0", "agentArn": "arn:aws:bedrock:us-east-1:123456789012:agent/A0008AGENT", "_region": "us-east-1"}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0043",
+    "name": "oidc_client",
+    "label": "Copilot Insurance Agency",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://copilot-insurance.example"
+      }
+    }
+  }
+]

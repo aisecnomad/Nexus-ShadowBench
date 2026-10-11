@@ -1,0 +1,161 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:00+00:00",
+  "finished_at": "2026-10-11T16:58:00+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "ddd7990421d2dc8e4a8afde1962a6ec5d0483729d2fe36a4d3201ec288f5e64c",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "identity": 1
+    },
+    "by_kind": {
+      "oauth-grant": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "coding-agent.amazon-q-developer": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:58:00+00:00",
+      "finished_at": "2026-10-11T16:58:00+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "identity",
+      "connector": "identity.okta",
+      "kind": "oauth-grant",
+      "title": "Okta OAuth app: Amazon Q",
+      "resource": "okta:app:0oa0020BENCH",
+      "resource_type": "okta-application",
+      "provider": "okta",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "coding-agent.amazon-q-developer"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "code-exec",
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "name:coding-agent.amazon-q-developer",
+          "description": "display name matched Amazon Q Developer / Kiro: Amazon Q",
+          "location": null,
+          "snippet": null,
+          "weight": 0.7,
+          "signature": "coding-agent.amazon-q-developer",
+          "attributes": {
+            "category": "coding-agent",
+            "value": "Amazon Q"
+          }
+        },
+        {
+          "signal": "okta:app",
+          "description": "OPENID_CONNECT application, status ACTIVE, type n/a, grant types n/a",
+          "location": null,
+          "snippet": null,
+          "weight": 0.15,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.745,
+      "likelihood": "likely",
+      "risk": {
+        "score": 36,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "oauth-grant finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:code-exec",
+            "description": "can execute code or shell commands",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.90 because confidence is 0.74; this only ever lowers risk",
+            "weight": -4
+          }
+        ],
+        "danger_score": 27
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "okta_name": "oidc_client",
+        "sign_on_mode": "OPENID_CONNECT",
+        "status": "ACTIVE",
+        "application_type": null,
+        "grant_types": [],
+        "client_id": null,
+        "scopes": [],
+        "consenting_users": 0,
+        "admin_grants": 0,
+        "evidence_counts": {
+          "coding-agent.amazon-q-developer|name": 1
+        },
+        "technologies": [
+          {
+            "id": "coding-agent.amazon-q-developer",
+            "name": "Amazon Q Developer / Kiro",
+            "category": "coding-agent",
+            "vendor": "Amazon Web Services"
+          }
+        ]
+      },
+      "id": "ss-dbccdbf9453d708a",
+      "identity_discriminator": "okta-application",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

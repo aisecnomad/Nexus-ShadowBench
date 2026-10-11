@@ -1,0 +1,157 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:38+00:00",
+  "finished_at": "2026-10-11T16:58:38+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "393e53770cc4a8330cdb35f9e0ba2557a9ac8ec5fb5d8b04a58f84861da4d798",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "lowcode": 1
+    },
+    "by_kind": {
+      "agent": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "platform.n8n": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "lowcode.n8n",
+      "started_at": "2026-10-11T16:58:38+00:00",
+      "finished_at": "2026-10-11T16:58:38+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "lowcode",
+      "connector": "lowcode.n8n",
+      "kind": "agent",
+      "title": "n8n agent with AI steps: flow-4",
+      "resource": "n8n:workflow:wf-004",
+      "resource_type": "workflow",
+      "provider": "n8n",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "platform.n8n"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "code:platform.n8n",
+          "description": "code pattern matched n8n: @n8n/n8n-nodes-langchain.agent",
+          "location": null,
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "platform.n8n",
+          "attributes": {
+            "category": "platform",
+            "value": "@n8n/n8n-nodes-langchain.agent"
+          }
+        },
+        {
+          "signal": "n8n:ai-steps",
+          "description": "AI steps: Model (@n8n/n8n-nodes-langchain.agent)",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "platform.n8n",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.99,
+      "likelihood": "strong",
+      "risk": {
+        "score": 30,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "agent finding",
+            "weight": 15
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 1.00 because confidence is 0.99; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 20
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "active": null,
+        "triggers": [],
+        "ai_steps": [
+          "Model (@n8n/n8n-nodes-langchain.agent)"
+        ],
+        "url": null,
+        "node_count": 1,
+        "node_types": [
+          "@n8n/n8n-nodes-langchain.agent"
+        ],
+        "tags": [],
+        "evidence_counts": {
+          "platform.n8n|code": 1
+        },
+        "technologies": [
+          {
+            "id": "platform.n8n",
+            "name": "n8n",
+            "category": "platform",
+            "vendor": "n8n"
+          }
+        ]
+      },
+      "id": "ss-138e962301904fa0",
+      "identity_discriminator": "workflow",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

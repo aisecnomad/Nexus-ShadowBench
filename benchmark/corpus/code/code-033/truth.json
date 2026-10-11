@@ -1,0 +1,12 @@
+{
+  "id": "code-033",
+  "surface": "code",
+  "index": 32,
+  "polarity": "negative",
+  "title": "Ordinary rich service",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

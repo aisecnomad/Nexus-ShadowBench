@@ -1,0 +1,142 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:09+00:00",
+  "finished_at": "2026-10-11T16:55:09+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "a9530a63cf311f209ef6d0b724839dd18158c9b590becb6e923e2f7d5c44cf73",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.ollama": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:09+00:00",
+      "finished_at": "2026-10-11T16:55:09+00:00",
+      "findings": 1,
+      "objects_examined": 2,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Ollama",
+      "resource": "/workspace/benchmark/corpus/code/code-019",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.ollama"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "file:provider.ollama",
+          "description": "config file matched Ollama: Modelfile",
+          "location": "Modelfile",
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "provider.ollama",
+          "attributes": {
+            "category": "provider",
+            "value": "Modelfile",
+            "confidence_group": "provider.ollama"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 11,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.ollama",
+            "description": "local / self-hosted inference",
+            "weight": -3
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 2
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-019",
+        "agent_indicators": 0,
+        "files_scanned": 2,
+        "languages": [],
+        "dependencies_matched": [],
+        "models": [],
+        "evidence_counts": {
+          "provider.ollama|file": 1
+        },
+        "technologies": [
+          {
+            "id": "provider.ollama",
+            "name": "Ollama",
+            "category": "provider",
+            "vendor": "Ollama"
+          }
+        ]
+      },
+      "id": "ss-288f86cac651750e",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

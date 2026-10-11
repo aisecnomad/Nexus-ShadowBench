@@ -1,0 +1,147 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:00:39+00:00",
+  "finished_at": "2026-10-11T17:00:39+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "f0a0799fe920ec6fe42429c46c9c92cc7ed3edb1afa53b4eb2512f58a3efd388",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "runtime": 1
+    },
+    "by_kind": {
+      "runtime-process": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "coding-agent.cursor": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "runtime.processes",
+      "started_at": "2026-10-11T17:00:39+00:00",
+      "finished_at": "2026-10-11T17:00:39+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "runtime",
+      "connector": "runtime.processes",
+      "kind": "runtime-process",
+      "title": "Cursor running on hds-haj7cysy7yog (dev)",
+      "resource": "runtime:hds-haj7cysy7yog:dev:cursor",
+      "resource_type": "process/app",
+      "provider": "runtime",
+      "account": "hds-haj7cysy7yog",
+      "region": null,
+      "owner": "dev",
+      "frameworks": [
+        "coding-agent.cursor"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "code-exec",
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "runtime:process:app",
+          "description": "1 running process(es) of Cursor (cursor)",
+          "location": "hds-haj7cysy7yog",
+          "snippet": null,
+          "weight": 0.85,
+          "signature": "coding-agent.cursor",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.85,
+      "likelihood": "strong",
+      "risk": {
+        "score": 28,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "runtime-process finding",
+            "weight": 10
+          },
+          {
+            "id": "capability:code-exec",
+            "description": "can execute code or shell commands",
+            "weight": 15
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.94 because confidence is 0.85; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 28
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "observed-running"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 1,
+        "tool": "cursor",
+        "product": "Cursor",
+        "role": "app",
+        "host": "hds-haj7cysy7yog",
+        "user": "dev",
+        "processes": 1,
+        "pids": [
+          4010
+        ],
+        "executables": {
+          "cursor": 1
+        },
+        "mcp_packages": {},
+        "technologies": [
+          {
+            "id": "coding-agent.cursor",
+            "name": "Cursor",
+            "category": "coding-agent",
+            "vendor": "Anysphere"
+          }
+        ]
+      },
+      "id": "ss-a651d2b6efa34fef",
+      "identity_discriminator": "process",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

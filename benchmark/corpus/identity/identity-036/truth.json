@@ -1,0 +1,12 @@
+{
+  "id": "identity-036",
+  "surface": "identity",
+  "index": 35,
+  "polarity": "negative",
+  "title": "Okta grant Okta Dashboard",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

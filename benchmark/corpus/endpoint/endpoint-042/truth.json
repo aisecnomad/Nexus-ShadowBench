@@ -1,0 +1,21 @@
+{
+  "id": "endpoint-042",
+  "surface": "endpoint",
+  "index": 41,
+  "polarity": "near_miss",
+  "title": "Home directory with prose and CSS",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "agent",
+      "value": "cursor"
+    },
+    {
+      "category": "agent",
+      "value": "claude-code"
+    }
+  ]
+}

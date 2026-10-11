@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1133, "error": null, "stderr_tail": "wrote json report to /workspace/benchmark/results/raw/shadowscan/saas-024.json\n", "findings": [{"category": "saas_ai", "value": "you-com"}]}

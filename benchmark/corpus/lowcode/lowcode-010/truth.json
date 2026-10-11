@@ -1,0 +1,25 @@
+{
+  "id": "lowcode-010",
+  "surface": "lowcode",
+  "index": 9,
+  "polarity": "positive",
+  "title": "n8n node @n8n/n8n-nodes-langchain.agent",
+  "provenance": "synthetic-realistic",
+  "format": "n8n workflow export JSON (id, name, nodes, connections).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "lowcode",
+      "value": "n8n-agent",
+      "path": "workflow.json",
+      "quote": "@n8n/n8n-nodes-langchain.agent"
+    },
+    {
+      "category": "framework",
+      "value": "langchain",
+      "path": "workflow.json",
+      "quote": "@n8n/n8n-nodes-langchain.agent"
+    }
+  ],
+  "forbidden": []
+}

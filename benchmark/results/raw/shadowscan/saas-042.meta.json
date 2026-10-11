@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1166, "error": null, "stderr_tail": "wrote json report to /workspace/benchmark/results/raw/shadowscan/saas-042.json\n", "findings": [{"category": "agent", "value": "cursor"}, {"category": "agent", "value": "windsurf"}, {"category": "saas_ai", "value": "codeium"}, {"category": "saas_ai", "value": "tabnine"}]}

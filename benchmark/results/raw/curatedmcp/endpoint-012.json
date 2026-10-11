@@ -1,0 +1,22 @@
+{
+  "scannedAt": "10/11/2026, 5:15:25 PM",
+  "configFiles": [
+    "/workspace/benchmark/corpus/endpoint/endpoint-012/home/.claude.json"
+  ],
+  "totalServers": 1,
+  "high": [],
+  "medium": [],
+  "verified": [],
+  "unverified": [
+    {
+      "name": "filesystem",
+      "sourceFile": "/workspace/benchmark/corpus/endpoint/endpoint-012/home/.claude.json",
+      "command": "npx -y @modelcontextprotocol/server-filesystem",
+      "flags": [
+        "UNVERIFIED"
+      ],
+      "level": "LOW",
+      "npmPackage": "@modelcontextprotocol/server-filesystem"
+    }
+  ]
+}

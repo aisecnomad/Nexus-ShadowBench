@@ -1,0 +1,19 @@
+{
+  "id": "network-008",
+  "surface": "network",
+  "index": 7,
+  "polarity": "positive",
+  "title": "DNS query api.openai.com",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "openai",
+      "path": "dns.jsonl",
+      "quote": "api.openai.com"
+    }
+  ],
+  "forbidden": []
+}

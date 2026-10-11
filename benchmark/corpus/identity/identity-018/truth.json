@@ -1,0 +1,19 @@
+{
+  "id": "identity-018",
+  "surface": "identity",
+  "index": 17,
+  "polarity": "positive",
+  "title": "Okta grant Codeium",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "codeium",
+      "path": "okta-apps.json",
+      "quote": "Codeium"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "runtime-024",
+  "surface": "runtime",
+  "index": 23,
+  "polarity": "positive",
+  "title": "Process openclaw",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "openclaw",
+      "path": "processes.json",
+      "quote": "openclaw"
+    }
+  ],
+  "forbidden": []
+}

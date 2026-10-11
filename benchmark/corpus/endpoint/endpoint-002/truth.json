@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-002",
+  "surface": "endpoint",
+  "index": 1,
+  "polarity": "positive",
+  "title": "Endpoint claude-code",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "claude-code",
+      "path": "home/.claude.json",
+      "quote": "server-filesystem"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-filesystem",
+      "path": "home/.claude.json",
+      "quote": "server-filesystem"
+    }
+  ],
+  "forbidden": []
+}

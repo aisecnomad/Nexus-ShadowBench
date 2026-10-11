@@ -1,0 +1,197 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:50+00:00",
+  "finished_at": "2026-10-11T16:54:50+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "ecbd231e561c2e2417dcebfb8f42f49a77f81656695966ffb05304ee3f8b8b81",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.langgraph": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:50+00:00",
+      "finished_at": "2026-10-11T16:54:50+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: LangGraph",
+      "resource": "/workspace/benchmark/corpus/code/code-003",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.langgraph"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.langgraph",
+          "description": "dependency matched LangGraph: langgraph",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: langgraph ==0.2.16",
+          "weight": 0.95,
+          "signature": "framework.langgraph",
+          "attributes": {
+            "category": "framework",
+            "value": "langgraph",
+            "confidence_group": "framework.langgraph"
+          }
+        },
+        {
+          "signal": "import:framework.langgraph",
+          "description": "import matched LangGraph: from langgraph",
+          "location": "src/graph.py:1",
+          "snippet": "from langgraph.graph import StateGraph",
+          "weight": 0.95,
+          "signature": "framework.langgraph",
+          "attributes": {
+            "category": "framework",
+            "value": "from langgraph",
+            "confidence_group": "framework.langgraph"
+          }
+        },
+        {
+          "signal": "import:framework.langgraph",
+          "description": "import matched LangGraph: langgraph.graph",
+          "location": "src/graph.py:1",
+          "snippet": "from langgraph.graph import StateGraph",
+          "weight": 0.95,
+          "signature": "framework.langgraph",
+          "attributes": {
+            "category": "framework",
+            "value": "langgraph.graph",
+            "confidence_group": "framework.langgraph"
+          }
+        },
+        {
+          "signal": "code:framework.langgraph",
+          "description": "code pattern matched LangGraph: StateGraph(",
+          "location": "src/graph.py:2",
+          "snippet": "workflow = StateGraph(dict)",
+          "weight": 0.9,
+          "signature": "framework.langgraph",
+          "attributes": {
+            "category": "framework",
+            "value": "StateGraph(",
+            "confidence_group": "framework.langgraph"
+          }
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 15,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-003",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:langgraph"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.langgraph|dependency": 1,
+          "framework.langgraph|import": 2,
+          "framework.langgraph|code": 1
+        },
+        "technologies": [
+          {
+            "id": "framework.langgraph",
+            "name": "LangGraph",
+            "category": "framework",
+            "vendor": "LangChain, Inc."
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-70d8a1b629a228a4",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

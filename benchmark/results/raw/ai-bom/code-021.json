@@ -1,0 +1,110 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:1b64c72b-1290-49fb-a134-fef08abf0f60",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:36.935218+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "2"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "2"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "0dfb31bc-ae99-468e-bb95-82ce616e9d9f",
+      "type": "service",
+      "name": "memory (MCP Server)",
+      "description": "MCP Memory tool_use",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "tool_use"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-021/.cursor/mcp.json"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "MCP Memory"
+        },
+        {
+          "name": "trusera:source",
+          "value": "mcp-config"
+        }
+      ],
+      "purl": "pkg:pypi/memory (mcp server)"
+    },
+    {
+      "bom-ref": "dfe45c53-7fe5-4f59-b992-1fabdc4c8a5e",
+      "type": "service",
+      "name": "MCP Server: memory",
+      "description": "MCP tool_use",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "tool_use"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-021/.cursor/mcp.json"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "MCP"
+        },
+        {
+          "name": "trusera:source",
+          "value": "network"
+        }
+      ],
+      "purl": "pkg:pypi/mcp server: memory"
+    }
+  ]
+}

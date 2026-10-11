@@ -1,0 +1,19 @@
+{
+  "id": "saas-007",
+  "surface": "saas",
+  "index": 6,
+  "polarity": "positive",
+  "title": "Slack app Perplexity",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "perplexity",
+      "path": "approved-app.json",
+      "quote": "Perplexity"
+    }
+  ],
+  "forbidden": []
+}

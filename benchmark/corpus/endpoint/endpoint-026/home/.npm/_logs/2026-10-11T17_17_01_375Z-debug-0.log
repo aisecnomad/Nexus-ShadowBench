@@ -1,0 +1,23 @@
+0 verbose cli /usr/bin/node /usr/lib/node_modules/npm/bin/npm-cli.js
+1 info using npm@10.9.9
+2 info using node@v22.23.3
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/workspace/.npmrc
+5 silly config load:file:/workspace/benchmark/corpus/endpoint/endpoint-026/home/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm exec curatedmcp audit --json
+8 verbose argv "exec" "--yes" "--" "curatedmcp" "audit" "--json"
+9 verbose logfile logs-max:10 dir:/workspace/benchmark/corpus/endpoint/endpoint-026/home/.npm/_logs/2026-10-11T17_17_01_375Z-
+10 verbose logfile /workspace/benchmark/corpus/endpoint/endpoint-026/home/.npm/_logs/2026-10-11T17_17_01_375Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2111045632 maxSize:527761408 maxEntrySize:263880704
+13 verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules
+14 http fetch GET 200 https://registry.npmjs.org/curatedmcp 68ms (cache revalidated)
+15 silly packumentCache heap:2111045632 maxSize:527761408 maxEntrySize:263880704
+16 silly packumentCache heap:2111045632 maxSize:527761408 maxEntrySize:263880704
+17 verbose cwd /workspace/benchmark/corpus/endpoint/endpoint-026/home
+18 verbose os Linux 6.12.8+
+19 verbose node v22.23.3
+20 verbose npm  v10.9.9
+21 verbose exit 0
+22 info ok

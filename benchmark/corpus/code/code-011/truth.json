@@ -1,0 +1,19 @@
+{
+  "id": "code-011",
+  "surface": "code",
+  "index": 10,
+  "polarity": "positive",
+  "title": "Code signal dspy",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "dspy",
+      "path": "src/opt.py",
+      "quote": "import dspy"
+    }
+  ],
+  "forbidden": []
+}

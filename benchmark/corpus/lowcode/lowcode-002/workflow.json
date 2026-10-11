@@ -1,0 +1,17 @@
+{
+  "id": "wf-001",
+  "name": "flow-1",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Model",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

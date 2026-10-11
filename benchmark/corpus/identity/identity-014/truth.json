@@ -1,0 +1,19 @@
+{
+  "id": "identity-014",
+  "surface": "identity",
+  "index": 13,
+  "polarity": "positive",
+  "title": "Okta grant Runway",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "runway",
+      "path": "okta-apps.json",
+      "quote": "Runway"
+    }
+  ],
+  "forbidden": []
+}

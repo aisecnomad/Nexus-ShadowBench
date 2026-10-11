@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0027",
+    "name": "oidc_client",
+    "label": "Zendesk",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.zendesk.com"
+      }
+    }
+  }
+]

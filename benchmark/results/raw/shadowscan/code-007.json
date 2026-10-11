@@ -1,0 +1,178 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:55+00:00",
+  "finished_at": "2026-10-11T16:54:55+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "56fa13e26b8e81b37c3e7d4efcaa146c0f64d116c02d93495a949014422f96e7",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.google-gemini": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:55+00:00",
+      "finished_at": "2026-10-11T16:54:55+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Google Gemini API (AI Studio)",
+      "resource": "/workspace/benchmark/corpus/code/code-007",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.google-gemini"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:provider.google-gemini",
+          "description": "dependency matched Google Gemini API (AI Studio): google-generativeai",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: google-generativeai ==0.7.2",
+          "weight": 0.8,
+          "signature": "provider.google-gemini",
+          "attributes": {
+            "category": "provider",
+            "value": "google-generativeai",
+            "confidence_group": "provider.google-gemini"
+          }
+        },
+        {
+          "signal": "import:provider.google-gemini",
+          "description": "import matched Google Gemini API (AI Studio): import google.generativeai",
+          "location": "src/gem.py:1",
+          "snippet": "import google.generativeai as genai",
+          "weight": 0.8,
+          "signature": "provider.google-gemini",
+          "attributes": {
+            "category": "provider",
+            "value": "import google.generativeai",
+            "confidence_group": "provider.google-gemini"
+          }
+        },
+        {
+          "signal": "import:provider.google-gemini",
+          "description": "import matched Google Gemini API (AI Studio): google.generativeai",
+          "location": "src/gem.py:1",
+          "snippet": "import google.generativeai as genai",
+          "weight": 0.8,
+          "signature": "provider.google-gemini",
+          "attributes": {
+            "category": "provider",
+            "value": "google.generativeai",
+            "confidence_group": "provider.google-gemini"
+          }
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 23,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.google-gemini",
+            "description": "uses the consumer Gemini API (API keys outside cloud IAM)",
+            "weight": 5
+          },
+          {
+            "id": "vendor-notes",
+            "description": "Gemini API keys bypass Cloud IAM and are often created in personal AI Studio accounts.",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 14
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-007",
+        "agent_indicators": 0,
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:google-generativeai"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "provider.google-gemini|dependency": 1,
+          "provider.google-gemini|import": 2
+        },
+        "technologies": [
+          {
+            "id": "provider.google-gemini",
+            "name": "Google Gemini API (AI Studio)",
+            "category": "provider",
+            "vendor": "Google"
+          }
+        ]
+      },
+      "id": "ss-698291e50f584b12",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

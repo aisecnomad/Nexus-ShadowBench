@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0036",
+    "name": "oidc_client",
+    "label": "Salesforce CRM",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.salesforce.com"
+      }
+    }
+  }
+]

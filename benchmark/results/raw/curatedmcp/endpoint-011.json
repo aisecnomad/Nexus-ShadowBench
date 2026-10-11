@@ -1,0 +1,20 @@
+{
+  "scannedAt": "10/11/2026, 5:15:17 PM",
+  "configFiles": [
+    "/workspace/benchmark/corpus/endpoint/endpoint-011/home/.cursor/mcp.json"
+  ],
+  "totalServers": 1,
+  "high": [],
+  "medium": [],
+  "verified": [
+    {
+      "name": "github",
+      "sourceFile": "/workspace/benchmark/corpus/endpoint/endpoint-011/home/.cursor/mcp.json",
+      "command": "npx -y @modelcontextprotocol/server-github",
+      "flags": [],
+      "level": "VERIFIED",
+      "npmPackage": "@modelcontextprotocol/server-github"
+    }
+  ],
+  "unverified": []
+}

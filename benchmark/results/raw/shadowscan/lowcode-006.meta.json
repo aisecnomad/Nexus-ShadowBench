@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1183, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/lowcode-006.json\n", "findings": [{"category": "framework", "value": "langchain"}, {"category": "lowcode", "value": "n8n-openai"}, {"category": "provider", "value": "openai"}]}

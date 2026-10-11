@@ -1,0 +1,19 @@
+{
+  "id": "identity-023",
+  "surface": "identity",
+  "index": 22,
+  "polarity": "positive",
+  "title": "Okta grant Copy.ai",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "copy-ai",
+      "path": "okta-apps.json",
+      "quote": "Copy.ai"
+    }
+  ],
+  "forbidden": []
+}

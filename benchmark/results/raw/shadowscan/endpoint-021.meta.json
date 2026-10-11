@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1108, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/endpoint-021.json\n", "findings": [{"category": "agent", "value": "cursor"}, {"category": "mcp", "value": "mcp-github"}]}

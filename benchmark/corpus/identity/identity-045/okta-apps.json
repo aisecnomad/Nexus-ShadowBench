@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0044",
+    "name": "oidc_client",
+    "label": "Bedrock Landscaping",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://bedrock-landscaping.example"
+      }
+    }
+  }
+]

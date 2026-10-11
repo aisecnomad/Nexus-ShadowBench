@@ -1,0 +1,184 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:52+00:00",
+  "finished_at": "2026-10-11T16:54:53+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "1db5a7875dc2f3914d465fb4aec4d813a75d531009ca06b7d0200a6760ff3812",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.autogen": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:53+00:00",
+      "finished_at": "2026-10-11T16:54:53+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: AutoGen / AG2",
+      "resource": "/workspace/benchmark/corpus/code/code-005",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.autogen"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.autogen",
+          "description": "dependency matched AutoGen / AG2: pyautogen",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: pyautogen ==0.2.35",
+          "weight": 0.95,
+          "signature": "framework.autogen",
+          "attributes": {
+            "category": "framework",
+            "value": "pyautogen",
+            "confidence_group": "framework.autogen"
+          }
+        },
+        {
+          "signal": "import:framework.autogen",
+          "description": "import matched AutoGen / AG2: from autogen",
+          "location": "src/team.py:1",
+          "snippet": "from autogen import AssistantAgent",
+          "weight": 0.95,
+          "signature": "framework.autogen",
+          "attributes": {
+            "category": "framework",
+            "value": "from autogen",
+            "confidence_group": "framework.autogen"
+          }
+        },
+        {
+          "signal": "import:framework.autogen",
+          "description": "import matched AutoGen / AG2: autogen",
+          "location": "src/team.py:1",
+          "snippet": "from autogen import AssistantAgent",
+          "weight": 0.95,
+          "signature": "framework.autogen",
+          "attributes": {
+            "category": "framework",
+            "value": "autogen",
+            "confidence_group": "framework.autogen"
+          }
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 15,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-005",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "multi-agent",
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:pyautogen"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.autogen|dependency": 1,
+          "framework.autogen|import": 2
+        },
+        "technologies": [
+          {
+            "id": "framework.autogen",
+            "name": "AutoGen / AG2",
+            "category": "framework",
+            "vendor": "Microsoft / AG2"
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-01906d61b903eb25",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

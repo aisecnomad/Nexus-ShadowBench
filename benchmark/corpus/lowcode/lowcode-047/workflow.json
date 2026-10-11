@@ -1,0 +1,17 @@
+{
+  "id": "wf-m-46",
+  "name": "AI ideas inbox",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Inbox",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {},
+      "position": [
+        240,
+        300
+      ]
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1123, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/endpoint-014.json\n", "findings": [{"category": "agent", "value": "gemini-cli"}, {"category": "mcp", "value": "mcp-memory"}]}

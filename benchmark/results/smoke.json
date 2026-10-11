@@ -1,0 +1,867 @@
+{
+  "benchmark": {
+    "name": "ShadowBench",
+    "version": "1.0.0",
+    "seed": "shadowbench-450-v1",
+    "cases": 450,
+    "surfaces": [
+      "code",
+      "identity",
+      "gateway",
+      "lowcode",
+      "saas",
+      "cloud",
+      "endpoint",
+      "network",
+      "runtime"
+    ],
+    "per_surface": {
+      "code": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "identity": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "gateway": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "lowcode": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "saas": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "cloud": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "endpoint": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "network": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      },
+      "runtime": {
+        "positive": 25,
+        "negative": 15,
+        "near_miss": 10
+      }
+    },
+    "formats": {
+      "code": "Minimal application tree (Python or Node, plus optional agent config).",
+      "identity": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+      "gateway": "LiteLLM-style JSONL spend log (one record).",
+      "lowcode": "n8n workflow export JSON (id, name, nodes, connections).",
+      "saas": "Slack admin approved-app record JSON, with workspace id.",
+      "cloud": "JSONL record in the AWS inventory dump shape (agent or lambda).",
+      "endpoint": "Linux home-directory fragment with vendor config paths.",
+      "network": "JSONL DNS log row with src_ip, query and ts.",
+      "runtime": "osquery processes JSON array (name, path, cmdline, pid)."
+    },
+    "provenance": "synthetic-realistic",
+    "corpus_sha256": "c35afd5e8b5cf73a6f891c907575ee3db923c65c69ede6e488158cf72fc5895c",
+    "label_rule": "Labels are the planted facts in truth.json. No evaluated tool produced them."
+  },
+  "smoke": true,
+  "scored_cases": 27,
+  "tools": [
+    {
+      "id": "shadowscan",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "shadowscan, version 0.1.2",
+      "applicable_surfaces": [
+        "cloud",
+        "code",
+        "endpoint",
+        "gateway",
+        "identity",
+        "lowcode",
+        "network",
+        "runtime",
+        "saas"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 27,
+          "errors": 0,
+          "fact": {
+            "tp": 12,
+            "fp": 4,
+            "fn": 0,
+            "precision": 0.75,
+            "recall": 1.0,
+            "f1": 0.8571428571428571
+          },
+          "case": {
+            "tp": 9,
+            "fp": 2,
+            "tn": 16,
+            "fn": 0,
+            "precision": 0.8181818181818182,
+            "recall": 1.0,
+            "specificity": 0.8888888888888888,
+            "fpr": 0.11111111111111116,
+            "balanced_accuracy": 0.9444444444444444,
+            "mcc": 0.8528028654224417
+          },
+          "by_surface": {
+            "cloud": {
+              "tp": 2,
+              "fp": 1,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "code": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "endpoint": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "gateway": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "identity": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 0,
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6666666666666666,
+              "case_tp": 1,
+              "case_fp": 1,
+              "case_tn": 1,
+              "case_fn": 0
+            },
+            "lowcode": {
+              "tp": 2,
+              "fp": 1,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "network": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "runtime": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "saas": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 0,
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6666666666666666,
+              "case_tp": 1,
+              "case_fp": 1,
+              "case_tn": 1,
+              "case_fn": 0
+            }
+          },
+          "fact_f1_ci95": [
+            0.7272727272727273,
+            0.962962962962963
+          ]
+        },
+        "estate_recall": 1.0,
+        "estate_fact_fn": 0,
+        "estate_fact_tp": 12
+      },
+      "latency_ms": {
+        "n": 27,
+        "p50": 1131,
+        "p95": 1160
+      }
+    },
+    {
+      "id": "vet",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "1.20.0",
+      "applicable_surfaces": [
+        "code",
+        "endpoint"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 6,
+          "errors": 0,
+          "fact": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 1,
+            "precision": 1.0,
+            "recall": 0.6666666666666666,
+            "f1": 0.8
+          },
+          "case": {
+            "tp": 1,
+            "fp": 0,
+            "tn": 4,
+            "fn": 1,
+            "precision": 1.0,
+            "recall": 0.5,
+            "specificity": 1.0,
+            "fpr": 0.0,
+            "balanced_accuracy": 0.75,
+            "mcc": 0.6324555320336759
+          },
+          "by_surface": {
+            "code": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 1,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            },
+            "endpoint": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            1.0
+          ]
+        },
+        "estate_recall": 0.16666666666666666,
+        "estate_fact_fn": 10,
+        "estate_fact_tp": 2
+      },
+      "latency_ms": {
+        "n": 6,
+        "p50": 425,
+        "p95": 436
+      }
+    },
+    {
+      "id": "numbat",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "numbat 0.2.0 (schema 0.3.0)",
+      "applicable_surfaces": [
+        "endpoint"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 3,
+          "errors": 0,
+          "fact": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 2,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "case": {
+            "tp": 0,
+            "fp": 0,
+            "tn": 2,
+            "fn": 1,
+            "precision": null,
+            "recall": 0.0,
+            "specificity": 1.0,
+            "fpr": 0.0,
+            "balanced_accuracy": 0.5,
+            "mcc": null
+          },
+          "by_surface": {
+            "endpoint": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 2,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "estate_recall": 0.0,
+        "estate_fact_fn": 12,
+        "estate_fact_tp": 0
+      },
+      "latency_ms": {
+        "n": 3,
+        "p50": 116,
+        "p95": 119
+      }
+    },
+    {
+      "id": "snyk-agent-scan",
+      "role": "tool",
+      "status": "not_run",
+      "status_detail": "skipped in smoke",
+      "version": null,
+      "applicable_surfaces": [
+        "endpoint"
+      ]
+    },
+    {
+      "id": "ai-bom",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "ai-bom version 3.6.0",
+      "applicable_surfaces": [
+        "code",
+        "lowcode"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 6,
+          "errors": 0,
+          "fact": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 3,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "case": {
+            "tp": 0,
+            "fp": 0,
+            "tn": 4,
+            "fn": 2,
+            "precision": null,
+            "recall": 0.0,
+            "specificity": 1.0,
+            "fpr": 0.0,
+            "balanced_accuracy": 0.5,
+            "mcc": null
+          },
+          "by_surface": {
+            "code": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 1,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            },
+            "lowcode": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 2,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "estate_recall": 0.0,
+        "estate_fact_fn": 12,
+        "estate_fact_tp": 0
+      },
+      "latency_ms": {
+        "n": 6,
+        "p50": 282,
+        "p95": 299
+      }
+    },
+    {
+      "id": "nuguard",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "0.9.15",
+      "applicable_surfaces": [
+        "code"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 3,
+          "errors": 0,
+          "fact": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 1,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "case": {
+            "tp": 0,
+            "fp": 0,
+            "tn": 2,
+            "fn": 1,
+            "precision": null,
+            "recall": 0.0,
+            "specificity": 1.0,
+            "fpr": 0.0,
+            "balanced_accuracy": 0.5,
+            "mcc": null
+          },
+          "by_surface": {
+            "code": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 1,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "estate_recall": 0.0,
+        "estate_fact_fn": 12,
+        "estate_fact_tp": 0
+      },
+      "latency_ms": {
+        "n": 3,
+        "p50": 1768,
+        "p95": 1842
+      }
+    },
+    {
+      "id": "agentdiscover",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "AgentDiscover v2.9.5",
+      "applicable_surfaces": [
+        "code"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 3,
+          "errors": 0,
+          "fact": {
+            "tp": 0,
+            "fp": 8,
+            "fn": 1,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "case": {
+            "tp": 0,
+            "fp": 1,
+            "tn": 1,
+            "fn": 1,
+            "precision": 0.0,
+            "recall": 0.0,
+            "specificity": 0.5,
+            "fpr": 0.5,
+            "balanced_accuracy": 0.25,
+            "mcc": -0.5
+          },
+          "by_surface": {
+            "code": {
+              "tp": 0,
+              "fp": 8,
+              "fn": 1,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 1,
+              "case_tn": 1,
+              "case_fn": 1
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "estate_recall": 0.0,
+        "estate_fact_fn": 12,
+        "estate_fact_tp": 0
+      },
+      "latency_ms": {
+        "n": 3,
+        "p50": 822,
+        "p95": 920
+      }
+    },
+    {
+      "id": "agentic-radar",
+      "role": "tool",
+      "status": "scored",
+      "status_detail": "run",
+      "version": "0.14.1",
+      "applicable_surfaces": [
+        "code",
+        "lowcode"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 6,
+          "errors": 0,
+          "fact": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 3,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "case": {
+            "tp": 0,
+            "fp": 0,
+            "tn": 4,
+            "fn": 2,
+            "precision": null,
+            "recall": 0.0,
+            "specificity": 1.0,
+            "fpr": 0.0,
+            "balanced_accuracy": 0.5,
+            "mcc": null
+          },
+          "by_surface": {
+            "code": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 1,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            },
+            "lowcode": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 2,
+              "precision": null,
+              "recall": 0.0,
+              "f1": 0.0,
+              "case_tp": 0,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 1
+            }
+          },
+          "fact_f1_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "estate_recall": 0.0,
+        "estate_fact_fn": 12,
+        "estate_fact_tp": 0
+      },
+      "latency_ms": {
+        "n": 6,
+        "p50": 4160,
+        "p95": 4173
+      }
+    },
+    {
+      "id": "aiostack",
+      "role": "tool",
+      "status": "not_run",
+      "status_detail": "skipped in smoke",
+      "version": null,
+      "applicable_surfaces": [
+        "runtime"
+      ]
+    },
+    {
+      "id": "curatedmcp",
+      "role": "tool",
+      "status": "not_run",
+      "status_detail": "skipped in smoke",
+      "version": null,
+      "applicable_surfaces": [
+        "endpoint"
+      ]
+    },
+    {
+      "id": "reference-lexicon",
+      "role": "reference",
+      "status": "scored",
+      "status_detail": "run",
+      "version": null,
+      "applicable_surfaces": [
+        "cloud",
+        "code",
+        "endpoint",
+        "gateway",
+        "identity",
+        "lowcode",
+        "network",
+        "runtime",
+        "saas"
+      ],
+      "metrics": {
+        "quality": {
+          "cases_scored": 27,
+          "errors": 0,
+          "fact": {
+            "tp": 10,
+            "fp": 4,
+            "fn": 2,
+            "precision": 0.7142857142857143,
+            "recall": 0.8333333333333334,
+            "f1": 0.7692307692307692
+          },
+          "case": {
+            "tp": 9,
+            "fp": 2,
+            "tn": 16,
+            "fn": 0,
+            "precision": 0.8181818181818182,
+            "recall": 1.0,
+            "specificity": 0.8888888888888888,
+            "fpr": 0.11111111111111116,
+            "balanced_accuracy": 0.9444444444444444,
+            "mcc": 0.8528028654224417
+          },
+          "by_surface": {
+            "cloud": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "code": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "endpoint": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 1,
+              "precision": 1.0,
+              "recall": 0.5,
+              "f1": 0.6666666666666666,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "gateway": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "identity": {
+              "tp": 1,
+              "fp": 2,
+              "fn": 0,
+              "precision": 0.3333333333333333,
+              "recall": 1.0,
+              "f1": 0.5,
+              "case_tp": 1,
+              "case_fp": 1,
+              "case_tn": 1,
+              "case_fn": 0
+            },
+            "lowcode": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.5,
+              "recall": 0.5,
+              "f1": 0.5,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "network": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "runtime": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "case_tp": 1,
+              "case_fp": 0,
+              "case_tn": 2,
+              "case_fn": 0
+            },
+            "saas": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 0,
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6666666666666666,
+              "case_tp": 1,
+              "case_fp": 1,
+              "case_tn": 1,
+              "case_fn": 0
+            }
+          },
+          "fact_f1_ci95": [
+            0.6,
+            0.9285714285714286
+          ]
+        },
+        "estate_recall": 0.8333333333333334,
+        "estate_fact_fn": 2,
+        "estate_fact_tp": 10
+      },
+      "latency_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null
+      }
+    }
+  ],
+  "methodology": {
+    "positives_per_surface": 25,
+    "negatives_per_surface": 15,
+    "near_misses_per_surface": 10,
+    "primary_metric": "Fact-level precision, recall and F1 on surfaces the tool can read.",
+    "estate_recall": "Positive facts on surfaces the tool cannot read count as misses. Unscanned negatives are not counted as true negatives.",
+    "case_metric": "A positive case is detected when any planted fact is returned. Any mapped finding on a negative or near-miss case is a false positive.",
+    "errors": "Timeouts and crashes are excluded from precision and recall and reported separately.",
+    "reference": "reference-lexicon applies the published alias table to the artifact text. It is a string-match ceiling, not a product."
+  }
+}

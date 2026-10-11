@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0003BENCH",
+    "name": "oidc_client",
+    "label": "GitHub Copilot",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://github.com/features/copilot"
+      }
+    }
+  }
+]

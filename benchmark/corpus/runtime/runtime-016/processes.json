@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4015,
+    "name": "openclaw",
+    "path": "/usr/local/bin/openclaw",
+    "cmdline": "openclaw",
+    "username": "dev"
+  }
+]

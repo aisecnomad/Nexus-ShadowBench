@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0012BENCH",
+    "name": "oidc_client",
+    "label": "ElevenLabs",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://elevenlabs.io"
+      }
+    }
+  }
+]

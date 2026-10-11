@@ -1,0 +1,19 @@
+{
+  "id": "code-004",
+  "surface": "code",
+  "index": 3,
+  "polarity": "positive",
+  "title": "Code signal crewai",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "crewai",
+      "path": "src/crew.py",
+      "quote": "from crewai import Agent, Crew"
+    }
+  ],
+  "forbidden": []
+}

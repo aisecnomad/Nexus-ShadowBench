@@ -1,0 +1,4 @@
+{
+  "name": "desk-proxy",
+  "dependencies": {"agent-base": "7.1.1", "https-proxy-agent": "7.0.5"}
+}

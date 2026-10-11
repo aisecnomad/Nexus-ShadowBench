@@ -1,0 +1,31 @@
+{
+  "id": "cloud-024",
+  "surface": "cloud",
+  "index": 23,
+  "polarity": "positive",
+  "title": "Bedrock agent agent-023",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL record in the AWS inventory dump shape (agent or lambda).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "cloud_agent",
+      "value": "bedrock-agent",
+      "path": "aws.jsonl",
+      "quote": "agent-023"
+    },
+    {
+      "category": "provider",
+      "value": "aws-bedrock",
+      "path": "aws.jsonl",
+      "quote": "bedrock"
+    },
+    {
+      "category": "provider",
+      "value": "mistral",
+      "path": "aws.jsonl",
+      "quote": "mistral.mistral-large-2402-v1:0"
+    }
+  ],
+  "forbidden": []
+}

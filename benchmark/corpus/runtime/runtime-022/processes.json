@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4021,
+    "name": "codex",
+    "path": "/usr/bin/codex",
+    "cmdline": "codex",
+    "username": "dev"
+  }
+]

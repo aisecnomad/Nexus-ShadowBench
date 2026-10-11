@@ -1,0 +1,151 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:9fc75eb2-44f8-4a77-90c0-558a14b6cbc9",
+  "metadata": {
+    "timestamp": "2026-10-11T17:04:36.095370+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "ai-bom",
+          "version": "3.6.0",
+          "manufacturer": {
+            "name": "Trusera",
+            "url": [
+              "https://trusera.dev"
+            ]
+          }
+        }
+      ]
+    },
+    "properties": [
+      {
+        "name": "trusera:total_components",
+        "value": "3"
+      },
+      {
+        "name": "trusera:critical_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:high_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:medium_count",
+        "value": "0"
+      },
+      {
+        "name": "trusera:low_count",
+        "value": "3"
+      },
+      {
+        "name": "trusera:scan_duration_seconds",
+        "value": "0.01"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "4142f32c-3585-42cf-8394-8ca5eed24d63",
+      "type": "machine-learning-model",
+      "name": "ollama",
+      "description": "Ollama completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "dependency files"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "Ollama"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/ollama"
+    },
+    {
+      "bom-ref": "b68a65fe-acf8-4082-a90d-9a20317fc86a",
+      "type": "machine-learning-model",
+      "name": "Ollama",
+      "description": "Ollama completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "0"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-018/src/local.py:1"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "Ollama"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/ollama"
+    },
+    {
+      "bom-ref": "ce5ffbed-5ced-4e9c-8555-4bb3a51209dd",
+      "type": "machine-learning-model",
+      "name": "Ollama Model",
+      "description": "Ollama completion",
+      "properties": [
+        {
+          "name": "trusera:risk_score",
+          "value": "5"
+        },
+        {
+          "name": "trusera:usage_type",
+          "value": "completion"
+        },
+        {
+          "name": "trusera:source_location",
+          "value": "/workspace/benchmark/corpus/code/code-018/src/local.py:2"
+        },
+        {
+          "name": "trusera:provider",
+          "value": "Ollama"
+        },
+        {
+          "name": "trusera:risk_factors",
+          "value": "Model version not pinned (+5)"
+        },
+        {
+          "name": "trusera:flags",
+          "value": "unpinned_model"
+        },
+        {
+          "name": "trusera:model_name",
+          "value": "local"
+        },
+        {
+          "name": "trusera:source",
+          "value": "code"
+        }
+      ],
+      "purl": "pkg:pypi/ollama model"
+    }
+  ]
+}

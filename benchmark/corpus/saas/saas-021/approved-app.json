@@ -1,0 +1,9 @@
+{
+  "id": "A0020",
+  "name": "Amazon Q",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

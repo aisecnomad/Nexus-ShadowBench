@@ -1,0 +1,19 @@
+{
+  "id": "endpoint-007",
+  "surface": "endpoint",
+  "index": 6,
+  "polarity": "positive",
+  "title": "Endpoint ollama",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "local_model",
+      "value": "ollama",
+      "path": "home/.ollama/models/manifests/registry.ollama.ai/library/llama3.1",
+      "quote": "llama3.1"
+    }
+  ],
+  "forbidden": []
+}

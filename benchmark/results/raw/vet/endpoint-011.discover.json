@@ -1,0 +1,30 @@
+[
+  {
+    "Kind": 1,
+    "ItemIdentity": "c860e7273ed5eb3f",
+    "SourceID": "e5bc9d3e1dd194e2",
+    "Name": "github",
+    "App": "cursor",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/endpoint/endpoint-011/home/.cursor/mcp.json",
+    "Enabled": null,
+    "MCPServer": {
+      "Transport": 1,
+      "Command": "npx",
+      "Args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "URL": "",
+      "EnvVarNames": null,
+      "HeaderNames": null,
+      "AllowedTools": null,
+      "AllowedResources": null
+    },
+    "Agent": null,
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "Cursor"
+    }
+  }
+]

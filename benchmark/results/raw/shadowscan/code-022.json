@@ -1,0 +1,240 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:12+00:00",
+  "finished_at": "2026-10-11T16:55:12+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "1adb7383b0c3cd84b44c6fac11bec602350404434391f1cee4ec343df75ee3cf",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {},
+    "model_providers": {
+      "provider.openai": 1,
+      "provider.openrouter": 1,
+      "provider.openai-compatible": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:12+00:00",
+      "finished_at": "2026-10-11T16:55:12+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: OpenAI, OpenRouter, OpenAI-compatible endpoint override",
+      "resource": "/workspace/benchmark/corpus/code/code-022",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [
+        "provider.openai",
+        "provider.openrouter",
+        "provider.openai-compatible"
+      ],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:provider.openai",
+          "description": "dependency matched OpenAI: openai",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: openai ==1.40.0",
+          "weight": 0.8,
+          "signature": "provider.openai",
+          "attributes": {
+            "category": "provider",
+            "value": "openai",
+            "confidence_group": "provider.openai"
+          }
+        },
+        {
+          "signal": "domain:provider.openrouter",
+          "description": "endpoint matched OpenRouter: openrouter.ai",
+          "location": "truth.json:15",
+          "snippet": "\"quote\": \"https://openrouter.ai/api/v1\"",
+          "weight": 0.9,
+          "signature": "provider.openrouter",
+          "attributes": {
+            "category": "provider",
+            "value": "openrouter.ai",
+            "confidence_group": "provider.openrouter"
+          }
+        },
+        {
+          "signal": "import:provider.openai",
+          "description": "import matched OpenAI: from openai",
+          "location": "src/route.py:1",
+          "snippet": "from openai import OpenAI",
+          "weight": 0.8,
+          "signature": "provider.openai",
+          "attributes": {
+            "category": "provider",
+            "value": "from openai",
+            "confidence_group": "provider.openai"
+          }
+        },
+        {
+          "signal": "code:provider.openai-compatible",
+          "description": "code pattern matched OpenAI-compatible endpoint override: base_url='https://openrouter.ai/api/v1'",
+          "location": "src/route.py:2",
+          "snippet": "client = OpenAI(base_url='https://openrouter.ai/api/v1')",
+          "weight": 0.6,
+          "signature": "provider.openai-compatible",
+          "attributes": {
+            "category": "provider",
+            "value": "base_url='https://openrouter.ai/api/v1'",
+            "confidence_group": "provider.openai-compatible"
+          }
+        },
+        {
+          "signal": "import:provider.openai",
+          "description": "import matched OpenAI: openai",
+          "location": "src/route.py:1",
+          "snippet": "from openai import OpenAI",
+          "weight": 0.8,
+          "signature": "provider.openai",
+          "attributes": {
+            "category": "provider",
+            "value": "openai",
+            "confidence_group": "provider.openai"
+          }
+        },
+        {
+          "signal": "domain:provider.openrouter",
+          "description": "endpoint matched OpenRouter: openrouter.ai",
+          "location": "src/route.py:2",
+          "snippet": "client = OpenAI(base_url='https://openrouter.ai/api/v1')",
+          "weight": 0.9,
+          "signature": "provider.openrouter",
+          "attributes": {
+            "category": "provider",
+            "value": "openrouter.ai",
+            "confidence_group": "provider.openrouter"
+          }
+        }
+      ],
+      "confidence": 0.992,
+      "likelihood": "strong",
+      "risk": {
+        "score": 35,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.openrouter",
+            "description": "routes prompts through a third-party model aggregator",
+            "weight": 10
+          },
+          {
+            "id": "provider:provider.openai-compatible",
+            "description": "custom OpenAI-compatible endpoint (unknown host)",
+            "weight": 5
+          },
+          {
+            "id": "vendor-notes",
+            "description": "OpenRouter aggregates many third-party model hosts; data residency is provider dependent.",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 1.00 because confidence is 0.99; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 25
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-022",
+        "agent_indicators": 0,
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:openai"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "provider.openai|dependency": 1,
+          "provider.openrouter|domain": 2,
+          "provider.openai|import": 2,
+          "provider.openai-compatible|code": 1
+        },
+        "technologies": [
+          {
+            "id": "provider.openai",
+            "name": "OpenAI",
+            "category": "provider",
+            "vendor": "OpenAI"
+          },
+          {
+            "id": "provider.openrouter",
+            "name": "OpenRouter",
+            "category": "provider",
+            "vendor": "OpenRouter"
+          },
+          {
+            "id": "provider.openai-compatible",
+            "name": "OpenAI-compatible endpoint override",
+            "category": "provider",
+            "vendor": null
+          }
+        ]
+      },
+      "id": "ss-572bc9796847454c",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

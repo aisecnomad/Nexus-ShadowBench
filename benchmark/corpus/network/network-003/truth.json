@@ -1,0 +1,19 @@
+{
+  "id": "network-003",
+  "surface": "network",
+  "index": 2,
+  "polarity": "positive",
+  "title": "DNS query generativelanguage.googleapis.com",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL DNS log row with src_ip, query and ts.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "egress",
+      "value": "google-gemini",
+      "path": "dns.jsonl",
+      "quote": "generativelanguage.googleapis.com"
+    }
+  ],
+  "forbidden": []
+}

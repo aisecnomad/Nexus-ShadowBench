@@ -1,0 +1,17 @@
+{
+  "id": "code-046",
+  "surface": "code",
+  "index": 45,
+  "polarity": "near_miss",
+  "title": "Travel agent prose",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "agent",
+      "value": "claude-code"
+    }
+  ]
+}

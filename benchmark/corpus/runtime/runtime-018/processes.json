@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 4017,
+    "name": "Claude",
+    "path": "/opt/Claude/claude",
+    "cmdline": "/opt/Claude/claude",
+    "username": "dev"
+  }
+]

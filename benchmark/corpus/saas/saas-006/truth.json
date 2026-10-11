@@ -1,0 +1,19 @@
+{
+  "id": "saas-006",
+  "surface": "saas",
+  "index": 5,
+  "polarity": "positive",
+  "title": "Slack app Microsoft Copilot",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "microsoft-copilot",
+      "path": "approved-app.json",
+      "quote": "Microsoft Copilot"
+    }
+  ],
+  "forbidden": []
+}

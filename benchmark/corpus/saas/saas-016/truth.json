@@ -1,0 +1,19 @@
+{
+  "id": "saas-016",
+  "surface": "saas",
+  "index": 15,
+  "polarity": "positive",
+  "title": "Slack app Poe",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "poe",
+      "path": "approved-app.json",
+      "quote": "Poe"
+    }
+  ],
+  "forbidden": []
+}

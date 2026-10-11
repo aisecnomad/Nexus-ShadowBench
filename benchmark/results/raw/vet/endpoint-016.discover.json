@@ -1,0 +1,30 @@
+[
+  {
+    "Kind": 1,
+    "ItemIdentity": "b45b956c3e746212",
+    "SourceID": "75b3df27ee9c13ef",
+    "Name": "github",
+    "App": "codex",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/endpoint/endpoint-016/home/.codex/config.toml",
+    "Enabled": null,
+    "MCPServer": {
+      "Transport": 1,
+      "Command": "npx",
+      "Args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "URL": "",
+      "EnvVarNames": null,
+      "HeaderNames": null,
+      "AllowedTools": null,
+      "AllowedResources": null
+    },
+    "Agent": null,
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "Codex"
+    }
+  }
+]

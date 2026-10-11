@@ -1,0 +1,31 @@
+{
+  "id": "lowcode-016",
+  "surface": "lowcode",
+  "index": 15,
+  "polarity": "positive",
+  "title": "n8n node @n8n/n8n-nodes-langchain.openAi",
+  "provenance": "synthetic-realistic",
+  "format": "n8n workflow export JSON (id, name, nodes, connections).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "lowcode",
+      "value": "n8n-openai",
+      "path": "workflow.json",
+      "quote": "@n8n/n8n-nodes-langchain.openAi"
+    },
+    {
+      "category": "provider",
+      "value": "openai",
+      "path": "workflow.json",
+      "quote": "@n8n/n8n-nodes-langchain.openAi"
+    },
+    {
+      "category": "framework",
+      "value": "langchain",
+      "path": "workflow.json",
+      "quote": "langchain"
+    }
+  ],
+  "forbidden": []
+}

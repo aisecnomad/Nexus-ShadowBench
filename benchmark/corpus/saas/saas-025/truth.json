@@ -1,0 +1,19 @@
+{
+  "id": "saas-025",
+  "surface": "saas",
+  "index": 24,
+  "polarity": "positive",
+  "title": "Slack app Hugging Face",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "huggingface",
+      "path": "approved-app.json",
+      "quote": "Hugging Face"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,183 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:49+00:00",
+  "finished_at": "2026-10-11T16:54:49+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "8ccc1fcf8454a24748a2f3ff6661fa7545cbc7a2a257cee3707a54d24c103dd0",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.langchain": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:49+00:00",
+      "finished_at": "2026-10-11T16:54:49+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: LangChain",
+      "resource": "/workspace/benchmark/corpus/code/code-002",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.langchain"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.langchain",
+          "description": "dependency matched LangChain: langchain",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: langchain ==0.2.14",
+          "weight": 0.85,
+          "signature": "framework.langchain",
+          "attributes": {
+            "category": "framework",
+            "value": "langchain",
+            "confidence_group": "framework.langchain"
+          }
+        },
+        {
+          "signal": "import:framework.langchain",
+          "description": "import matched LangChain: from langchain",
+          "location": "src/chain.py:1",
+          "snippet": "from langchain.chat_models import ChatOpenAI",
+          "weight": 0.85,
+          "signature": "framework.langchain",
+          "attributes": {
+            "category": "framework",
+            "value": "from langchain",
+            "confidence_group": "framework.langchain"
+          }
+        },
+        {
+          "signal": "import:framework.langchain",
+          "description": "import matched LangChain: langchain.chat_models",
+          "location": "src/chain.py:1",
+          "snippet": "from langchain.chat_models import ChatOpenAI",
+          "weight": 0.85,
+          "signature": "framework.langchain",
+          "attributes": {
+            "category": "framework",
+            "value": "langchain.chat_models",
+            "confidence_group": "framework.langchain"
+          }
+        }
+      ],
+      "confidence": 0.85,
+      "likelihood": "strong",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.94 because confidence is 0.85; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-002",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:langchain"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.langchain|dependency": 1,
+          "framework.langchain|import": 2
+        },
+        "technologies": [
+          {
+            "id": "framework.langchain",
+            "name": "LangChain",
+            "category": "framework",
+            "vendor": "LangChain, Inc."
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-98fa79a788984762",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

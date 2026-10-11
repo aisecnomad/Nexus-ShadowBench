@@ -1,0 +1,42 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:56:16+00:00",
+  "finished_at": "2026-10-11T16:56:16+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": false,
+    "reason": "live collection scope is not attested",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 0,
+    "shadow": 0,
+    "by_surface": {},
+    "by_kind": {},
+    "by_risk_level": {},
+    "frameworks": {},
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "endpoint.inventory",
+      "started_at": "2026-10-11T16:56:16+00:00",
+      "finished_at": "2026-10-11T16:56:16+00:00",
+      "findings": 0,
+      "objects_examined": 0,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": []
+}

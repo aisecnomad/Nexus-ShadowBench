@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-009",
+  "surface": "endpoint",
+  "index": 8,
+  "polarity": "positive",
+  "title": "Endpoint github-copilot",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "github-copilot",
+      "path": "home/.config/Code/User/mcp.json",
+      "quote": "server-github"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-github",
+      "path": "home/.config/Code/User/mcp.json",
+      "quote": "server-github"
+    }
+  ],
+  "forbidden": []
+}

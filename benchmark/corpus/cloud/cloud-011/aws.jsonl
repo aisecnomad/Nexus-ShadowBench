@@ -1,0 +1,1 @@
+{"_kind": "bedrock-agent", "agentName": "agent-010", "agentId": "A0010AGENT", "agentStatus": "PREPARED", "foundationModel": "anthropic.claude-3-sonnet-20240229-v1:0", "agentArn": "arn:aws:bedrock:us-east-1:123456789012:agent/A0010AGENT", "_region": "us-east-1"}

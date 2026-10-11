@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:14Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-009",
+  "nodes": [
+    {
+      "id": "3fa8fe1e-6822-4070-a0e8-66e3e010a496",
+      "name": "CLAUDE.md",
+      "component_type": "DEVELOPER_TOOL_CONFIG",
+      "confidence": 0.8,
+      "metadata": {
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "tool_config_type": "claude-instructions",
+        "permission_scope": "repo",
+        "file_size_bytes": 61,
+        "content_entropy": 4.225980273922876,
+        "extras": {}
+      },
+      "evidence": [
+        {
+          "kind": "config",
+          "confidence": 0.8,
+          "detail": "dev_tool_config: claude-instructions",
+          "location": {
+            "path": "CLAUDE.md",
+            "line": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "1a2c910f-bbc6-4f30-9ff9-1cbe7069ecb0",
+      "name": ".mcp.json",
+      "component_type": "DEVELOPER_TOOL_CONFIG",
+      "confidence": 0.8,
+      "metadata": {
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "tool_config_type": "mcp-config",
+        "permission_scope": "repo",
+        "file_size_bytes": 127,
+        "content_entropy": 4.533944093762403,
+        "extras": {}
+      },
+      "evidence": [
+        {
+          "kind": "config",
+          "confidence": 0.8,
+          "detail": "dev_tool_config: mcp-config",
+          "location": {
+            "path": ".mcp.json",
+            "line": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "10a01d8d-6054-4c8e-be50-ca716bd227f5",
+      "name": "mcp-server:filesystem",
+      "component_type": "MCP_SERVER",
+      "confidence": 0.9,
+      "metadata": {
+        "mcp_server_url": "stdio://npx",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "mcp_server_trusted": false,
+        "mcp_transport": "stdio",
+        "extras": {}
+      },
+      "evidence": [
+        {
+          "kind": "config",
+          "confidence": 0.9,
+          "detail": "mcp_server: filesystem in .mcp.json",
+          "location": {
+            "path": ".mcp.json",
+            "line": 1
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "1a2c910f-bbc6-4f30-9ff9-1cbe7069ecb0",
+      "target": "10a01d8d-6054-4c8e-be50-ca716bd227f5",
+      "relationship_type": "CONTAINS",
+      "derivation": "hint"
+    }
+  ],
+  "deps": [],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "DEVELOPER_TOOL_CONFIG": 2,
+      "MCP_SERVER": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 32,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

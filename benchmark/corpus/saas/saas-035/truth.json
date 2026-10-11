@@ -1,0 +1,12 @@
+{
+  "id": "saas-035",
+  "surface": "saas",
+  "index": 34,
+  "polarity": "negative",
+  "title": "Slack app Jira",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

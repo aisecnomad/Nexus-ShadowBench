@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0048",
+    "name": "oidc_client",
+    "label": "Notion Template Club",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://notion-templates.example"
+      }
+    }
+  }
+]

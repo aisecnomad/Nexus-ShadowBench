@@ -1,0 +1,19 @@
+{
+  "id": "runtime-004",
+  "surface": "runtime",
+  "index": 3,
+  "polarity": "positive",
+  "title": "Process ollama serve",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "local_model",
+      "value": "ollama",
+      "path": "processes.json",
+      "quote": "ollama serve"
+    }
+  ],
+  "forbidden": []
+}

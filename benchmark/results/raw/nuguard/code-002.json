@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:01Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-002",
+  "nodes": [
+    {
+      "id": "3db63699-de7c-48f3-bd59-6c5e5060b9a1",
+      "name": "Langchain",
+      "component_type": "FRAMEWORK",
+      "confidence": 0.95,
+      "metadata": {
+        "framework": "langchain",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "dependency_names": [
+          "langchain"
+        ],
+        "loc": 2,
+        "extras": {
+          "canonical_name": "framework_langchain",
+          "adapter": "langgraph",
+          "evidence_count": 1,
+          "framework": "langchain"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_import",
+          "confidence": 0.95,
+          "detail": "langgraph: import langchain",
+          "location": {
+            "path": "src/chain.py"
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "deps": [
+    {
+      "name": "langchain",
+      "version_spec": "==0.2.14",
+      "purl": "pkg:pypi/langchain@0.2.14",
+      "group": "runtime",
+      "source_file": "requirements.txt"
+    }
+  ],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [
+      "langchain"
+    ],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "FRAMEWORK": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 22,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

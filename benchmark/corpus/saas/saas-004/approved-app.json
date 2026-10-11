@@ -1,0 +1,9 @@
+{
+  "id": "A0003",
+  "name": "GitHub Copilot",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

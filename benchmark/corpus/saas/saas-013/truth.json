@@ -1,0 +1,19 @@
+{
+  "id": "saas-013",
+  "surface": "saas",
+  "index": 12,
+  "polarity": "positive",
+  "title": "Slack app ElevenLabs",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "elevenlabs",
+      "path": "approved-app.json",
+      "quote": "ElevenLabs"
+    }
+  ],
+  "forbidden": []
+}

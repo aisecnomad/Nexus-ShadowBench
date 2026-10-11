@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0026",
+    "name": "oidc_client",
+    "label": "DocuSign",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.docusign.com"
+      }
+    }
+  }
+]

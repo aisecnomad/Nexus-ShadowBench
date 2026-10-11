@@ -1,0 +1,162 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:01:40+00:00",
+  "finished_at": "2026-10-11T17:01:40+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "4e886d9aa041b49668f13fdc7f7d9dcd4ce64134cd99a0062ec3da6832613afd",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "saas": 1
+    },
+    "by_kind": {
+      "bot-app": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {},
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "saas.slack",
+      "started_at": "2026-10-11T17:01:40+00:00",
+      "finished_at": "2026-10-11T17:01:40+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "saas",
+      "connector": "saas.slack",
+      "kind": "bot-app",
+      "title": "Slack app: Runway",
+      "resource": "slack:app:A0013",
+      "resource_type": "slack-app",
+      "provider": "slack",
+      "account": "T000BENCH",
+      "region": null,
+      "owner": null,
+      "frameworks": [],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [
+        "chat:write",
+        "users:read"
+      ],
+      "evidence": [
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: chat:write",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "chat:write"
+          }
+        },
+        {
+          "signal": "scope:policy.data-access-scopes",
+          "description": "permission matched Broad data read permissions: users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "policy.data-access-scopes",
+          "attributes": {
+            "category": "policy",
+            "value": "users:read"
+          }
+        },
+        {
+          "signal": "slack:app",
+          "description": "App 'Runway' (approved); scopes: chat:write, users:read",
+          "location": null,
+          "snippet": null,
+          "weight": 0.2,
+          "signature": null,
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.52,
+      "likelihood": "possible",
+      "risk": {
+        "score": 24,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "bot-app finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:policy.data-access-scopes",
+            "description": "holds broad data-read permissions (mail, files, chat, repos)",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.81 because confidence is 0.52; this only ever lowers risk",
+            "weight": -6
+          }
+        ],
+        "danger_score": 16
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "policy.data-access-scopes"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "app_id": "A0013",
+        "status": "approved",
+        "scopes": [
+          "chat:write",
+          "users:read"
+        ],
+        "bot_user_id": null,
+        "is_directory_approved": null,
+        "install_logs": 0,
+        "homepage": null,
+        "evidence_counts": {
+          "policy.data-access-scopes|scope": 2
+        },
+        "technologies": [],
+        "workspace_name": null,
+        "workspace_scope_source": "operator-configured"
+      },
+      "id": "ss-8db87668ea24486c",
+      "identity_discriminator": "slack-app",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

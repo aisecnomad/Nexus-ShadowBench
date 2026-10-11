@@ -1,0 +1,19 @@
+{
+  "id": "saas-020",
+  "surface": "saas",
+  "index": 19,
+  "polarity": "positive",
+  "title": "Slack app Sourcegraph Cody",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "cody",
+      "path": "approved-app.json",
+      "quote": "Sourcegraph Cody"
+    }
+  ],
+  "forbidden": []
+}

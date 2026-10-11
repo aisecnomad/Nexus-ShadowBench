@@ -1,0 +1,17 @@
+{
+  "id": "identity-046",
+  "surface": "identity",
+  "index": 45,
+  "polarity": "near_miss",
+  "title": "Okta near-miss Agent Provocateur HR",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "identity_grant",
+      "value": "chatgpt"
+    }
+  ]
+}

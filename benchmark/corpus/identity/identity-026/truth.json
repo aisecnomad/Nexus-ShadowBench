@@ -1,0 +1,12 @@
+{
+  "id": "identity-026",
+  "surface": "identity",
+  "index": 25,
+  "polarity": "negative",
+  "title": "Okta grant Workday",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

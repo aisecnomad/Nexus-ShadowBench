@@ -1,0 +1,19 @@
+{
+  "id": "identity-022",
+  "surface": "identity",
+  "index": 21,
+  "polarity": "positive",
+  "title": "Okta grant Jasper",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "jasper",
+      "path": "okta-apps.json",
+      "quote": "Jasper"
+    }
+  ],
+  "forbidden": []
+}

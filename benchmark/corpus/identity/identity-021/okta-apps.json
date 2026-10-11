@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0020BENCH",
+    "name": "oidc_client",
+    "label": "Amazon Q",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://aws.amazon.com/q"
+      }
+    }
+  }
+]

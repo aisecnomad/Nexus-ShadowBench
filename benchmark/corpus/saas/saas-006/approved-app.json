@@ -1,0 +1,9 @@
+{
+  "id": "A0005",
+  "name": "Microsoft Copilot",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

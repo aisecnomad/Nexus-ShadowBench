@@ -1,0 +1,17 @@
+{
+  "id": "saas-046",
+  "surface": "saas",
+  "index": 45,
+  "polarity": "near_miss",
+  "title": "Slack near-miss Agent Provocateur HR",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "saas_ai",
+      "value": "chatgpt"
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:53:57+00:00",
+  "finished_at": "2026-10-11T16:53:57+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "a01e73d42d3978e746cb9a9a8d084c87c8ad5edb2da41234ccd324caae402ed8",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "cloud": 1
+    },
+    "by_kind": {
+      "agent": 1
+    },
+    "by_risk_level": {
+      "medium": 1
+    },
+    "frameworks": {
+      "cloud.aws-bedrock-agents": 1
+    },
+    "model_providers": {
+      "provider.aws-bedrock": 1,
+      "provider.anthropic": 1
+    },
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "cloud.aws",
+      "started_at": "2026-10-11T16:53:57+00:00",
+      "finished_at": "2026-10-11T16:53:57+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "cloud",
+      "connector": "cloud.aws",
+      "kind": "agent",
+      "title": "Bedrock Agent: agent-010",
+      "resource": "arn:aws:bedrock:us-east-1:123456789012:agent/A0010AGENT",
+      "resource_type": "bedrock-agent",
+      "provider": "aws",
+      "account": "123456789012",
+      "region": "us-east-1",
+      "owner": null,
+      "frameworks": [
+        "cloud.aws-bedrock-agents"
+      ],
+      "model_providers": [
+        "provider.aws-bedrock",
+        "provider.anthropic"
+      ],
+      "models": [
+        "anthropic.claude-3-sonnet-20240229-v1:0"
+      ],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "model:provider.anthropic",
+          "description": "model id matched Anthropic: anthropic.claude-",
+          "location": null,
+          "snippet": null,
+          "weight": 0.4,
+          "signature": "provider.anthropic",
+          "attributes": {
+            "category": "provider",
+            "value": "anthropic.claude-"
+          }
+        },
+        {
+          "signal": "model:provider.aws-bedrock",
+          "description": "model id matched Amazon Bedrock: anthropic.claude-3-sonnet-20240229-v1:0",
+          "location": null,
+          "snippet": null,
+          "weight": 0.425,
+          "signature": "provider.aws-bedrock",
+          "attributes": {
+            "category": "provider",
+            "value": "anthropic.claude-3-sonnet-20240229-v1:0"
+          }
+        },
+        {
+          "signal": "aws:bedrock-agent",
+          "description": "Agent 'agent-010' (PREPARED) on anthropic.claude-3-sonnet-20240229-v1:0 with 0 action group version(s), 0 knowledge base association(s), 0 alias(es); role None",
+          "location": "arn:aws:bedrock:us-east-1:123456789012:agent/A0010AGENT",
+          "snippet": null,
+          "weight": 0.97,
+          "signature": "cloud.aws-bedrock-agents",
+          "attributes": {}
+        },
+        {
+          "signal": "name:identity-app.generic-ai-name",
+          "description": "display name matched Generic AI / bot naming: agent",
+          "location": null,
+          "snippet": null,
+          "weight": 0.175,
+          "signature": "identity-app.generic-ai-name",
+          "attributes": {
+            "category": "identity-app",
+            "value": "agent"
+          }
+        }
+      ],
+      "confidence": 0.991,
+      "likelihood": "strong",
+      "risk": {
+        "score": 35,
+        "level": "medium",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "agent finding",
+            "weight": 15
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "tag:no-guardrail",
+            "description": "no guardrail configured",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 1.00 because confidence is 0.99; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 25
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "no-guardrail",
+        "ai-name-hint"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "agent_id": "A0010AGENT",
+        "status": "PREPARED",
+        "foundation_model": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "role": null,
+        "instruction": null,
+        "versions_scanned": [],
+        "version_models": {},
+        "version_guardrails": {},
+        "action_groups": [],
+        "knowledge_bases": [],
+        "knowledge_base_versions": [],
+        "collaborator_versions": [],
+        "aliases": [],
+        "guardrail": null,
+        "collaboration": null,
+        "evidence_counts": {
+          "provider.anthropic|model": 1,
+          "provider.aws-bedrock|model": 1,
+          "identity-app.generic-ai-name|name": 1
+        },
+        "technologies": [
+          {
+            "id": "cloud.aws-bedrock-agents",
+            "name": "Amazon Bedrock Agents / AgentCore / Flows",
+            "category": "cloud-service",
+            "vendor": "Amazon Web Services"
+          },
+          {
+            "id": "provider.aws-bedrock",
+            "name": "Amazon Bedrock",
+            "category": "provider",
+            "vendor": "Amazon Web Services"
+          },
+          {
+            "id": "provider.anthropic",
+            "name": "Anthropic",
+            "category": "provider",
+            "vendor": "Anthropic"
+          }
+        ]
+      },
+      "id": "ss-1bbc0a34accefb1c",
+      "identity_discriminator": "bedrock-agent",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

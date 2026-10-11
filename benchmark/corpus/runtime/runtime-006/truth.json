@@ -1,0 +1,19 @@
+{
+  "id": "runtime-006",
+  "surface": "runtime",
+  "index": 5,
+  "polarity": "positive",
+  "title": "Process codex",
+  "provenance": "synthetic-realistic",
+  "format": "osquery processes JSON array (name, path, cmdline, pid).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "codex-cli",
+      "path": "processes.json",
+      "quote": "codex"
+    }
+  ],
+  "forbidden": []
+}

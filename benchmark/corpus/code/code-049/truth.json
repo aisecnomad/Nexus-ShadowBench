@@ -1,0 +1,17 @@
+{
+  "id": "code-049",
+  "surface": "code",
+  "index": 48,
+  "polarity": "near_miss",
+  "title": "Express shop",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "framework",
+      "value": "langchain"
+    }
+  ]
+}

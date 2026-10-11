@@ -1,0 +1,19 @@
+{
+  "id": "saas-009",
+  "surface": "saas",
+  "index": 8,
+  "polarity": "positive",
+  "title": "Slack app Mistral",
+  "provenance": "synthetic-realistic",
+  "format": "Slack admin approved-app record JSON, with workspace id.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "saas_ai",
+      "value": "mistral",
+      "path": "approved-app.json",
+      "quote": "Mistral"
+    }
+  ],
+  "forbidden": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "identity-008",
+  "surface": "identity",
+  "index": 7,
+  "polarity": "positive",
+  "title": "Okta grant Cursor",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "cursor",
+      "path": "okta-apps.json",
+      "quote": "Cursor"
+    }
+  ],
+  "forbidden": []
+}

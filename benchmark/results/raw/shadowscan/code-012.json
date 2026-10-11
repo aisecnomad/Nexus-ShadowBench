@@ -1,0 +1,183 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:00+00:00",
+  "finished_at": "2026-10-11T16:55:00+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "10640d6d56041b2150cceb5f79da90c3f75c520e61f6dda1e7e5c5f311528cb3",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.pydantic-ai": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:00+00:00",
+      "finished_at": "2026-10-11T16:55:00+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: Pydantic AI",
+      "resource": "/workspace/benchmark/corpus/code/code-012",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.pydantic-ai"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.pydantic-ai",
+          "description": "dependency matched Pydantic AI: pydantic-ai",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: pydantic-ai ==0.0.14",
+          "weight": 0.97,
+          "signature": "framework.pydantic-ai",
+          "attributes": {
+            "category": "framework",
+            "value": "pydantic-ai",
+            "confidence_group": "framework.pydantic-ai"
+          }
+        },
+        {
+          "signal": "import:framework.pydantic-ai",
+          "description": "import matched Pydantic AI: from pydantic_ai",
+          "location": "src/agent.py:1",
+          "snippet": "from pydantic_ai import Agent",
+          "weight": 0.97,
+          "signature": "framework.pydantic-ai",
+          "attributes": {
+            "category": "framework",
+            "value": "from pydantic_ai",
+            "confidence_group": "framework.pydantic-ai"
+          }
+        },
+        {
+          "signal": "import:framework.pydantic-ai",
+          "description": "import matched Pydantic AI: pydantic_ai",
+          "location": "src/agent.py:1",
+          "snippet": "from pydantic_ai import Agent",
+          "weight": 0.97,
+          "signature": "framework.pydantic-ai",
+          "attributes": {
+            "category": "framework",
+            "value": "pydantic_ai",
+            "confidence_group": "framework.pydantic-ai"
+          }
+        }
+      ],
+      "confidence": 0.97,
+      "likelihood": "strong",
+      "risk": {
+        "score": 15,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.99 because confidence is 0.97; this only ever lowers risk",
+            "weight": 0
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-012",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:pydantic-ai"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.pydantic-ai|dependency": 1,
+          "framework.pydantic-ai|import": 2
+        },
+        "technologies": [
+          {
+            "id": "framework.pydantic-ai",
+            "name": "Pydantic AI",
+            "category": "framework",
+            "vendor": "Pydantic Services"
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-33f502a02d071031",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "endpoint-014",
+  "surface": "endpoint",
+  "index": 13,
+  "polarity": "positive",
+  "title": "Endpoint gemini-cli",
+  "provenance": "synthetic-realistic",
+  "format": "Linux home-directory fragment with vendor config paths.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "gemini-cli",
+      "path": "home/.gemini/settings.json",
+      "quote": "server-memory"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-memory",
+      "path": "home/.gemini/settings.json",
+      "quote": "server-memory"
+    }
+  ],
+  "forbidden": []
+}

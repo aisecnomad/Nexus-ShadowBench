@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaN0029",
+    "name": "oidc_client",
+    "label": "Figma",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://www.figma.com"
+      }
+    }
+  }
+]

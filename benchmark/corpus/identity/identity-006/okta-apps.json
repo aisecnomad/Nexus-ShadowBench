@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0005BENCH",
+    "name": "oidc_client",
+    "label": "Microsoft Copilot",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://copilot.microsoft.com"
+      }
+    }
+  }
+]

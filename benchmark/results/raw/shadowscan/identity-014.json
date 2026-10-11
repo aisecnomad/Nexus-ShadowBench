@@ -1,0 +1,42 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:57:52+00:00",
+  "finished_at": "2026-10-11T16:57:52+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "7e2600288cc1e5d8f152b5ee4342e03d8f854f4190cf5d20a004b7ebeb9e14ec",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 0,
+    "shadow": 0,
+    "by_surface": {},
+    "by_kind": {},
+    "by_risk_level": {},
+    "frameworks": {},
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "identity.okta",
+      "started_at": "2026-10-11T16:57:52+00:00",
+      "finished_at": "2026-10-11T16:57:52+00:00",
+      "findings": 0,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": []
+}

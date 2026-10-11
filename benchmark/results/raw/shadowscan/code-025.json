@@ -1,0 +1,165 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:55:15+00:00",
+  "finished_at": "2026-10-11T16:55:16+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "a3635f1160cecbb28cd74b6c63d50b8f80b1c018232982fa1f30fd13de251e11",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": false,
+    "status": "incomplete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "protocol.a2a": 1
+    },
+    "model_providers": {},
+    "errors": 3
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:55:16+00:00",
+      "finished_at": "2026-10-11T16:55:16+00:00",
+      "findings": 1,
+      "objects_examined": 2,
+      "errors": [
+        "code.filesystem: agent-card.json: A2A card requires a nonempty version",
+        "code.filesystem: agent-card.json: A2A card requires a capabilities object",
+        "code.filesystem: agent-card.json: A2A card requires nonempty skills with string id and name"
+      ],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": true
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "Incomplete A2A agent card: support-agent",
+      "resource": "/workspace/benchmark/corpus/code/code-025/agent-card.json",
+      "resource_type": "agent-manifest",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "protocol.a2a"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "file:protocol.a2a",
+          "description": "A2A Agent Card",
+          "location": "agent-card.json",
+          "snippet": null,
+          "weight": 0.95,
+          "signature": "protocol.a2a",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.95,
+      "likelihood": "strong",
+      "risk": {
+        "score": 24,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "tag:no-auth-declared",
+            "description": "agent card declares no security scheme",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.98 because confidence is 0.95; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 15
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [
+        "no-auth-declared",
+        "incomplete-agent-card"
+      ],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": "agent-card.json",
+        "scan_root": "/workspace/benchmark/corpus/code/code-025",
+        "agent_card": {
+          "name": "support-agent",
+          "description": "",
+          "url": "https://agents.internal.example/support",
+          "version": null,
+          "protocol_version": null,
+          "skills": [],
+          "capabilities": null,
+          "security_schemes": null
+        },
+        "agent_indicators": 0,
+        "technologies": [
+          {
+            "id": "protocol.a2a",
+            "name": "Agent2Agent Protocol (A2A)",
+            "category": "protocol",
+            "vendor": "Google / Linux Foundation"
+          }
+        ],
+        "card_errors": [
+          "A2A card requires a nonempty version",
+          "A2A card requires a capabilities object",
+          "A2A card requires nonempty skills with string id and name"
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-80f44ac8034ec55c",
+      "identity_discriminator": "agent-manifest",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

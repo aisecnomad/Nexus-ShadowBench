@@ -1,0 +1,42 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T17:00:01+00:00",
+  "finished_at": "2026-10-11T17:00:01+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "10332b933de544186f1ae59bd74783ccada914f45c207d36d0df806b62f995fc",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 0,
+    "shadow": 0,
+    "by_surface": {},
+    "by_kind": {},
+    "by_risk_level": {},
+    "frameworks": {},
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "network.logs",
+      "started_at": "2026-10-11T17:00:01+00:00",
+      "finished_at": "2026-10-11T17:00:01+00:00",
+      "findings": 0,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": []
+}

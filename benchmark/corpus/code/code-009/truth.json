@@ -1,0 +1,25 @@
+{
+  "id": "code-009",
+  "surface": "code",
+  "index": 8,
+  "polarity": "positive",
+  "title": "Code signal claude-code",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "agent",
+      "value": "claude-code",
+      "path": "CLAUDE.md",
+      "quote": "filesystem tools already configured"
+    },
+    {
+      "category": "mcp",
+      "value": "mcp-filesystem",
+      "path": ".mcp.json",
+      "quote": "@modelcontextprotocol/server-filesystem"
+    }
+  ],
+  "forbidden": []
+}

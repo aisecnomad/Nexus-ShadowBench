@@ -1,0 +1,12 @@
+{
+  "id": "identity-029",
+  "surface": "identity",
+  "index": 28,
+  "polarity": "negative",
+  "title": "Okta grant PagerDuty",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

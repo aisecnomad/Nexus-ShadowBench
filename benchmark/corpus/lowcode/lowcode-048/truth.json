@@ -1,0 +1,21 @@
+{
+  "id": "lowcode-048",
+  "surface": "lowcode",
+  "index": 47,
+  "polarity": "near_miss",
+  "title": "n8n webhook named AI ideas",
+  "provenance": "synthetic-realistic",
+  "format": "n8n workflow export JSON (id, name, nodes, connections).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "lowcode",
+      "value": "n8n-openai"
+    },
+    {
+      "category": "provider",
+      "value": "openai"
+    }
+  ]
+}

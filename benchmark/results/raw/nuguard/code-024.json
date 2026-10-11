@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.7.0",
+  "generated_at": "2026-10-11T17:05:40Z",
+  "generator": "nuguard",
+  "target": "/workspace/benchmark/corpus/code/code-024",
+  "nodes": [
+    {
+      "id": "2e08fcac-091c-4023-9eaa-5ff9f13f67e1",
+      "name": "Semantic Kernel",
+      "component_type": "FRAMEWORK",
+      "confidence": 0.98,
+      "metadata": {
+        "framework": "semantic_kernel",
+        "liveness_notes": [],
+        "request_body_schema": {},
+        "chat_payload_list": false,
+        "dependency_names": [
+          "semantic_kernel"
+        ],
+        "loc": 22,
+        "extras": {
+          "canonical_name": "framework_semantic_kernel",
+          "adapter": "semantic_kernel",
+          "evidence_count": 3,
+          "detected_by_tiers": [
+            "code",
+            "iac"
+          ],
+          "framework": "semantic_kernel",
+          "implementation": "vela_builtin"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "ast_import",
+          "confidence": 0.95,
+          "detail": "semantic_kernel: import semantic_kernel",
+          "location": {
+            "path": "src/sk.py"
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.65,
+          "detail": "semantic_kernel: semantic-kernel",
+          "location": {
+            "path": "truth.json",
+            "line": 6
+          }
+        },
+        {
+          "kind": "regex",
+          "confidence": 0.55,
+          "detail": "semantic_kernel: semantic_kernel",
+          "location": {
+            "path": "src/sk.py",
+            "line": 1
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "deps": [
+    {
+      "name": "semantic-kernel",
+      "version_spec": "==1.9.0",
+      "purl": "pkg:pypi/semantic-kernel@1.9.0",
+      "group": "runtime",
+      "source_file": "requirements.txt"
+    }
+  ],
+  "summary": {
+    "use_case": "This application implements an agentic AI workflow with 0 agent(s), 0 tool integration(s), and 0 guardrail control(s). Detected use cases include general agentic task orchestration. Multi-modal support: Voice not supported, Images not supported, Video not supported.",
+    "frameworks": [
+      "semantic_kernel"
+    ],
+    "modalities": [
+      "TEXT"
+    ],
+    "modality_support": {
+      "text": true,
+      "voice": false,
+      "image": false,
+      "video": false
+    },
+    "api_endpoints": [],
+    "deployment_platforms": [],
+    "regions": [],
+    "environments": [],
+    "deployment_urls": [],
+    "iac_accounts": [],
+    "node_counts": {
+      "FRAMEWORK": 1
+    },
+    "node_counts_soft_rejected": {},
+    "secret_stores": [],
+    "availability_zones": [],
+    "encryption_at_rest_coverage": false,
+    "security_findings": [],
+    "iam_principals": [],
+    "service_accounts": [],
+    "data_classification": [],
+    "classified_tables": [],
+    "startup_commands": [],
+    "env_files": [],
+    "env_var_keys": [],
+    "staging_urls": [],
+    "production_urls": [],
+    "log_paths": [],
+    "uses_streaming": false,
+    "streaming_endpoints": [],
+    "total_loc": 22,
+    "github_actions_content": "",
+    "workflow_security_findings": [],
+    "k8s_network_policy_namespaces": [],
+    "has_package_json": false,
+    "has_lockfile": false,
+    "minified_js_files": []
+  }
+}

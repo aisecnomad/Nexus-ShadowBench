@@ -1,0 +1,19 @@
+{
+  "id": "code-024",
+  "surface": "code",
+  "index": 23,
+  "polarity": "positive",
+  "title": "Code signal semantic-kernel",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "framework",
+      "value": "semantic-kernel",
+      "path": "src/sk.py",
+      "quote": "import semantic_kernel"
+    }
+  ],
+  "forbidden": []
+}

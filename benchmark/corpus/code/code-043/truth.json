@@ -1,0 +1,17 @@
+{
+  "id": "code-043",
+  "surface": "code",
+  "index": 42,
+  "polarity": "near_miss",
+  "title": "Prose mention of OpenAI",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": [
+    {
+      "category": "provider",
+      "value": "openai"
+    }
+  ]
+}

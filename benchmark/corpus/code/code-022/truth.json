@@ -1,0 +1,25 @@
+{
+  "id": "code-022",
+  "surface": "code",
+  "index": 21,
+  "polarity": "positive",
+  "title": "Code signal openrouter",
+  "provenance": "synthetic-realistic",
+  "format": "Minimal application tree (Python or Node, plus optional agent config).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "provider",
+      "value": "openrouter",
+      "path": "src/route.py",
+      "quote": "https://openrouter.ai/api/v1"
+    },
+    {
+      "category": "provider",
+      "value": "openai",
+      "path": "src/route.py",
+      "quote": "from openai import OpenAI"
+    }
+  ],
+  "forbidden": []
+}

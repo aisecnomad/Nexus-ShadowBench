@@ -1,0 +1,25 @@
+{
+  "id": "cloud-008",
+  "surface": "cloud",
+  "index": 7,
+  "polarity": "positive",
+  "title": "Bedrock agent agent-007",
+  "provenance": "synthetic-realistic",
+  "format": "JSONL record in the AWS inventory dump shape (agent or lambda).",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "cloud_agent",
+      "value": "bedrock-agent",
+      "path": "aws.jsonl",
+      "quote": "agent-007"
+    },
+    {
+      "category": "provider",
+      "value": "aws-bedrock",
+      "path": "aws.jsonl",
+      "quote": "bedrock"
+    }
+  ],
+  "forbidden": []
+}

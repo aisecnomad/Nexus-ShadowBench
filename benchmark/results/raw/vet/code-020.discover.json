@@ -1,0 +1,31 @@
+[
+  {
+    "Kind": 1,
+    "ItemIdentity": "626193e2a805af53",
+    "SourceID": "d53bba6b0e490b4",
+    "Name": "filesystem",
+    "App": "vscode",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/code/code-020/.vscode/mcp.json",
+    "Enabled": null,
+    "MCPServer": {
+      "Transport": 1,
+      "Command": "npx",
+      "Args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "URL": "",
+      "EnvVarNames": null,
+      "HeaderNames": null,
+      "AllowedTools": null,
+      "AllowedResources": null
+    },
+    "Agent": null,
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "VS Code"
+    }
+  }
+]

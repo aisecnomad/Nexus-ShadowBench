@@ -1,0 +1,1 @@
+{"_kind": "bedrock-agent", "agentName": "agent-016", "agentId": "A0016AGENT", "agentStatus": "PREPARED", "foundationModel": "amazon.titan-text-express-v1", "agentArn": "arn:aws:bedrock:us-east-1:123456789012:agent/A0016AGENT", "_region": "us-east-1"}

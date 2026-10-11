@@ -1,0 +1,55 @@
+[
+  {
+    "Kind": 1,
+    "ItemIdentity": "550f325e7a345fcf",
+    "SourceID": "6c9e6ed8109ff45a",
+    "Name": "filesystem",
+    "App": "claude_code",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/code/code-009/.mcp.json",
+    "Enabled": null,
+    "MCPServer": {
+      "Transport": 1,
+      "Command": "npx",
+      "Args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "URL": "",
+      "EnvVarNames": null,
+      "HeaderNames": null,
+      "AllowedTools": null,
+      "AllowedResources": null
+    },
+    "Agent": null,
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "Claude Code"
+    }
+  },
+  {
+    "Kind": 5,
+    "ItemIdentity": "658942b741144662",
+    "SourceID": "6145c0142405884f",
+    "Name": "Claude Code",
+    "App": "claude_code",
+    "Scope": 2,
+    "ConfigPath": "/workspace/benchmark/corpus/code/code-009",
+    "Enabled": null,
+    "MCPServer": null,
+    "Agent": {
+      "Version": "",
+      "PermissionMode": "",
+      "InstructionFiles": [
+        "/workspace/benchmark/corpus/code/code-009/CLAUDE.md"
+      ],
+      "Model": "",
+      "APIKeyEnvName": ""
+    },
+    "IDEExtension": null,
+    "Metadata": {
+      "app.display": "Claude Code"
+    }
+  }
+]

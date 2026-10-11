@@ -1,0 +1,184 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:54:58+00:00",
+  "finished_at": "2026-10-11T16:54:58+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "b275ca0ad03724935dc8507c53224647c9429e25307fea38c256076fdcfd95ad",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "code": 1
+    },
+    "by_kind": {
+      "framework-usage": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "framework.llamaindex": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "code.filesystem",
+      "started_at": "2026-10-11T16:54:58+00:00",
+      "finished_at": "2026-10-11T16:54:58+00:00",
+      "findings": 1,
+      "objects_examined": 3,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "code",
+      "connector": "code.filesystem",
+      "kind": "framework-usage",
+      "title": "LLM usage in repository root: LlamaIndex",
+      "resource": "/workspace/benchmark/corpus/code/code-010",
+      "resource_type": "project",
+      "provider": "filesystem",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "framework.llamaindex"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "dependency:framework.llamaindex",
+          "description": "dependency matched LlamaIndex: llama-index",
+          "location": "requirements.txt:1",
+          "snippet": "pypi: llama-index ==0.10.55",
+          "weight": 0.85,
+          "signature": "framework.llamaindex",
+          "attributes": {
+            "category": "framework",
+            "value": "llama-index",
+            "confidence_group": "framework.llamaindex"
+          }
+        },
+        {
+          "signal": "import:framework.llamaindex",
+          "description": "import matched LlamaIndex: from llama_index",
+          "location": "src/idx.py:1",
+          "snippet": "from llama_index.core import VectorStoreIndex",
+          "weight": 0.85,
+          "signature": "framework.llamaindex",
+          "attributes": {
+            "category": "framework",
+            "value": "from llama_index",
+            "confidence_group": "framework.llamaindex"
+          }
+        },
+        {
+          "signal": "import:framework.llamaindex",
+          "description": "import matched LlamaIndex: llama_index.core",
+          "location": "src/idx.py:1",
+          "snippet": "from llama_index.core import VectorStoreIndex",
+          "weight": 0.85,
+          "signature": "framework.llamaindex",
+          "attributes": {
+            "category": "framework",
+            "value": "llama_index.core",
+            "confidence_group": "framework.llamaindex"
+          }
+        }
+      ],
+      "confidence": 0.85,
+      "likelihood": "strong",
+      "risk": {
+        "score": 14,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "framework-usage finding",
+            "weight": 5
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.94 because confidence is 0.85; this only ever lowers risk",
+            "weight": -1
+          }
+        ],
+        "danger_score": 5
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "path": ".",
+        "scan_root": "/workspace/benchmark/corpus/code/code-010",
+        "agent_indicators": 0,
+        "potential_capabilities": [
+          "rag",
+          "tool-use"
+        ],
+        "files_scanned": 3,
+        "languages": [
+          "python"
+        ],
+        "dependencies_matched": [
+          "pypi:llama-index"
+        ],
+        "models": [],
+        "evidence_counts": {
+          "framework.llamaindex|dependency": 1,
+          "framework.llamaindex|import": 2
+        },
+        "technologies": [
+          {
+            "id": "framework.llamaindex",
+            "name": "LlamaIndex",
+            "category": "framework",
+            "vendor": "LlamaIndex Inc."
+          }
+        ],
+        "runtime_activity": {
+          "status": "unknown",
+          "reason": "no-trusted-workload-binding",
+          "events": 0,
+          "frameworks": [],
+          "window": null,
+          "last_seen": null,
+          "production_observed": false,
+          "production_label_verified": false,
+          "sources": [],
+          "limitations": "Absence in exported telemetry does not establish that the framework is inactive."
+        }
+      },
+      "id": "ss-79ccd8a82cfee77e",
+      "identity_discriminator": "project",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"exit": 0, "ms": 1136, "error": null, "stderr_tail": "wrote json report to \n/workspace/benchmark/results/raw/shadowscan/identity-023.json\n", "findings": [{"category": "identity_grant", "value": "copy-ai"}, {"category": "identity_grant", "value": "jasper"}, {"category": "identity_grant", "value": "notion-ai"}]}

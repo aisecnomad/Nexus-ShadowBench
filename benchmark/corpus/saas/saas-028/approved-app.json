@@ -1,0 +1,9 @@
+{
+  "id": "A90027",
+  "name": "Zendesk",
+  "scopes": [
+    "chat:write",
+    "users:read"
+  ],
+  "team_id": "T000BENCH"
+}

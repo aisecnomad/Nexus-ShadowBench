@@ -1,0 +1,19 @@
+{
+  "id": "identity-012",
+  "surface": "identity",
+  "index": 11,
+  "polarity": "positive",
+  "title": "Okta grant Midjourney",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "midjourney",
+      "path": "okta-apps.json",
+      "quote": "Midjourney"
+    }
+  ],
+  "forbidden": []
+}

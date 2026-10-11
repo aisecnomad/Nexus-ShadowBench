@@ -1,0 +1,12 @@
+{
+  "id": "identity-037",
+  "surface": "identity",
+  "index": 36,
+  "polarity": "negative",
+  "title": "Okta grant Salesforce CRM",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [],
+  "forbidden": []
+}

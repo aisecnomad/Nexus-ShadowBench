@@ -1,0 +1,142 @@
+{
+  "version": "0.1.2",
+  "finding_identity_schema": "shadowscan.finding-identity/v2",
+  "started_at": "2026-10-11T16:58:53+00:00",
+  "finished_at": "2026-10-11T16:58:53+00:00",
+  "inventory_size": 0,
+  "collection_scope": {
+    "schema": "shadowscan.collection-scope/v1",
+    "comparable": true,
+    "fingerprint": "e31b6b9ee89dc096dfc2a17af7f2c2fe073dd6266f27b22237c9c3432a3e50b5",
+    "credential_identity_schema": "shadowscan.credential-identity/v1",
+    "credential_identity_scope": "run"
+  },
+  "summary": {
+    "complete": true,
+    "status": "complete",
+    "total": 1,
+    "shadow": 0,
+    "by_surface": {
+      "lowcode": 1
+    },
+    "by_kind": {
+      "workflow": 1
+    },
+    "by_risk_level": {
+      "low": 1
+    },
+    "frameworks": {
+      "platform.n8n": 1
+    },
+    "model_providers": {},
+    "errors": 0
+  },
+  "stats": [
+    {
+      "connector": "lowcode.n8n",
+      "started_at": "2026-10-11T16:58:53+00:00",
+      "finished_at": "2026-10-11T16:58:53+00:00",
+      "findings": 1,
+      "objects_examined": 1,
+      "errors": [],
+      "warnings": [],
+      "skipped": false,
+      "skip_reason": null,
+      "cached": false,
+      "incomplete": false
+    }
+  ],
+  "findings": [
+    {
+      "surface": "lowcode",
+      "connector": "lowcode.n8n",
+      "kind": "workflow",
+      "title": "n8n workflow with AI steps: flow-17",
+      "resource": "n8n:workflow:wf-017",
+      "resource_type": "workflow",
+      "provider": "n8n",
+      "account": null,
+      "region": null,
+      "owner": null,
+      "frameworks": [
+        "platform.n8n"
+      ],
+      "model_providers": [],
+      "models": [],
+      "capabilities": [
+        "tool-use"
+      ],
+      "permissions": [],
+      "evidence": [
+        {
+          "signal": "n8n:ai-steps",
+          "description": "AI steps: Model (@n8n/n8n-nodes-langchain.googleGemini)",
+          "location": null,
+          "snippet": null,
+          "weight": 0.8,
+          "signature": "platform.n8n",
+          "attributes": {}
+        }
+      ],
+      "confidence": 0.8,
+      "likelihood": "likely",
+      "risk": {
+        "score": 23,
+        "level": "low",
+        "factors": [
+          {
+            "id": "kind",
+            "description": "workflow finding",
+            "weight": 10
+          },
+          {
+            "id": "no-owner",
+            "description": "no identifiable owner",
+            "weight": 10
+          },
+          {
+            "id": "capability:tool-use",
+            "description": "calls tools / functions",
+            "weight": 5
+          },
+          {
+            "id": "confidence-scaling",
+            "description": "score multiplied by 0.92 because confidence is 0.80; this only ever lowers risk",
+            "weight": -2
+          }
+        ],
+        "danger_score": 14
+      },
+      "shadow": null,
+      "registry_match": null,
+      "tags": [],
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "agent_indicators": 0,
+        "active": null,
+        "triggers": [],
+        "ai_steps": [
+          "Model (@n8n/n8n-nodes-langchain.googleGemini)"
+        ],
+        "url": null,
+        "node_count": 1,
+        "node_types": [
+          "@n8n/n8n-nodes-langchain.googleGemini"
+        ],
+        "tags": [],
+        "technologies": [
+          {
+            "id": "platform.n8n",
+            "name": "n8n",
+            "category": "platform",
+            "vendor": "n8n"
+          }
+        ]
+      },
+      "id": "ss-12d3af004de68635",
+      "identity_discriminator": "workflow",
+      "identity_schema": "shadowscan.finding-identity/v2"
+    }
+  ]
+}

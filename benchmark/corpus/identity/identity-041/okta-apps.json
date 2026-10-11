@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oaM0040",
+    "name": "oidc_client",
+    "label": "Claude Bernard Gallery",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://claudebernard.example"
+      }
+    }
+  }
+]

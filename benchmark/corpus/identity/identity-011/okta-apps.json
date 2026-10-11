@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0oa0010BENCH",
+    "name": "oidc_client",
+    "label": "Cohere",
+    "status": "ACTIVE",
+    "signOnMode": "OPENID_CONNECT",
+    "settings": {
+      "oauthClient": {
+        "client_uri": "https://cohere.com"
+      }
+    }
+  }
+]

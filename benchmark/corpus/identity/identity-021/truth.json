@@ -1,0 +1,19 @@
+{
+  "id": "identity-021",
+  "surface": "identity",
+  "index": 20,
+  "polarity": "positive",
+  "title": "Okta grant Amazon Q",
+  "provenance": "synthetic-realistic",
+  "format": "Okta GET /api/v1/apps JSON export, status ACTIVE.",
+  "seed": "shadowbench-450-v1",
+  "facts": [
+    {
+      "category": "identity_grant",
+      "value": "amazon-q",
+      "path": "okta-apps.json",
+      "quote": "Amazon Q"
+    }
+  ],
+  "forbidden": []
+}
