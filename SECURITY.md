@@ -25,9 +25,14 @@ an AI assistant act on text it reads there.
   the 555 migrated files against its recorded length, SHA-256, Git blob and
   mode, or against the end of its chain in `AMENDMENTS.json`, and rejects
   symlinks and non-canonical paths before reading anything. Only live harness
-  code and tests can be amended; an entry for evidence, or a chain that does
-  not start from the recorded bytes, fails verification. The estate is frozen by SHA-256 in `FREEZE.json` (`verify-freeze`), and the
-  cases corpus is rebuilt and compared case by case (`verify`).
+  code, tests and the copied CI and build locks can be amended; an entry for
+  evidence, or a chain that does not start from the recorded bytes, fails
+  verification. The estate is frozen by SHA-256 in `FREEZE.json`
+  (`verify-freeze`), and the cases corpus is rebuilt and compared case by
+  case (`verify`).
+- **Dependency audit.** Every install is hash-locked and binary-only, and CI
+  runs `pip-audit` on the installed environment and on each lock it was
+  installed from, so a newly published advisory fails the next CI run.
 - **Result binding.** The cases scorer refuses rows whose corpus digest, tool,
   status counts or file SHA-256 differ from the run manifest unless `--force`
   is given, and a forced score lists every override in `metrics.json` and the

@@ -300,3 +300,11 @@ def test_removing_the_ledger_fails_closed(tmp_path):
     (tmp_path / "AMENDMENTS.json").unlink()
     with pytest.raises(ValueError, match="bytes or mode changed"):
         verify(tmp_path)
+
+
+def test_copied_ci_and_build_locks_are_amendable_but_the_original_lock_is_not():
+    assert amendable("requirements-ci.lock")
+    assert amendable("requirements-build.lock")
+    assert not amendable("migration/requirements.source.lock")
+    assert not amendable("requirements-docs.lock")
+    assert not amendable("tools/requirements-ci.lock")
