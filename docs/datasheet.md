@@ -314,7 +314,9 @@ real credential or personal data goes to a private advisory instead; see
 [SECURITY.md](../SECURITY.md).
 
 **Will the datasets be updated?** Not in place. The committed corpora,
-freeze and results are bound by `MIGRATION.json` and stay byte-identical,
+freeze and results are bound by `MIGRATION.json` and stay byte-identical
+(the amendment ledger, `AMENDMENTS.json`, may change harness code but never
+data),
 because every recorded run is scored against them. A correction or a new
 version is published in a new path with its own provenance, and historical
 results keep their original corpus. Labels are not changed because a tool

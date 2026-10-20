@@ -23,8 +23,10 @@ an AI assistant act on text it reads there.
 
 - **Evidence identity.** `python -m tools.verify_migration` checks every one of
   the 555 migrated files against its recorded length, SHA-256, Git blob and
-  mode, and rejects symlinks and non-canonical paths before reading anything.
-  The estate is frozen by SHA-256 in `FREEZE.json` (`verify-freeze`), and the
+  mode, or against the end of its chain in `AMENDMENTS.json`, and rejects
+  symlinks and non-canonical paths before reading anything. Only live harness
+  code and tests can be amended; an entry for evidence, or a chain that does
+  not start from the recorded bytes, fails verification. The estate is frozen by SHA-256 in `FREEZE.json` (`verify-freeze`), and the
   cases corpus is rebuilt and compared case by case (`verify`).
 - **Result binding.** The cases scorer refuses rows whose corpus digest, tool,
   status counts or file SHA-256 differ from the run manifest unless `--force`
@@ -74,6 +76,9 @@ issues.
 - **Path traversal or unsafe parsing** in corpus, freeze, manifest, `runs.json`
   or `services.json` loading, including symlinked or non-regular inputs that
   are read instead of rejected.
+- **Amendment ledger bypass:** a change to a migrated file, evidence above all,
+  that `python -m tools.verify_migration` accepts without a valid
+  `AMENDMENTS.json` entry.
 - **Scorer integrity bypass:** edited, truncated, swapped or foreign result rows
   that score without `--force`, an override that `--force` does not record, or
   an error, missing row or incomplete run that earns a true negative.

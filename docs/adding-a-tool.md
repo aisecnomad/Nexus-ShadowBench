@@ -13,7 +13,7 @@ review checklist are what make the resulting numbers mean something.
 - [Estate track adapter](#estate-track-adapter)
 - [Code-surface discovery adapter](#code-surface-discovery-adapter)
 - [Fairness rules](#fairness-rules)
-- [Byte-locked extension points in this companion](#byte-locked-extension-points-in-this-companion)
+- [Amending byte-locked harness files](#amending-byte-locked-harness-files)
 - [Adapter pull request checklist](#adapter-pull-request-checklist)
 
 ## Before you start
@@ -351,27 +351,40 @@ ShadowScan's included:
    whether that person is affiliated with this tool or any other tool under
    test.
 
-## Byte-locked extension points in this companion
+## Amending byte-locked harness files
 
 Every file imported from ShadowScan is bound by SHA-256 in
-[`MIGRATION.json`](../MIGRATION.json), and `python -m tools.verify_migration`
-fails if one changes. That includes the files a new adapter would normally
-touch:
+[`MIGRATION.json`](../MIGRATION.json). That includes the files a new adapter
+normally touches:
 
-| Track | What a new adapter needs | Bound file(s) |
+| Track | What a new adapter needs | Bound file(s) to amend |
 |---|---|---|
-| Cases | A new module in `adapters/` is discovered automatically. But `test_install_script_layout_satisfies_every_adapter` in `tests/unit/test_shadowbench_cases_adapters.py` requires every loaded adapter except ShadowScan to be satisfied by the `tools.json` that `install_tools.sh` writes, so a new adapter fails that test until the installer configures it | `tools/shadowbench/cases/install_tools.sh`, `tests/unit/test_shadowbench_cases_adapters.py` |
+| Cases | A new module in `adapters/` is discovered automatically. But `test_install_script_layout_satisfies_every_adapter` in `tests/unit/test_shadowbench_cases_adapters.py` requires every loaded adapter except ShadowScan to be satisfied by the `tools.json` that `install_tools.sh` writes, so the installer must configure it | `tools/shadowbench/cases/install_tools.sh` |
 | Estate | An entry in the explicit adapter list | `tools/shadowbench/estate/adapters/registry.py` |
 | Code-surface discovery | An entry in the explicit adapter list | `tools/discovery_benchmark/adapters/registry.py` |
 
-Changing a bound file changes the evidence this repository preserves, and
-the migration verifier accepts only the dispositions `moved`,
-`copied-support` and `copied-source-context`. Until the maintainers define a
-versioned extension path, open an issue before writing an adapter, and say in
-the pull request exactly which bound files it would change and why. Never
-edit a bound file to make a test pass, and never change historical results,
-freezes or recorded predictions. See [CONTRIBUTING.md](../CONTRIBUTING.md),
-[GOVERNANCE.md](../GOVERNANCE.md) and [ROADMAP.md](../ROADMAP.md).
+Live harness code and tests may change only through a recorded amendment.
+Add the new adapter module (a new file, so nothing to amend), edit the bound
+file, then record it:
+
+```bash
+python -m tools.verify_migration --amend tools/discovery_benchmark/adapters/registry.py \
+    --reason "Register the <tool> adapter" \
+    --reference https://github.com/aisecnomad/Nexus-ShadowBench/pull/<number>
+python -m tools.verify_migration    # now reports "amended": <n>
+```
+
+`--amend` appends an entry to [`AMENDMENTS.json`](../AMENDMENTS.json) with the
+SHA-256 the file changes from (its migrated bytes or its previous amendment)
+and the bytes, Git blob, mode and SHA-256 it changes to. Commit the edit and
+the ledger together; if the file changes again in review, amend it again
+(the chain is append-only) or, before merge, drop the entry and record it
+once more. The verifier refuses entries for evidence and for the code that
+produces it: corpora, labels, freezes, results, the cases generator, its
+case model and families, the ground-truth labeler, the taxonomies, and the
+legacy `tools/benchmark` and `tools/benchmark_realworld` harnesses, whose
+sources are hashed into recorded freezes. Never amend a file to make a
+failing test pass without saying why in the reason.
 
 ## Adapter pull request checklist
 
@@ -393,8 +406,9 @@ freezes or recorded predictions. See [CONTRIBUTING.md](../CONTRIBUTING.md),
 - [ ] No corpus content is executed; no network is needed.
 - [ ] The adapter was committed before any run on the scored corpus, and no
       scored result was used to change it.
-- [ ] Bound files touched (if any) are listed and justified;
-      `python -m tools.verify_migration` result is stated.
+- [ ] Every bound file the change touches is recorded in `AMENDMENTS.json`
+      with `python -m tools.verify_migration --amend`, and
+      `python -m tools.verify_migration` passes.
 - [ ] The author's affiliation with any tool under test is disclosed.
 - [ ] `ruff check`, `ruff format --check`, `mypy tools benchmarks` and
       `python -m pytest -q` pass.

@@ -37,6 +37,23 @@ prediction, result or harness behaviour changed, and no benchmark was rerun.
   four cells because the current renderer no longer calls an incomplete
   negative clean ([docs/results.md](docs/results.md)).
 
+### Harness amendments
+
+- Added `AMENDMENTS.json`, an append-only ledger for changes to migrated
+  harness code and tests, and taught `tools/verify_migration.py` to accept a
+  migrated file only at its migrated bytes or at the end of its recorded
+  chain. Evidence (corpora, labels, freezes, results), the cases generator,
+  case model and families, the ground-truth labeler, the taxonomies and the
+  legacy `tools/benchmark` and `tools/benchmark_realworld` harnesses are not
+  amendable. `python -m tools.verify_migration --amend PATH --reason TEXT
+  --reference URL` records an entry; its output gains an `amended` count.
+- First amendment: the code-surface `fetch` now delegates to the cases
+  track's hardened `fetch_pinned` and `checkout_problem` (https only, no
+  operator git configuration, hooks, submodules or filter drivers, `GIT_*`
+  dropped, pin checked before checkout, and a checkout reused only when it
+  holds exactly the pinned tree). Checkouts made by the earlier fetcher
+  should be fetched again. `tests/unit/test_discovery_fetch.py` covers it.
+
 ## e027b98: extraction from Nexus ShadowScan
 
 Preserved 555 original files from Nexus ShadowScan commit

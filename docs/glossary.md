@@ -30,6 +30,14 @@ agents from plain AI use. Agent-tier recall counts an expected `agent`
 entity as found only when the tool reported it labeled `agent`; a tool that
 reports only `ai` earns no agent-tier credit.
 
+**amendment, AMENDMENTS.json.** A recorded change to a migrated file of
+live harness code or tests (`tools/shadowbench/`, `tools/discovery_benchmark/`,
+`tests/`). Each entry names the SHA-256 the file changes from (its migrated
+bytes or its previous amendment), the bytes, Git blob, mode and SHA-256 it
+changes to, a reason and a reference. `python -m tools.verify_migration
+--amend PATH` appends one. Evidence, the cases generator and families, the
+labeler, the taxonomies and the legacy harnesses can never be amended.
+
 **anchor, primary anchor.** In the estate track, a lowercase token grounded
 in an entity's artifacts (an app id, an ARN, a server name, a client IP or a
 `host:user:tool` composite) that ties a tool's prediction to the entity when
@@ -227,7 +235,8 @@ ran. Only discordant cases count: those only one of the two got right.
 **MIGRATION.json.** The record of the 555 files imported from ShadowScan
 commit `0792106b`: each file's path, source path where it differs,
 disposition, size, Git blob, mode and SHA-256. `python -m
-tools.verify_migration` checks every one.
+tools.verify_migration` checks every one, against its migrated bytes or its
+latest [amendment](#a).
 
 **missing row.** A case with no result row. In the cases track it counts as
 an error and is reported as missing, unless the tool does not run that

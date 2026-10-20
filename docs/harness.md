@@ -392,6 +392,11 @@ estate README's [Reproduce](../benchmarks/shadowbench/estate/README.md#reproduce
 is shared by the ground-truth extractor and every adapter.
 `adapters/registry.py` lists the adapters explicitly. The estate track reuses
 this package's environment scrubbing, `ToolConfig` and code-surface adapters.
+`fetch.py` delegates every checkout to the cases track's hardened
+`fetch_pinned` and every `--verify` to its `checkout_problem` (see
+[`fetch_code.py`](../tools/shadowbench/cases/fetch_code.py)), so both code
+fetchers apply the same git rules; that change is the first entry in
+[`AMENDMENTS.json`](../AMENDMENTS.json).
 
 ### Isolation
 
@@ -475,8 +480,8 @@ run from here they would hash an empty scanner tree and record the
 companion's commit as if it were a scanner revision. Reproduce those commands
 in a checkout of ShadowScan at
 `0792106b8d2cc09517f7f4ee2eeabf4f8eb8da2d`, where that layout exists. Their
-source bytes are bound by `MIGRATION.json`, so they are not changed here;
-see the [repository README](../README.md).
+source bytes are bound by `MIGRATION.json` and are not amendable, because
+recorded freezes hash them; see the [repository README](../README.md).
 
 ## Where the rules live
 

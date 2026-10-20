@@ -5,6 +5,7 @@
 
 /.github/ @aisecnomad
 /MIGRATION.json @aisecnomad
+/AMENDMENTS.json @aisecnomad
 /tools/verify_migration.py @aisecnomad
 /tools/check_secrets.py @aisecnomad
 /tools/secret_allowlist.json @aisecnomad

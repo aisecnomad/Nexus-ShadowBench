@@ -18,7 +18,7 @@
 
 Shortcut: `make check` runs every gate below, in CI's order.
 
-- [ ] `python -m tools.verify_migration` passes: no byte bound by `MIGRATION.json` changed
+- [ ] `python -m tools.verify_migration` passes: no evidence bound by `MIGRATION.json` changed, and every changed harness file is recorded in `AMENDMENTS.json` (`--amend`)
 - [ ] `python -m pytest -q` passes
 - [ ] `ruff check tests tools benchmarks` and `ruff format --check tests tools benchmarks` pass
 - [ ] `MYPYPATH=scanner-source mypy tools benchmarks` passes

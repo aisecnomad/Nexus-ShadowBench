@@ -23,8 +23,9 @@ field precision or recall.
 1. **Append, never rewrite.** Every run gets a new directory. Never
    overwrite, re-score in place, regenerate or "refresh" a committed result,
    corpus, label, freeze record or recorded prediction. Every imported file
-   is bound by SHA-256 in [`MIGRATION.json`](../MIGRATION.json), and
-   `python -m tools.verify_migration` must pass before and after your change.
+   is bound by SHA-256 in [`MIGRATION.json`](../MIGRATION.json), results can
+   never be amended, and `python -m tools.verify_migration` must pass before
+   and after your change.
 2. **Scorable by anyone.** Commit enough that the published `metrics.json`
    and `REPORT.md` can be regenerated from the committed rows, with no
    third-party tool installed.
