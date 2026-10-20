@@ -1,0 +1,13 @@
+# Every imported byte is bound by MIGRATION.json. Never normalize historical data.
+benchmarks/** -text
+tools/benchmark/** -text
+tools/benchmark_realworld/** -text
+tools/discovery_benchmark/** -text
+tools/shadowbench/** -text
+benchmarks/**/results/** linguist-generated
+benchmarks/**/corpus.json linguist-generated
+benchmarks/shadowbench/estate/artifacts/** linguist-vendored
+tools/benchmark/results*/** linguist-generated
+tools/benchmark/realworld/results*/** linguist-generated
+tools/benchmark_realworld/results*/** linguist-generated
+MIGRATION.json linguist-generated

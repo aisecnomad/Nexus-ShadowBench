@@ -1,0 +1,37 @@
+name: Companion tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: aisecnomad/Nexus-ShadowScan
+          ref: 0792106b8d2cc09517f7f4ee2eeabf4f8eb8da2d
+          path: scanner-source
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Install the pinned scanner and hash-locked test dependencies
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: -r requirements.lock -r requirements-ci.lock -r requirements-build.lock
+          python -m pip install --no-deps --no-build-isolation -e ./scanner-source
+      - name: Verify preserved evidence and run the harness tests
+        run: |
+          python -m tools.verify_migration
+          python -m pytest -q
+      - name: Check harness source and synthetic-secret approvals
+        run: |
+          ruff check tests tools benchmarks
+          ruff format --check tests tools benchmarks
+          MYPYPATH=scanner-source mypy tools benchmarks
+          git ls-files -z | xargs -0 python tools/check_secrets.py
