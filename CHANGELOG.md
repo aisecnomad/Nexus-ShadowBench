@@ -24,6 +24,11 @@ prediction, result or harness behaviour changed, and no benchmark was rerun.
   result submission, corpus proposal, question), a pull request template,
   Dependabot for GitHub Actions, OpenSSF Scorecard and CodeQL workflows,
   `.editorconfig`, a pre-commit configuration and a `Makefile`.
+- Added `.github/labels.yml` and a Labels workflow that creates or updates
+  those labels on `main`, and `tests/test_repository_policy.py`, which fails
+  when an issue form or Dependabot applies a label the file does not define,
+  or when a workflow leaves an action unpinned, omits token permissions or
+  persists checkout credentials.
 - Added `tests/test_docs.py`, which checks that the companion's own
   Markdown links and anchors resolve and that `CITATION.cff` is well formed.
 - Recorded what re-scoring shows at this commit: the cases and estate
