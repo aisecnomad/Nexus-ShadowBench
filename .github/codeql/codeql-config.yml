@@ -1,0 +1,12 @@
+name: ShadowBench CodeQL configuration
+
+# Analyse the harness, scorers and tests. The estate's sample repositories are
+# deliberately authored inputs that discovery tools are scored on, and results
+# directories hold recorded tool output; neither is project code, and alerts
+# in them would describe the test data rather than the harness. The pinned
+# ShadowScan checkout is analysed in its own repository.
+paths-ignore:
+  - benchmarks/shadowbench/estate/artifacts/**
+  - benchmarks/**/results/**
+  - tools/**/results*/**
+  - scanner-source/**

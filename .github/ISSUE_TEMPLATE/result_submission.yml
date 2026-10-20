@@ -1,0 +1,89 @@
+name: Result submission
+description: Propose a new benchmark run or results for review.
+labels: [results]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste credentials, tenant data, personal data or unscrubbed local paths.**
+        Results are committed in a new dated directory and never overwrite an earlier run. A run on a corpus whose errors were used to tune the tool is in-sample and must say so. See [docs/submitting-results.md](https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/docs/submitting-results.md).
+
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - ShadowBench cases
+        - ShadowBench estate
+        - Code-surface discovery
+        - Other (name it below)
+    validations:
+      required: true
+
+  - type: input
+    id: corpus
+    attributes:
+      label: Corpus SHA-256
+      description: The digest the run manifest records for the corpus file (and for the estate, the freeze the run was checked against).
+    validations:
+      required: true
+
+  - type: input
+    id: harness
+    attributes:
+      label: Harness commit
+      description: The full ShadowBench commit the run used, and whether anything under `tools/` differed from it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tools
+    attributes:
+      label: Tools and versions
+      description: Every tool run, with its exact version or commit and how it was installed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and isolation
+      description: Platform, kernel, worker count, and how tools were isolated (the runner's uid and namespaces, a disposable host, network access).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scoring
+    attributes:
+      label: Did the scorer accept the rows without `--force`?
+      options:
+        - "Yes"
+        - "No, every override is listed in metrics.json and explained below"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: in-sample
+    attributes:
+      label: In-sample status
+      description: Was any scored tool's detection logic changed with this corpus's results in view?
+      options:
+        - "No tool was tuned on this corpus"
+        - "At least one tool is in-sample (name it below)"
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: independence
+    attributes:
+      label: Independence statement
+      description: Who wrote the corpus, the labels and each adapter? What is your relationship to every tool you ran? Did you see any results before the run was complete?
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary and disclosures
+      description: The scorer's summary lines, anything that differed from the documented protocol, and anything a reader should know before interpreting the numbers.

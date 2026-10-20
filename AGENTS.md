@@ -17,3 +17,10 @@ integration job before that pin changes.
 Never log credentials, weaken HTTPS, execute corpus artifacts, or rewrite
 history to make old clones smaller. Review the original source-checkout
 requirements in README.md before using historical self-hashing helpers.
+
+The companion's own documentation (README.md, the root policy files and
+docs/) is not migration-bound and may change; `tests/test_docs.py` fails on
+any relative link or heading anchor that does not resolve. Keep its claims
+consistent with the committed results and the track READMEs: re-score a
+run (`make rescore`) before restating its numbers, and follow
+CONTRIBUTING.md and GOVERNANCE.md for labels, adapters and new runs.

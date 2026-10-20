@@ -1,0 +1,92 @@
+# Pre-commit hooks for ShadowBench development.
+# Install the hash-locked toolchain and the hooks: make install, then
+# pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Every byte imported from ShadowScan is bound by MIGRATION.json. The hooks
+# below never rewrite those files, and the verify-migration hook fails the
+# commit if anything changed one anyway.
+exclude: ^scanner-source/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      # The migrated corpora, results, harnesses, tests and locks keep their
+      # original bytes (MIGRATION.json), and requirements.lock is generated;
+      # whitespace fixers must never touch them.
+      - id: trailing-whitespace
+        # Two trailing spaces are a Markdown line break (.editorconfig keeps them).
+        args: [--markdown-linebreak-ext=md]
+        exclude: &frozen |
+          (?x)^(
+            LICENSE|NOTICE|MIGRATION\.json|requirements[^/]*\.lock|
+            migration/.*|benchmarks/.*|
+            tools/(benchmark|benchmark_realworld|discovery_benchmark|shadowbench)/.*|
+            tools/(__init__|check_secrets|shadowbench450_archive)\.py|
+            tests/(conftest|test_benchmark|test_benchmark_cdxgen_install|test_benchmark_realworld_sampled|test_sab_realworld_harness|test_shadowbench450_archive)\.py|
+            tests/unit/.*
+          )$
+      - id: end-of-file-fixer
+        exclude: *frozen
+      # Corpus and estate YAML is untrusted evidence, read as data by the
+      # harness, and cannot be changed anyway; only project configuration is
+      # checked here.
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: *frozen
+      - id: check-toml
+        exclude: *frozen
+      - id: check-merge-conflict
+      # Large evidence files already in the repository are bound by
+      # MIGRATION.json; a new one belongs in a reviewed results directory.
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+        # A redaction test names a PEM marker around a synthetic placeholder;
+        # tools/secret_allowlist.json binds that file by digest.
+        exclude: ^tests/unit/test_benchmark_realworld_review2\.py$
+      - id: no-commit-to-branch
+        args: [--branch=main]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 38bfb07c0c64c304f47eb52090f8288150c77730 # v0.17.1
+    hooks:
+      # Keep the version comment equal to the ruff pin in requirements-ci.lock
+      # so the hook runs the same version as CI. CI lints and formats Python
+      # only; restricting the format hook keeps it out of Markdown code blocks.
+      # Migrated Python already passes CI's ruff gates, so these hooks leave
+      # it unchanged; verify-migration below fails if they ever do not.
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: local
+    hooks:
+      # The type check needs the pinned ShadowScan checkout and the
+      # hash-locked environment, which an isolated hook environment would not
+      # have, so it runs in the active environment exactly as CI runs it.
+      - id: mypy
+        name: Type-check the harness against the pinned scanner
+        entry: env MYPYPATH=scanner-source mypy tools benchmarks
+        language: system
+        pass_filenames: false
+        files: ^(tools|benchmarks)/.*\.py$
+
+      # Fails the commit when any byte bound by MIGRATION.json changed, whatever
+      # changed it.
+      - id: verify-migration
+        name: Verify migrated evidence identity
+        entry: python -m tools.verify_migration
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: no-hardcoded-secrets
+        name: Check for hardcoded secret patterns
+        entry: python tools/check_secrets.py
+        language: system
+        # Every text file, including tests and corpora. Only exact reviewed
+        # path/family/digest entries in tools/secret_allowlist.json are
+        # approved. The script also rejects stale approvals on partial runs.
+        types: [text]
