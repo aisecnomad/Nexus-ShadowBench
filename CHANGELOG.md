@@ -78,6 +78,12 @@ prediction, result or harness behaviour changed, and no benchmark was rerun.
   companion docs that described the old baseline selection now describe
   `BASELINE_RUN`.
 
+### README
+
+- Retitled the README "ShadowBench", replaced the SVG banner with a photo
+  banner (`docs/assets/shadowbench-banner.jpg`, 1600 px), and cut the README
+  from 595 to 171 lines; the detail it held is in `docs/`.
+
 ## e027b98: extraction from Nexus ShadowScan
 
 Preserved 555 original files from Nexus ShadowScan commit
