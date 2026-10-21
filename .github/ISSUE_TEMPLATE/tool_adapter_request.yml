@@ -1,0 +1,83 @@
+name: Tool adapter request
+description: Propose a shadow AI agent discovery tool to benchmark.
+labels: [tool-adapter]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste credentials, license keys, tenant data or personal data.**
+        An adapter runs a tool at a pinned version through an offline entry point, on inputs the harness supplies, and maps its output to the benchmark's tool-neutral keys. Tools that only work against live tenants or cloud APIs are listed as not run, with the reason, until a live replay profile exists. See [docs/adding-a-tool.md](https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/docs/adding-a-tool.md).
+
+  - type: input
+    id: name
+    attributes:
+      label: Tool name and project URL
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit to pin
+      description: An exact release version or full commit SHA, not a branch.
+    validations:
+      required: true
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: The tool's license, and whether it permits running it and publishing its output.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Surfaces the tool claims to cover
+      options:
+        - label: code
+        - label: identity
+        - label: gateway
+        - label: lowcode
+        - label: saas
+        - label: cloud
+        - label: endpoint
+        - label: network
+        - label: runtime
+
+  - type: dropdown
+    id: offline
+    attributes:
+      label: Does it have an offline entry point?
+      description: Can it read a repository checkout, a home directory, an export file, a log window, a loopback service or the local process table without credentials or internet access?
+      options:
+        - "Yes, for every surface listed"
+        - "Yes, for some surfaces"
+        - "No, it needs live APIs, credentials or kernel features"
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command and output format
+      description: The command line you would run on one input, its exit codes and what each means, and the output format (JSON, SARIF, text). Use placeholder paths.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: mapping
+    attributes:
+      label: Output-to-entity mapping
+      description: How a reported item maps to the benchmark's keys (code facts such as `framework:langgraph`, an app id, an ARN, an artifact path, `ip:port`, a pid), and whether the tool distinguishes agents from plain AI use.
+
+  - type: textarea
+    id: interest
+    attributes:
+      label: Relationship to the tool
+      description: Do you maintain, work on or have a financial interest in this tool or a competing one? "None" is a valid answer.
+    validations:
+      required: true

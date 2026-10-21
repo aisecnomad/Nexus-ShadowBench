@@ -1,0 +1,16 @@
+# Default reviewers. A code owner who authored a change cannot approve it;
+# see GOVERNANCE.md for the conflict-of-interest rules on labels, adapters,
+# scorers and results.
+* @aisecnomad
+
+/.github/ @aisecnomad
+/MIGRATION.json @aisecnomad
+/AMENDMENTS.json @aisecnomad
+/tools/verify_migration.py @aisecnomad
+/tools/check_secrets.py @aisecnomad
+/tools/secret_allowlist.json @aisecnomad
+/benchmarks/ @aisecnomad
+/tools/shadowbench/ @aisecnomad
+/tools/discovery_benchmark/ @aisecnomad
+/SECURITY.md @aisecnomad
+/GOVERNANCE.md @aisecnomad

@@ -1,0 +1,68 @@
+name: Corpus proposal
+description: Propose a new case family, estate or independently authored corpus.
+labels: [corpus]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never contribute real tenant exports, logs, process tables, credentials or personal data, even redacted.** Public repositories are referenced by URL and pinned commit, not copied.
+        Independently authored corpora, written and labeled by people with no stake in any scored tool and without sight of any tool's results on them, are the most valuable contribution this project can receive. See [GOVERNANCE.md](https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/GOVERNANCE.md#path-to-independent-stewardship).
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What are you proposing?
+      options:
+        - A new case family for the cases track
+        - A new estate (a whole fictional organization)
+        - New code-surface repositories pinned by commit
+        - A held-out corpus for an existing track
+        - A new track
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Surfaces covered
+      options:
+        - label: code
+        - label: identity
+        - label: gateway
+        - label: lowcode
+        - label: saas
+        - label: cloud
+        - label: endpoint
+        - label: network
+        - label: runtime
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What question does it answer that the current corpora do not?
+    validations:
+      required: true
+
+  - type: textarea
+    id: rubric
+    attributes:
+      label: Labeling rubric
+      description: How an entity is labeled `agent`, `llm` or `none` (or positive, control and near-miss), what counts as evidence, which keys are tolerated, and which decoys or near-misses are included and why.
+    validations:
+      required: true
+
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Authorship and provenance
+      description: Who authored the inputs and who labeled them, whether labels were fixed before any tool ran, how the corpus will be frozen (SHA-256 freeze or generator digest), and the license of every artifact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: interest
+    attributes:
+      label: Conflict of interest
+      description: Do the authors or labelers maintain, work on or have a financial interest in any tool the benchmark scores? Have they seen any tool's output on these inputs? "None" is a valid answer.
+    validations:
+      required: true

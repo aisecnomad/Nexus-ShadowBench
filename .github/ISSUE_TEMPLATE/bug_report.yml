@@ -1,0 +1,91 @@
+name: Bug report
+description: Report a harness, runner, scorer, report or verification bug.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste real credentials, JWTs, tenant exports, personal data or exploit details.**
+        Use a [private security advisory](https://github.com/aisecnomad/Nexus-ShadowBench/security/advisories/new) for runner isolation escapes, scorer integrity bypasses, unsafe input parsing, or a real credential found in a corpus.
+        A label you believe is wrong belongs in the [label dispute form](https://github.com/aisecnomad/Nexus-ShadowBench/issues/new?template=label_dispute.yml).
+
+  - type: input
+    id: commit
+    attributes:
+      label: Full commit SHA
+      description: The 40-character ShadowBench commit (`git rev-parse HEAD`), and for a run, the harness commit its manifest records.
+      placeholder: "0123456789abcdef0123456789abcdef01234567"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track or component
+      options:
+        - ShadowBench cases (tools/shadowbench/cases)
+        - ShadowBench estate (tools/shadowbench/estate)
+        - Code-surface discovery benchmark (tools/discovery_benchmark)
+        - Historical harnesses (tools/benchmark, tools/benchmark_realworld, benchmarks/sab_realworld)
+        - ShadowBench-450 arithmetic check (tools/shadowbench450_archive.py)
+        - Migration verification (tools/verify_migration.py)
+        - Secret check (tools/check_secrets.py)
+        - CI or tooling
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Stage
+      options:
+        - Corpus generation or verification
+        - Freeze or validation
+        - Running tools (runner, stage, isolation)
+        - Adapter normalization
+        - Scoring
+        - Report rendering
+        - Tests
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: The exact command, its exit code and the relevant output. Remove local paths you do not want public.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: For a scoring bug, name the case or entity id, the row involved and the outcome the documented rule gives.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, OS and kernel, whether the scanner is the pinned `scanner-source` checkout, and for a run, each tool's version.
+      placeholder: |
+        Python 3.11.9, Ubuntu 24.04, kernel 6.8, scanner-source at 0792106b8d2c
+    validations:
+      required: true
+
+  - type: dropdown
+    id: published
+    attributes:
+      label: Does this affect committed results?
+      description: If the bug would change a published metric, a maintainer will publish a documented re-score in a new directory; historical files are never edited.
+      options:
+        - "No"
+        - "Yes"
+        - Not sure
+    validations:
+      required: true

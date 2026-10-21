@@ -1,0 +1,28 @@
+# Review routing comes from CODEOWNERS; the deprecated `reviewers` key is not
+# used.
+#
+# pip is deliberately not tracked. requirements-ci.lock and
+# requirements-build.lock are ShadowScan's hash locks at the pinned scanner
+# revision and, with the original runtime lock kept at
+# migration/requirements.source.lock, are byte-bound provenance in
+# MIGRATION.json. requirements.lock is that runtime lock with only the aiohttp
+# security update applied. Lock updates come from ShadowScan, together with a
+# new scanner pin, never from a Dependabot bump here.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      # One pull request per weekly run. Sub-actions of one repository (for
+      # example codeql-action init, analyze and upload-sarif) must move
+      # together: a workflow that mixes their versions fails at analysis time.
+      actions:
+        patterns:
+          - "*"

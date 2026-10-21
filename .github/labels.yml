@@ -1,0 +1,134 @@
+# Labels for the ShadowBench issue tracker.
+#
+# The Labels workflow (.github/workflows/labels.yml) creates or updates every
+# label listed here on each push to main that changes this file; it never
+# deletes a label. Issue forms and dependabot.yml may only apply labels that
+# exist here (tests/test_repository_policy.py checks this). Retire a label by
+# removing it here and deleting it in the repository by hand.
+
+# Type
+- name: bug
+  color: "d73a4a"
+  description: A harness, scorer, report or test does not work as documented.
+
+- name: enhancement
+  color: "a2eeef"
+  description: New capability for the harness, scorer or documentation.
+
+- name: documentation
+  color: "0075ca"
+  description: Improvements or additions to documentation.
+
+- name: security
+  color: "e4e669"
+  description: Harness isolation, integrity or credential-handling change.
+
+- name: question
+  color: "d876e3"
+  description: Usage question about running, scoring or reading results.
+
+# Benchmark work
+- name: label-dispute
+  color: "b60205"
+  description: A ground-truth label may be wrong; needs evidence from the artifact or pinned commit.
+
+- name: tool-adapter
+  color: "5319e7"
+  description: Request or change to benchmark a discovery tool.
+
+- name: results
+  color: "0e8a16"
+  description: A new run, re-score or result submission.
+
+- name: corpus
+  color: "1d76db"
+  description: A new case family, estate or independently authored corpus.
+
+- name: in-sample
+  color: "fbca04"
+  description: Measured on a corpus a tool was tuned against; not evidence of accuracy.
+
+- name: needs-independent-review
+  color: "c5def5"
+  description: Changes labels, scoring or results that move a scored tool's numbers.
+
+# Track
+- name: "track: cases"
+  color: "bfd4f2"
+  description: Generated per-surface cases track.
+
+- name: "track: estate"
+  color: "bfd4f2"
+  description: Authored whole-organization estate track.
+
+- name: "track: code-surface"
+  color: "bfd4f2"
+  description: Pinned public repositories, code-surface track.
+
+# Surface
+- name: "surface: code"
+  color: "ededed"
+  description: Repository checkouts.
+
+- name: "surface: identity"
+  color: "ededed"
+  description: Identity-provider exports.
+
+- name: "surface: gateway"
+  color: "ededed"
+  description: LLM gateway logs.
+
+- name: "surface: lowcode"
+  color: "ededed"
+  description: Low-code platform exports.
+
+- name: "surface: saas"
+  color: "ededed"
+  description: SaaS app inventories.
+
+- name: "surface: cloud"
+  color: "ededed"
+  description: Cloud and Kubernetes inventories.
+
+- name: "surface: endpoint"
+  color: "ededed"
+  description: Developer home directories and endpoint exports.
+
+- name: "surface: network"
+  color: "ededed"
+  description: Network logs and listening services.
+
+- name: "surface: runtime"
+  color: "ededed"
+  description: Process tables and live processes.
+
+# Community
+- name: good first issue
+  color: "7057ff"
+  description: Well scoped for a first contribution.
+
+- name: help wanted
+  color: "008672"
+  description: Extra attention or an outside contributor is welcome.
+
+# Lifecycle
+- name: duplicate
+  color: "cfd3d7"
+  description: This issue or pull request already exists.
+
+- name: invalid
+  color: "e4e669"
+  description: Not actionable as written.
+
+- name: wontfix
+  color: "ffffff"
+  description: Will not be worked on.
+
+# Dependencies
+- name: dependencies
+  color: "0366d6"
+  description: Updates a dependency.
+
+- name: github-actions
+  color: "000000"
+  description: Updates a GitHub Actions dependency.

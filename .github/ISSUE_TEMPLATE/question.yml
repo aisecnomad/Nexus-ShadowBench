@@ -1,0 +1,30 @@
+name: Question
+description: Ask about running a track, reproducing a result or interpreting a metric.
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [SUPPORT.md](https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/SUPPORT.md) first.
+        This is a public issue. Remove credentials, tenant identifiers, private paths and personal data. For vulnerabilities use a private security advisory.
+  - type: input
+    id: commit
+    attributes:
+      label: Full commit SHA
+      description: The ShadowBench commit you are using (`git rev-parse HEAD`).
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: Name the track, the run or result directory, and the metric or rule in question.
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Link the documentation you followed and include a sanitized command and its output.
+    validations:
+      required: true

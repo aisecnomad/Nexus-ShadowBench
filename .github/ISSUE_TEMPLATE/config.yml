@@ -1,0 +1,16 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability or real credential in a corpus
+    url: https://github.com/aisecnomad/Nexus-ShadowBench/security/advisories/new
+    about: >
+      Report runner isolation escapes, scorer integrity bypasses, unsafe input
+      parsing, or a real credential or personal data found in a corpus through
+      a private advisory. Do not open a public issue.
+  - name: ShadowScan scanner issues
+    url: https://github.com/aisecnomad/Nexus-ShadowScan/issues/new/choose
+    about: >
+      Detection behaviour of ShadowScan outside this benchmark belongs in the
+      scanner's own repository.
+  - name: Support and contribution routes
+    url: https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/SUPPORT.md
+    about: Find troubleshooting steps and the right route for your question.

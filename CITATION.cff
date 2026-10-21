@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+title: "Nexus ShadowBench: an open benchmark for shadow AI agent discovery"
+message: >-
+  If you use Nexus ShadowBench, its corpora or its results, please cite
+  this repository together with the commit and results directory you used.
+  The corpora and labels are author-written and not independent; quote
+  results with the caveats in the README.
+type: software
+authors:
+  - name: Nexus ShadowScan contributors
+    website: https://github.com/aisecnomad/Nexus-ShadowBench
+repository-code: https://github.com/aisecnomad/Nexus-ShadowBench
+url: https://github.com/aisecnomad/Nexus-ShadowBench/tree/main/docs
+abstract: >-
+  ShadowBench measures whether discovery tools find AI agents and plain
+  AI use across nine surfaces (code, identity, LLM gateways, low-code,
+  SaaS, cloud, endpoints, network and runtime) without flagging look-alike
+  decoys. It holds a generated cases track, an authored whole-organization
+  estate track and a code-surface track over pinned public repositories,
+  with tool-neutral ground truth, fail-closed scoring, confidence intervals,
+  paired tests and SHA-256 provenance for every input and recorded run.
+keywords:
+  - shadow-ai
+  - ai-agents
+  - benchmark
+  - agent-discovery
+  - mcp
+  - security
+  - ai-inventory
+license: Apache-2.0
+references:
+  - type: software
+    title: Nexus ShadowScan
+    authors:
+      - name: Nexus ShadowScan contributors
+    repository-code: https://github.com/aisecnomad/Nexus-ShadowScan
+    version: 0.1.2

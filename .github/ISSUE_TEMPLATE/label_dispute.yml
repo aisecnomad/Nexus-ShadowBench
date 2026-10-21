@@ -1,0 +1,61 @@
+name: Label dispute or erratum
+description: Report a ground-truth label, fact, decoy or tolerated key you believe is wrong.
+labels: [label-dispute]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste real credentials, tenant exports or personal data.** Corpora contain synthetic credentials and prompt-injection text by design; quote only what the evidence needs, and never execute corpus content.
+        A label changes only on evidence in the artifact or pinned repository itself, never because a tool missed or flagged an entity. Frozen corpora are not edited: an accepted dispute becomes an erratum and takes effect in a new corpus version or freeze. See [GOVERNANCE.md](https://github.com/aisecnomad/Nexus-ShadowBench/blob/main/GOVERNANCE.md#benchmark-integrity-and-conflict-of-interest).
+
+  - type: dropdown
+    id: corpus
+    attributes:
+      label: Corpus
+      options:
+        - ShadowBench cases (benchmarks/shadowbench/cases/corpus.json)
+        - ShadowBench estate (benchmarks/shadowbench/estate/corpus.json)
+        - Code-surface discovery (benchmarks/shadow-ai-discovery/corpus.json)
+        - Real-world repositories (benchmarks/realworld/corpus.json)
+        - Other (name it below)
+    validations:
+      required: true
+
+  - type: input
+    id: item
+    attributes:
+      label: Case, entity or repository id
+      description: For example `code-checkout-017`, an estate entity id such as `saas.slack-wudpecker`, or `owner/repo`.
+    validations:
+      required: true
+
+  - type: input
+    id: current
+    attributes:
+      label: Current label, fact or key
+      description: What the corpus says now, for example `agent`, `none`, `provider:bedrock`, a decoy key or a tolerated key.
+    validations:
+      required: true
+
+  - type: input
+    id: proposed
+    attributes:
+      label: Proposed label, fact or key
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence pointer
+      description: A path, line or record in the frozen artifact, or a `kind:path[:line]` pointer at the repository's pinned commit, and why it supports the proposed label under the corpus's written rubric.
+    validations:
+      required: true
+
+  - type: textarea
+    id: interest
+    attributes:
+      label: Conflict of interest
+      description: Do you maintain, work on or have a financial interest in any tool the benchmark scores? Did a tool's result on this item prompt the dispute? "None" is a valid answer.
+    validations:
+      required: true
