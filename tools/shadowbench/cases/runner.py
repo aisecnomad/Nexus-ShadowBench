@@ -77,6 +77,10 @@ version is the ``version`` string its ``tools.json`` entry gives, recorded as
 given, or else what its adapter's ``version()`` probes. ``isolation`` records
 the sandbox: backend, namespaces, host name and resource limits, and for the
 OCI backend the image digest, the daemon's version and the runtime.
+``tool_install`` records what ``install_tools.sh`` resolved: the runner copies
+``<tool_root>/resolved/`` (frozen venvs, Go build info, the locks used and
+SHA256SUMS of every binary) into ``<out>/resolved/`` and records each file's
+SHA-256, or ``null`` when the tool root has no such record.
 """
 
 from __future__ import annotations
@@ -867,6 +871,30 @@ def fakeproc_problem(exc: Exception) -> str:
     )
 
 
+def record_install(tool_root: Path, out: Path) -> dict[str, Any]:
+    """Copy ``tool_root/resolved/`` into ``out/resolved/``; the SHA-256 of each regular file copied.
+
+    Symlinks and special files are skipped, so nothing outside the record is copied or followed.
+    """
+    src = tool_root / "resolved"
+    if not src.is_dir() or src.is_symlink():
+        return {"resolved": None}
+    digests: dict[str, str] = {}
+    for top, dirs, files in os.walk(src):
+        dirs[:] = sorted(d for d in dirs if not os.path.islink(os.path.join(top, d)))
+        for name in sorted(files):
+            path = Path(top, name)
+            if path.is_symlink() or not path.is_file():
+                continue
+            rel = path.relative_to(src).as_posix()
+            data = path.read_bytes()
+            dest = out / "resolved" / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(data)
+            digests[rel] = hashlib.sha256(data).hexdigest()
+    return {"resolved": dict(sorted(digests.items()))}
+
+
 def namespace_problem() -> str | None:
     """Why ``unshare`` cannot give the stage every namespace it needs on this host; None when it can."""
     command = stage_command(Path("/dev/null"), Path("/dev/null"))
@@ -1064,6 +1092,7 @@ def main(argv: list[str] | None = None) -> int:
         "python": platform.python_version(),
         "workers": args.workers,
         "isolation": {**sandbox.describe(), **isolation_facts},
+        "tool_install": record_install(env.tool_root, args.out),
         "cases": len(cases),
         "tools": {},
         "skipped_adapters": problems,
