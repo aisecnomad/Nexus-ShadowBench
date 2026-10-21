@@ -76,6 +76,26 @@ def test_a_path_keeps_its_case(segments: list[str]) -> None:
     assert keys.canonical(f"artifact:{path}") == f"artifact:{path}"
 
 
+_PATH_PART = st.sampled_from(["~", "$HOME", "${HOME}", "..", ".", "", " ", "a", "B", ".claude", "x y"])
+
+
+@settings(max_examples=3000)
+@given(st.lists(_PATH_PART, max_size=24), st.sampled_from(["", "/", "./", "~/", "$HOME/", "\\"]))
+def test_canonical_is_idempotent_on_adversarial_paths(parts: list[str], lead: str) -> None:
+    """Repeated home prefixes, escapes and whitespace segments once needed more passes than allowed."""
+    once = keys.canonical("artifact:" + lead + "/".join(parts))
+    assert keys.canonical(once) == once
+
+
+@given(st.lists(st.sampled_from(["~", "$HOME", "a", "..", "b"]), min_size=1, max_size=8))
+def test_a_canonical_path_never_merges_a_directory_named_like_home(parts: list[str]) -> None:
+    """``./~/x`` (a directory named ~) and ``x`` are different files and must stay apart."""
+    value = keys.canonical("artifact:./" + "/".join(parts)).removeprefix("artifact:")
+    # whatever ``..`` resolved away, a path that still starts in a directory named like home says so
+    if value.removeprefix("./").split("/")[0] in keys.HOME_TOKENS:
+        assert value.startswith("./")
+
+
 @given(st.ip_addresses(v=4), st.integers(min_value=1, max_value=65535))
 def test_service_spellings_of_one_ipv4_endpoint_match(ip: Any, port: int) -> None:
     truth = f"service:{ip}:{port}"
@@ -129,7 +149,16 @@ def test_ipv6_services_are_bracketed_and_compressed(ip: Any, port: int) -> None:
         ("Framework:Lang_Graph", "framework:lang-graph"),
         ("provider:Azure OpenAI", "provider:azure-openai"),
         ("artifact:../outside", "artifact:../outside"),  # leaves the root: never rewritten into a match
-        ("artifact:a/../../b", "artifact:a/../../b"),
+        ("artifact:a/../../b", "artifact:../b"),  # the climb out is kept, so it lies inside nothing
+        ("artifact:.openclaw/../../.cursor/mcp.json", "artifact:../.cursor/mcp.json"),
+        ("artifact:./~/.openclaw/x", "artifact:./~/.openclaw/x"),  # a directory named ~, not home
+        ("artifact:~/~/x", "artifact:./~/x"),
+        ("artifact:~/$HOME/.openclaw/config.json", "artifact:./$HOME/.openclaw/config.json"),
+        ("artifact:~//.aws/amazonq/mcp.json", "artifact:.aws/amazonq/mcp.json"),  # home-relative
+        ("artifact:/../etc/x", "artifact:/etc/x"),
+        ("artifact:x/ / / / / / / / / / ", "artifact:x"),
+        ("process:" + "1" * 5000, "process:" + "1" * 5000),  # beyond int()'s digit limit
+        ("process:000", "process:0"),
         ("artifact:.claude/../.cursor/mcp.json", "artifact:.cursor/mcp.json"),
         ("artifact:/abs/path/", "artifact:/abs/path"),
         ("no-namespace", "no-namespace"),
@@ -272,6 +301,61 @@ def test_a_scheme_that_merges_truth_keys_is_refused(
     assert not out.exists()
     # the exact scheme compares them as written and scores
     assert score.main(args[:-2]) == 0
+
+
+@pytest.mark.parametrize("scheme", [(), ("--keys", "canonical-v1")])
+def test_a_path_that_climbs_out_of_a_truth_directory_is_not_inside_it(
+    tmp_path: Path, scheme: tuple[str, ...]
+) -> None:
+    pos = Case(
+        "e1",
+        "endpoint",
+        "home",
+        "test-family",
+        "easy",
+        "unit test",
+        expected=[TruthEntity("artifact", "artifact:.openclaw", "agent", {}, "planted")],
+        tolerated=[],
+        decoys=[],
+        files={"home/.openclaw/x": "{}"},
+    )
+    corpus_path, results = _results(tmp_path, [pos], {"e1": ["artifact:.openclaw/../../.cursor/mcp.json"]})
+    i = _metrics(tmp_path, corpus_path, results, *scheme)["tools"]["t"]["in_scope"]
+    assert (i["tp"], i["fp"], i["fn"]) == (0, 1, 1)
+
+
+@pytest.mark.parametrize("scheme", [(), ("--keys", "canonical-v1")])
+@pytest.mark.parametrize("order", [("llm", "agent"), ("agent", "llm")])
+def test_the_agent_tier_does_not_depend_on_report_order(
+    tmp_path: Path, scheme: tuple[str, ...], order: tuple[str, str]
+) -> None:
+    """De-duplicating by first report let report order decide agent credit and agent false alarms."""
+    pos = _case("p1", expected=(("service:127.0.0.1:11434", "agent"), ("service:127.0.0.1:8080", "llm")))
+    spellings = (
+        [
+            "service:127.0.0.1:11434",
+            "service:127.0.0.1:11434",
+            "service:127.0.0.1:8080",
+            "service:127.0.0.1:8080",
+        ]
+        if not scheme
+        else [
+            "service:localhost:11434",
+            "service:127.0.0.1:11434",
+            "service:localhost:8080",
+            "service:127.0.0.1:8080",
+        ]
+    )
+    corpus_path, results = _results(tmp_path, [pos], {})
+    rows = [json.loads(line) for line in (results / "t.jsonl").read_text(encoding="utf-8").splitlines()]
+    labels = [order[0], order[1], order[0], order[1]]
+    rows[0]["entities"] = [
+        {"kind": "service", "key": k, "label": lab} for k, lab in zip(spellings, labels, strict=True)
+    ]
+    (results / "t.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    i = _metrics(tmp_path, corpus_path, results, *scheme)["tools"]["t"]["in_scope"]
+    assert i["agent_recall"] == 1.0
+    assert i["agent_false_alarm_rate"] == 1.0  # the llm entity was called an agent by one report
 
 
 def test_the_committed_run_scores_the_same_under_canonical_keys(tmp_path: Path) -> None:

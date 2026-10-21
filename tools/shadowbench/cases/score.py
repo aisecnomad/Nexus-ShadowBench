@@ -38,9 +38,11 @@ Matching. A reported key equal to a tolerated key is neither credited nor
 penalized. Otherwise it matches an expected or decoy key when they are equal,
 or, for ``artifact:`` keys, when the reported path lies inside the expected or
 decoy directory (a tool that cites a file in Claude Code's ``.claude``
-directory has found it). A reported ancestor directory of an expected file is
+directory has found it); a reported path with a ``..`` segment lies inside no
+directory. A reported ancestor directory of an expected file is
 never a match: the rubric lists the directories a tool may name instead as
-tolerated. Reported keys are de-duplicated. A reported key that matches
+tolerated. Reported keys are de-duplicated; a key reported more than once is
+labeled ``agent`` when any of its reports is. A reported key that matches
 nothing expected or tolerated is a false positive; when it matches a decoy it
 also counts against specificity.
 
@@ -236,11 +238,17 @@ def mcnemar_exact(b: int, c: int) -> float:
 
 
 def _key_match(reported: str, truth: str) -> bool:
-    """Whether ``reported`` names ``truth``: the same key, or an artifact path inside the truth directory."""
+    """Whether ``reported`` names ``truth``: the same key, or an artifact path inside the truth directory.
+
+    A reported path with a ``..`` segment is inside no directory: ``.claude/../../x`` starts with
+    ``.claude/`` but names a file outside it.
+    """
     if reported == truth:
         return True
     if reported.startswith("artifact:") and truth.startswith("artifact:"):
         inner, outer = reported[9:].rstrip("/"), truth[9:].rstrip("/")
+        if ".." in inner.split("/"):
+            return False
         return inner.startswith(outer + "/")
     return False
 
@@ -293,13 +301,16 @@ class CaseScore:
             return
         # code hits the adapter could not map to a fact and dropped, counted in the row
         self.dropped_out_of_taxonomy = int(row.get("out_of_taxonomy") or 0)
-        seen: set[str] = set()
+        # One report per key, in first-seen order; a key reported more than once (as the same spelling,
+        # or as spellings the scheme maps together) is labeled agent when any of its reports is, so the
+        # agent tier never depends on the order a tool printed its findings in.
+        reports: dict[str, str] = {}
         for ent in row["entities"]:
             key = canon(str(ent["key"]))
             label = str(ent["label"])
-            if key in seen:
-                continue
-            seen.add(key)
+            if key not in reports or label == "agent":
+                reports[key] = label if key not in reports else "agent"
+        for key, label in reports.items():
             if case.surface == "code" and not is_fact(key):
                 self.out_of_taxonomy.add(key)
                 continue

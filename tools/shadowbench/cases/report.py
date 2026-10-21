@@ -86,10 +86,10 @@ def isolation(manifest: dict[str, Any]) -> str:
         runtime = "gVisor (`runsc`)" if record.get("runtime") == "runsc" else f"`{record.get('runtime')}`"
         return (
             f" Tools ran in containers from `{record.get('image')}` under {runtime}, with no network,"
-            f" a read-only root file system and resource limits {limit_text}."
+            f" a read-only root file system and requested resource limits {limit_text}."
         )
     namespaces = ", ".join(record.get("namespaces") or [])
-    return f" Tools ran in fresh namespaces ({namespaces}) with resource limits {limit_text}."
+    return f" Tools ran in fresh namespaces ({namespaces}) with requested resource limits {limit_text}."
 
 
 def withheld(metrics: dict[str, Any]) -> list[str]:

@@ -28,9 +28,12 @@ are compared. The normative rules are in ``docs/key-canonicalization.md``; in sh
   written the way ``ipaddress`` writes it (IPv6 in brackets) and the port loses leading zeros.
   ``client:`` IPs are written the same way.
 * ``process:`` pids and ``proc:`` indexes lose leading zeros.
-* ``artifact:`` paths use ``/``, lose a leading ``./``, ``~/`` or ``$HOME/``, empty and ``.``
-  segments and a trailing ``/``, and resolve ``..`` lexically; a path whose ``..`` would leave the
-  root is left as it is. Case is kept: the endpoint surface's file systems are case-sensitive.
+* ``artifact:`` paths use ``/``; one leading ``~/``, ``$HOME/`` or ``${HOME}/`` is removed (what
+  follows it is relative to home); empty and ``.`` segments, a trailing ``/`` and whitespace at
+  either end are dropped; ``..`` is resolved lexically, and one that climbs out of a relative path
+  is kept, so such a path lies inside no truth directory. A path whose first segment is a directory
+  named ``~`` or ``$HOME`` keeps a leading ``./``. Case is kept: the endpoint surface's file
+  systems are case-sensitive.
 * The code surface's fact namespaces (``tools.discovery_benchmark.taxonomy.CATEGORIES``) lower-case
   the value and write ``_`` and spaces as ``-``, the taxonomy's own spelling.
 
@@ -170,7 +173,8 @@ def _client(value: str) -> str:
 
 
 def _number(value: str) -> str:
-    return str(int(value)) if _DIGITS.match(value) else value
+    # not int(): a tool's output is untrusted, and int() refuses more than 4300 digits
+    return (value.lstrip("0") or "0") if _DIGITS.match(value) else value
 
 
 def _k8s(value: str) -> str:
@@ -181,27 +185,50 @@ def _k8s(value: str) -> str:
     return f"{namespace.lower()}/{K8S_KINDS.get(kind.lower(), kind)}/{name.lower()}"
 
 
-def _artifact(value: str) -> str:
-    path = value.replace("\\", "/")
-    for prefix in ("~/", "$HOME/", "${HOME}/"):
-        if path.startswith(prefix):
-            path = path[len(prefix) :]
-            break
-    absolute = path.startswith("/")
+HOME_PREFIXES: tuple[str, ...] = ("~/", "$HOME/", "${HOME}/")
+HOME_TOKENS: frozenset[str] = frozenset({"~", "$HOME", "${HOME}"})
+
+
+def _segments(path: str, absolute: bool) -> str:
+    """``path`` with empty and ``.`` segments dropped and ``..`` resolved lexically.
+
+    A ``..`` that climbs out of a relative path is kept, so the result can never lie inside a
+    truth directory; at the root of an absolute path it is dropped, as ``/..`` is ``/``.
+    """
     out: list[str] = []
     for segment in path.split("/"):
         if segment in ("", "."):
             continue
         if segment == "..":
-            if not out:
-                return value  # the path leaves its root; no rewrite can name the same file
-            out.pop()
+            if out and out[-1] != "..":
+                out.pop()
+            elif not absolute:
+                out.append("..")
             continue
         out.append(segment)
-    joined = "/".join(out)
+    return "/".join(out)
+
+
+def _artifact(value: str) -> str:
+    path = value.replace("\\", "/")
+    absolute = path.startswith("/")
+    # A home prefix is removed once, from the key as written: a later ``~`` is a directory named
+    # ``~``, and what follows a home prefix is relative to home whatever slashes come next.
+    for prefix in HOME_PREFIXES:
+        if path.startswith(prefix):
+            path = path[len(prefix) :]
+            break
+    previous = None
+    while path != previous:  # each round only removes text, so this ends
+        previous = path
+        path = _segments(path, absolute).strip()
     if absolute:
-        return "/" + joined
-    return joined or value
+        return "/" + path
+    if not path:
+        return value
+    if path.split("/", 1)[0] in HOME_TOKENS:
+        return "./" + path  # a directory named ``~``: kept apart from the home prefix
+    return path
 
 
 def _fact(value: str) -> str:
@@ -220,14 +247,14 @@ _RULES: dict[str, Callable[[str], str]] = {
 }
 
 
-MAX_PASSES = 8
-"""A rule can expose what an earlier one would have changed (a trailing ``/`` hiding a space), so
-:func:`canonical` repeats one pass until nothing changes; every pass only removes or folds text."""
+MAX_PASSES = 16
+"""One pass is idempotent by construction (each rule normalizes its own output to a fixed point);
+:func:`canonical` still re-applies it until nothing changes, as a backstop the tests never reach."""
 
 
 def canonical(key: str) -> str:
-    """The ``canonical-v1`` form of ``key``: the fixed point of :func:`_pass` (see the module docstring)."""
-    current = key
+    """The ``canonical-v1`` form of ``key`` (see the module docstring)."""
+    current = _pass(key)
     for _ in range(MAX_PASSES):
         following = _pass(current)
         if following == current:
@@ -253,7 +280,8 @@ def _pass(key: str) -> str:
         value = rule(value)
     elif namespace in FACT_NAMESPACES:
         value = _fact(value)
-    return f"{namespace}:{value}"
+    # lower-casing can leave text that is not NFC; normalize again so a second pass changes nothing
+    return unicodedata.normalize("NFC", f"{namespace}:{value}")
 
 
 SCHEMES: dict[str, Canonicalizer] = {EXACT: exact, CANONICAL_V1: canonical}
