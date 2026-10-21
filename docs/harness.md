@@ -156,10 +156,9 @@ those namespaces. Before anything from the case runs the stage:
 
 - checks that it is init of a fresh PID namespace and in neither the
   runner's mount nor its UTS namespace;
-- sets `no_new_privs`, lowers its resource limits to the spec's (no core
-  dumps, 4 GiB files, 4096 open files and processes by default; every process
-  it starts inherits them), sets the host name to `shadowbench` and brings
-  loopback up;
+- sets `no_new_privs`, sets the host name to `shadowbench`, binds read-only
+  files naming it over `/etc/hostname` and `/etc/hosts`, and brings loopback
+  up;
 - mounts an empty tmpfs over `/root` and `/home`, and a fresh, empty,
   world-writable tmpfs over `/var/tmp` and `/dev/shm`;
 - leaves its starting directory for `/`;
@@ -171,7 +170,11 @@ those namespaces. Before anything from the case runs the stage:
 - runs each invocation as uid/gid 65534 with no supplementary groups and
   exactly the environment the invocation declares (`base_env` builds one from
   scratch with a case-local `HOME`, the fixed `PATH`, telemetry opt-outs and
-  no inherited variable).
+  no inherited variable), under resource limits that `prlimit` sets in the
+  tool's own process (no core dumps, 4 GiB files, 4096 open files and
+  processes by default, soft and hard alike, never above the host's hard
+  limit); the stage, its mock services and the inert processes are not bound
+  by them, and the stage reports the limits that held.
 
 After each invocation, and on a timeout, the stage stops every process in the
 namespace with one `kill(-1, SIGSTOP)`, kills and reaps everything except

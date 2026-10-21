@@ -68,8 +68,9 @@ without becoming the baseline, but keep runs on other corpora out of it.
 - `metrics.json` from `python -m tools.shadowbench.cases score`, and
   `REPORT.md` from `report`;
 - the `tools.json` shape with paths replaced by placeholders, and the
-  installed-dependency records (`uv pip freeze` per venv, `go.sum` for built
-  wrappers), since installs are version-pinned, not hash-locked.
+  `resolved/` directory the runner copies from the tool root (freeze lists, Go
+  build info, the locks used and SHA256SUMS), whose digests the manifest
+  records as `tool_install`.
 
 **Estate track:**
 
@@ -106,13 +107,19 @@ ShadowScan ran) in the run's README and the pull request.
 - **Local paths and identities.** Replace machine paths with placeholders
   before publishing, as the committed runs did: `<tools>`, `<run>`,
   `<estate>`, `<repo>`, `<venvs>`, `<work>` (and `<corpus>`, `<home>`,
-  `<tmp>`, `<host>`). `python -m tools.shadowbench.scrub apply --map
-  PATH=<token> ... FILE...` does it at path boundaries and changes nothing
-  else; `python -m tools.shadowbench.scrub check --identity FILE...` then
-  reports any home, temporary or profile path and this machine's host and
-  user names left, and CI (`make paths`) checks every committed results
-  directory. Say in the pull request that you ran both. Never rewrite any
-  other field ([supply-chain.md](supply-chain.md#scrubbing-machine-paths)).
+  `<tmp>`, `<host>`). The cases runner already writes its rows with the tool
+  root, scratch, output and harness paths replaced, before it records their
+  digest, so **never edit a `<tool>.jsonl`**: the scorer would refuse it.
+  Scrub the other records (`manifest.json`, `tools.json`, `runs.json`, notes)
+  with `python -m tools.shadowbench.scrub apply --map PATH=<token> ...
+  [--home] [--tmp] [--host] FILE...`, which replaces a path only where one
+  starts and ends and changes nothing else, then run
+  `python -m tools.shadowbench.scrub check --identity` on every file you
+  publish, rows included; CI (`make paths`) checks every committed results
+  directory. Estate and code-surface rows carry no recorded digest; scrub
+  them the same way and say so. Say in the pull request that you ran both.
+  Never rewrite any other field
+  ([supply-chain.md](supply-chain.md#scrubbing-machine-paths)).
 - **Credentials or credential-shaped strings.** Run
   `git ls-files -z | xargs -0 python tools/check_secrets.py` before
   committing. Rows can echo synthetic tokens from the corpus; such a value

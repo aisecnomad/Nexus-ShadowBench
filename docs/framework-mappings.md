@@ -34,6 +34,7 @@ against the published lists on 2026-10-21 (`MAPPING_VERSION`).
 |---|---|---|---|
 | label `agent` | ASI10 Rogue Agents, ASI03 Identity and Privilege Abuse | LLM06 Excessive Agency | AML.T0103 Deploy AI Agent, AML.T0108 AI Agent |
 | label `llm` | | LLM02 Sensitive Information Disclosure | AML.T0040 AI Model Inference API Access, AML.T0047 AI-Enabled Product or Service |
+| reported label `ai` (a positive the tool could not tier) | | as `llm`, its lower bound | as `llm` |
 | surface `code` | ASI04 Agentic Supply Chain Vulnerabilities | LLM03 Supply Chain | AML.T0010 AI Supply Chain Compromise |
 | surface `identity` | ASI03 | LLM06 | AML.T0047 |
 | surface `gateway` | | LLM02, LLM10 Unbounded Consumption | AML.T0040, AML.T0034.002 Agentic Resource Consumption |
@@ -53,7 +54,9 @@ against the published lists on 2026-10-21 (`MAPPING_VERSION`).
 | fact `iac` | | LLM10 | AML.T0040 |
 
 An entity's references are the union of its label's, its surface's and, on
-the code surface, its fact category's. Each row's rationale is in the module;
+the code surface only, its fact category's (a `mcp:` key a tool reports on
+another surface takes no fact-category references). `problems()` fails when
+a truth or reported label other than `none` is left unmapped. Each row's rationale is in the module;
 `python -m tools.shadowbench.frameworks` prints the whole mapping as JSON.
 
 ## The AIBOM export
@@ -68,7 +71,8 @@ python -m tools.shadowbench.aibom --corpus benchmarks/shadowbench/cases/corpus.j
 
 Each entity is a component (`application`, `file`, `framework`, `library`,
 `device`) or, when it is reached over a network rather than present (an
-OAuth or SaaS app, a model server, a model provider), an entry of `services`.
+OAuth or SaaS app, a model server, a model provider), an entry of `services`,
+placed by its canonical namespace (`Service:` is placed as `service:`).
 Every entry carries `shadowbench:` properties: the key as written and in
 `canonical-v1` form ([key-canonicalization.md](key-canonicalization.md)), the
 case, surface, modality and label, and the `owasp-asi`, `owasp-llm` and
@@ -77,7 +81,12 @@ mapping version and, for a tool export, the tool's recorded version and the
 SHA-256 of its rows file.
 
 The export is deterministic (no timestamp; a serial number derived from the
-inputs), validates against the strict CycloneDX 1.6 schema in the tests, and
-refuses a results directory recorded against another corpus. A tool export
+SHA-256 of the rest of the document, so a new mapping version gives a new
+serial number) and validates against the strict CycloneDX 1.6 schema in the
+tests. A tool export takes only rows the scorer would accept and the run's
+manifest vouches for: the manifest names this corpus and records the tool as
+run, the row statuses add up to its counts, the file's SHA-256 is the one it
+recorded, and each row agrees with its case; anything else is refused with
+exit 2, a malformed row included. A tool export
 is an inventory of what the tool said, matched to nothing: it is not a score
 and says nothing about which reports were right.

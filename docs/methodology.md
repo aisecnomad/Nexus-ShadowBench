@@ -188,7 +188,10 @@ run, with the reason observed. Examples from the track READMEs:
 | Cisco AI BOM | refuses to run without an LLM credential; the benchmark is offline |
 
 Each adapter's docstring records the tool version, the exact command and the
-output-to-entity mapping. Tool installs are version-pinned, not hash-locked.
+output-to-entity mapping. Cases-track tool installs are hash-locked
+([supply-chain.md](supply-chain.md#hash-locked-tool-installs)); estate and
+code-surface installs are version-pinned, not hash-locked, and the 2026-10-11
+runs predate the locks.
 How each runner isolates a tool is described in the README's
 [architecture section](../README.md#the-how-the-harness-and-running-it-accurately)
 and in [harness.md](harness.md).

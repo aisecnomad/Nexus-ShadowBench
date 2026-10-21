@@ -137,8 +137,10 @@ checks both on every push, and CI audits every lock with `pip-audit`.
 Results directories can be signed with Sigstore and are checked by
 `make verify`; cases tools install from hash locks into a hardened sandbox
 (optionally a digest-pinned container, under gVisor), and each run records
-its sandbox and installed set. A weekly clean-room workflow re-scores every
-published run from scratch ([supply-chain notes](docs/supply-chain.md)).
+its sandbox and installed set. A weekly clean-room workflow re-scores the
+cases and estate 2026-10-11 runs (metrics and reports) and the code-surface
+2026-10-09 metrics from scratch; older historical results are not re-scored
+([supply-chain notes](docs/supply-chain.md)).
 
 ## Handling the corpus safely
 

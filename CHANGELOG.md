@@ -52,11 +52,34 @@ changed, no published number moved, and no published run was rerun.
   paths; `make paths` (now part of `make check`) and CI check every committed
   results directory of the live tracks.
 - **Clean-room rescore.** A weekly workflow installs from scratch, verifies,
-  rebuilds the cases corpus, re-scores every published run (`make rescore`
-  now includes the code-surface 2026-10-09 metrics) and runs two tools from
+  rebuilds the cases corpus, re-scores the cases and estate 2026-10-11 runs
+  and the code-surface 2026-10-09 metrics (`make rescore` now includes the
+  latter; older historical results are not re-scored) and runs two tools from
   their locks in the sandbox on every endpoint and runtime case, failing on
   harness problems and reporting drift from the 2026-10-11 run
   ([docs/supply-chain.md](docs/supply-chain.md)).
+- **Fixes from an adversarial review of this change** (41 findings, each
+  reproduced and upheld by independent verifiers): `canonical-v1` strips a
+  home prefix once, keeps a climb out of a relative path, never raises on
+  long pids and is idempotent on adversarial paths; a reported `artifact:`
+  path with `..` is inside no truth directory, and a key reported more than
+  once is labeled `agent` when any report is, in both schemes (no committed
+  row is affected); limits are set by `prlimit` in each tool's process, not
+  the stage, and the limits that held are recorded; `/etc/hostname` and
+  `/etc/hosts` are masked; OCI tool binds keep their configured paths; the
+  installer creates venvs afresh, builds sdists with hash-locked setuptools,
+  is `CDPATH`-safe, and Go adapters skip a missing binary; the runner refuses
+  tools whose binaries changed since install, empties `resolved/` before
+  copying, refuses impossible `--rlimit` values and writes rows with
+  placeholders before their digest; the scrubber bounds both ends of a path,
+  sees paths after JSON escapes and under `/var/home` or WSL profiles, exempts
+  only whole corpus paths, keeps line endings, refuses missing inputs and
+  gains `--host`; the AIBOM export refuses rows the manifest does not vouch
+  for and malformed rows, splits rows on newlines only, maps the `ai` label,
+  applies fact categories on the code surface only, places by canonical
+  namespace and derives its serial number from the whole document; the smoke
+  check fails on an expected tool that did not run; and the docs no longer
+  overstate what is re-scored, hash-locked or verified (erratum E6).
 - **Roadmap.** Added the remaining recommendations of the 2026-10-21 review:
   a third-party-held test split, a contamination policy, inter-annotator
   agreement, neutral stewardship, a pre-registered run of record, power

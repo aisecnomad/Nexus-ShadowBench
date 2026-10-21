@@ -10,9 +10,10 @@ or the [supply-chain notes](docs/supply-chain.md) already documents.
 
 - Keep the companion verifiable: every migrated byte bound by
   `MIGRATION.json` or a recorded `AMENDMENTS.json` entry, the estate freeze
-  holding, the cases corpus rebuilding case for case, every published run
-  re-scoring byte for byte in the weekly clean-room workflow, and the harness
-  tests green against the pinned scanner.
+  holding, the cases corpus rebuilding case for case, the cases and estate
+  2026-10-11 runs and the code-surface 2026-10-09 metrics re-scoring byte for
+  byte in the weekly clean-room workflow, and the harness tests green against
+  the pinned scanner.
 - **Sign the runs of record.** Dispatch the Attest results workflow for the
   cases and estate 2026-10-11 and code-surface 2026-10-09 directories and
   commit the bundles, then make `tools.attest verify --require-signatures`

@@ -18,6 +18,7 @@ quoting the file, the line and the evidence.
 | [E3](#e3-the-weekly-gate-no-longer-uses-the-newest-baseline) | `benchmarks/README.md`, `tools/discovery_benchmark/README.md`, `benchmarks/shadow-ai-discovery/README.md` | superseded behaviour |
 | [E4](#e4-the-cases-reproduce-block-assumes-one-repository) | `tools/shadowbench/cases/README.md` | layout after migration |
 | [E5](#e5-links-to-files-that-stayed-in-shadowscan) | several track and harness READMEs | broken relative links |
+| [E6](#e6-the-cases-harness-readme-describes-unlocked-installs-and-the-older-stage) | `tools/shadowbench/cases/README.md` | superseded behaviour |
 
 ## E1: code-surface 2026-10-09 REPORT.md wording
 
@@ -90,3 +91,24 @@ and `tools/benchmark/README.md`).
 [.github/workflows/benchmark.yml](https://github.com/aisecnomad/Nexus-ShadowScan/blob/main/.github/workflows/benchmark.yml)
 and the [engineering log](https://github.com/aisecnomad/Nexus-ShadowScan/blob/main/docs/engineering-log.md).
 The repository README says the links were kept as source evidence.
+
+## E6: the cases harness README describes unlocked installs and the older stage
+
+**Says.** Installs "are version-pinned, not hash-locked: each PyPI tool is
+pinned to one version, but its transitive dependencies resolve at install
+time, and the Fleet wrapper's indirect Go modules are resolved by `go mod
+tidy`. Record `uv pip freeze` for each venv and the wrapper's `go.sum` next to
+any results" (lines 160 to 165). The Isolation section starts the stage under
+`unshare --net --pid --fork --kill-child --mount --propagation private
+--mount-proc --ipc` (lines 49 to 51).
+
+**Read as.** Since [#8](https://github.com/aisecnomad/Nexus-ShadowBench/pull/8)
+`install_tools.sh` installs PyPI tools from committed hash locks in
+`tools/shadowbench/cases/locks/`, builds the Fleet wrapper against a committed
+`go.mod` and `go.sum`, and records the resolved set in `resolved/`, which the
+runner copies into each run and re-checks before tools run. The stage also
+gets UTS and cgroup namespaces, a fixed host name with `/etc/hostname` and
+`/etc/hosts` masked, and per-invocation resource limits; `--sandbox oci` runs
+it in a digest-pinned container. [supply-chain.md](supply-chain.md) and
+[harness.md](harness.md#isolation) describe both. The 2026-10-11 run predates
+all of this.

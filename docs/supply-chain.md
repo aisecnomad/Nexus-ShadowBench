@@ -29,8 +29,8 @@ states it.
 | Tool identity | uid/gid 65534, no supplementary groups, `no_new_privs` | the same, inside the container |
 | Capabilities | none for tools (dropped at the uid change) | container keeps only `SETUID`, `SETGID`, `KILL`, `DAC_READ_SEARCH` for the stage; tools get none; `no-new-privileges` |
 | File system | host's, with `/root` and `/home` hidden and fresh `/var/tmp` and `/dev/shm` | the image's, read-only; fresh `/tmp`, `/var/tmp`, `/run`; only the run directory writable; tool trees and harness bound read-only |
-| Host name | `shadowbench` | `shadowbench` |
-| Resource limits | `RLIMIT_CORE` 0, `FSIZE` 4 GiB, `NOFILE` 4096, `NPROC` 4096 (`--rlimit` changes them; `as` and `cpu` available) | the same, plus `--oci-memory` (4g, no swap), `--oci-cpus` (2) and `--oci-pids` (1024) |
+| Host name | `shadowbench`, with read-only `/etc/hostname` and `/etc/hosts` naming it | `shadowbench` (Docker writes both files) |
+| Resource limits | set by `prlimit` in each tool's own process, soft and hard alike: `RLIMIT_CORE` 0, `FSIZE` 4 GiB, `NOFILE` 4096, `NPROC` 4096 (`--rlimit` changes them; `as` and `cpu` available); the stage reports what held, recorded per tool as `limits_applied` | the same, plus `--oci-memory` (4g, no swap), `--oci-cpus` (2) and `--oci-pids` (1024) for the whole container |
 | Network | empty namespace, loopback mock services | `--network none`, loopback mock services |
 | System calls | unrestricted | Docker's default seccomp profile (gVisor: its own) |
 
@@ -38,9 +38,16 @@ The OCI image must be pinned by digest and present locally; a run never
 pulls. The runner refuses a rootless or user-namespace-remapped daemon, under
 which uid 65534 in the container would not own the work tree, and a
 contained stage refuses to skip its mounts unless its root file system is not
-the runner's. A timed-out container is force-removed. Both backends were run
-on the endpoint and runtime cases with Fleet `ai_tools` and reproduce the
-2026-10-11 run's keys on every case.
+the runner's. A timed-out container is force-removed. Tool trees are bound at
+the paths `tools.json` names, from what those paths resolve to on the host,
+so a symlinked tool root still works.
+
+No committed run used either backend yet. As an unrecorded check while writing
+this change (2026-10-21, on one Linux VM), Fleet `ai_tools` run under both
+backends (the OCI one with `python:3.13-slim-bookworm@sha256:73aa5fae…`) and
+Microsoft `agent-discovery` under `namespaces` reported the same keys as the
+2026-10-11 run on every endpoint and runtime case; the weekly smoke job
+repeats the `namespaces` part with a recorded summary.
 
 ## Hash-locked tool installs
 
@@ -48,12 +55,16 @@ on the endpoint and runtime cases with Fleet `ai_tools` and reproduce the
 cases track's third-party tools, all of them or the ones named
 (`install_tools.sh ROOT agentdiscover numbat`).
 
-- **PyPI tools** install exactly the distributions of
-  [`locks/<venv>.txt`](../tools/shadowbench/cases/locks/), universal locks
-  compiled with `uv pip compile --generate-hashes` from the one-line
-  `locks/<venv>.in`, with `--require-hashes --no-deps`. Nothing resolves at
-  install time, a distribution whose hash differs fails the install, and
-  `uv pip check` fails an incomplete lock.
+- **PyPI tools** install into a venv created afresh each time exactly the
+  distributions of [`locks/<venv>.txt`](../tools/shadowbench/cases/locks/),
+  universal locks compiled with `uv pip compile --generate-hashes` from the
+  one-line `locks/<venv>.in`, with `--require-hashes --no-deps`. Nothing
+  resolves at install time, a distribution whose hash differs fails the
+  install, and `uv pip check` fails an incomplete lock. A distribution
+  published only as an sdist (`esprima`) is built with `--no-build-isolation`
+  against the hash-locked setuptools of `locks/build.txt`, not in an isolated
+  build that would fetch setuptools unchecked (uv does not enforce hashes on
+  build constraints).
 - **Go tools** build from pinned commits against their own `go.sum`. The
   Fleet wrapper builds against a committed
   [`go.mod` and `go.sum`](../tools/shadowbench/cases/locks/) in `-mod=readonly`
@@ -62,8 +73,12 @@ cases track's third-party tools, all of them or the ones named
 - **The record.** `TOOL_ROOT/resolved/` holds `uv pip freeze` per venv,
   `go version -m` per binary (every module and its `h1:` hash), the locks
   used, and `SHA256SUMS` of every binary and entry point. The runner copies
-  it into each run's `resolved/` and records each file's SHA-256 as
-  `tool_install` in the manifest.
+  it into each run's `resolved/` (emptied first) and records each file's
+  SHA-256 as `tool_install` in the manifest. Before any tool runs it hashes
+  every file `SHA256SUMS` lists again and refuses to start if one changed or
+  is missing (`binaries_verified`), so the record names the binaries and entry
+  points that ran. The venvs' library files are covered by the freeze lists
+  and the locks, not re-hashed.
 
 The 2026-10-11 run predates the locks: its tools resolved their transitive
 dependencies at install time and nothing recorded them. To refresh a lock,
@@ -133,19 +148,28 @@ records for publication ([submitting-results.md](submitting-results.md#what-neve
 
 ```bash
 python -m tools.shadowbench.scrub apply --map /opt/nsb/tools=\<tools\> --map /opt/nsb/results/2026-11-02=\<run\> \
-    --home --tmp <published files>
-python -m tools.shadowbench.scrub check --identity <published files>
+    --home --tmp --host manifest.json tools.json
+python -m tools.shadowbench.scrub check --identity <every published file, rows included>
 ```
 
-`apply` replaces each mapped path with its placeholder (`<corpus>`,
-`<estate>`, `<home>`, `<host>`, `<repo>`, `<run>`, `<tmp>`, `<tools>`,
-`<venvs>`, `<work>`) at path boundaries only, longest first, in its raw and
-JSON-escaped forms, and changes nothing else. `check` reports home,
-temporary and Windows profile paths left, and with `--identity` this
-machine's host and user names; a path that occurs verbatim in a `--corpus`
-(the estate's fictional `/home/dana`, echoed by tools) is the corpus's, not
-the machine's. `make paths` and CI check every committed results directory
-of the live tracks with their corpora.
+The cases runner writes its rows with the tool root, scratch, output and
+harness paths already replaced, before it records their `rows_sha256`, so
+rows are never scrubbed afterwards (the scorer would refuse them). `apply`
+replaces each mapped path with its placeholder (`<corpus>`, `<estate>`,
+`<home>`, `<repo>`, `<run>`, `<tmp>`, `<tools>`, `<venvs>`, `<work>`) only
+where a path starts and ends (`/tmp` in `/tmp/x` or after a JSON `\n`, never
+the `/tmp` inside `/var/tmp` or a URL), longest first, in its raw and
+JSON-escaped forms, and `--host` replaces this machine's host name with
+`<host>` where it stands as a whole name. It keeps line endings and changes
+nothing else, and refuses a named file that is missing or not a text record.
+`check` reports home (including `/var/home` and WSL or macOS data-volume
+profiles), temporary and Windows profile paths left, also after a JSON escape
+or an ANSI colour code, and with `--identity` this machine's host and user
+names. A path a `--corpus` contains, or one of its directories, or one a
+report cut short inside its last component, is the corpus's (the estate's
+fictional `/home/dana`, echoed by tools), not the machine's; another path
+under the same home is still a finding. `make paths` and CI check every
+committed results directory of the live tracks with their corpora.
 
 ## The clean-room rescore
 
@@ -161,11 +185,12 @@ demand, on a fresh runner with nothing cached.
 - **Level-2 smoke run:** Fleet `ai_tools` and Microsoft `agent-discovery`
   installed from their locks and run in the sandbox on every endpoint and
   runtime case.
-  [`smoke.py`](../tools/shadowbench/cases/smoke.py) fails the job on an
-  `error` or `incomplete` row, a missing row, or a manifest without its
-  isolation or install record, and reports, without failing, every case whose
-  keys drift from the 2026-10-11 run. The records are then scrubbed and
-  checked as for publication.
+  [`smoke.py`](../tools/shadowbench/cases/smoke.py) fails the job when either
+  tool was not run, scored no case or its adapter did not load, on an `error`
+  or `incomplete` row, a missing row, or a manifest without its isolation or
+  install record, and reports, without failing, every case whose keys drift
+  from the 2026-10-11 run. The manifest is then scrubbed, and every record
+  checked, as for publication.
 
 ## What this does not establish
 

@@ -46,7 +46,7 @@ platform treats as the same; everything else keeps its case and spelling.
 | `service:` | `host:port`, or an `http(s)`, `grpc(s)` or `ws(s)` URL whose path is dropped and whose missing port is the scheme's default; host lower-cased; `localhost` is `127.0.0.1`; IPs as Python's `ipaddress` writes them, IPv6 in brackets; port without leading zeros | `service:http://LocalHost:11434/v1` is `service:127.0.0.1:11434` |
 | `client:` | an IP as `ipaddress` writes it | |
 | `process:`, `proc:` | leading zeros dropped | `process:007` is `process:7` |
-| `artifact:` | `\` as `/`; a leading `./`, `~/`, `$HOME/` or `${HOME}/` dropped; empty and `.` segments and a trailing `/` dropped; `..` resolved lexically; case kept | `artifact:~/.aws//amazonq/./mcp.json/` is `artifact:.aws/amazonq/mcp.json` |
+| `artifact:` | `\` as `/`; one leading `~/`, `$HOME/` or `${HOME}/` dropped, and what follows it is relative to home (`~//x` is `x`); empty and `.` segments, a trailing `/` and whitespace at either end dropped; `..` resolved lexically, and one that climbs out of a relative path kept (`a/../../b` is `../b`), so such a path lies inside no truth directory; a first segment that is a directory named `~` or `$HOME` keeps a leading `./`; case kept | `artifact:~/.aws//amazonq/./mcp.json/` is `artifact:.aws/amazonq/mcp.json`; `artifact:~/~/x` is `artifact:./~/x` |
 | code-surface fact categories | value lower-cased; `_` and spaces written as `-` | `Framework:Lang_Graph` is `framework:lang-graph` |
 
 Deliberately **not** folded:
@@ -62,11 +62,13 @@ Deliberately **not** folded:
 
 ## Guarantees
 
-- **Total and idempotent.** `canonical` never raises, and
-  `canonical(canonical(k)) == canonical(k)` for every string, which
-  Hypothesis checks on arbitrary text. One pass can expose what an earlier
-  rule would have changed, so `canonical` is the fixed point of a pass that
-  only removes or folds text.
+- **Total and idempotent.** `canonical` never raises (pids of any length
+  included), and `canonical(canonical(k)) == canonical(k)` for every string.
+  Each rule normalizes its own output to a fixed point, so one pass is
+  idempotent; Hypothesis checks it on arbitrary text and on adversarial paths
+  (repeated home prefixes, `..`, whitespace segments). A home prefix is
+  removed once, from the key as written, so no later pass can strip a
+  directory that is merely named `~`.
 - **Never merges truth.** The scorer refuses a scheme under which two truth
   keys of one case (expected, decoy or tolerated) share a canonical form,
   `--force` or not. `python -m tools.shadowbench.keys check --corpus
