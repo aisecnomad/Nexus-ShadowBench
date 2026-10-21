@@ -4,9 +4,10 @@
 (``--summary FILE`` appends a Markdown summary, such as ``$GITHUB_STEP_SUMMARY``)
 
 A smoke run installs a few tools from their locks and runs them in the sandbox on a few surfaces.
-It fails (exit 1) when the harness did not do its job: a tool the manifest says ran wrote no rows,
-a row is an ``error`` or ``incomplete``, a case has no row, or the manifest does not record the
-sandbox or the tool install. It never fails on drift: each case whose reported keys differ from
+It fails (exit 1) when the harness did not do its job: an ``--expect``-ed tool is missing from the
+manifest, was skipped or scored no case, an adapter module failed to load, a tool the manifest says
+ran wrote no rows, a row is an ``error`` or ``incomplete``, a case has no row, or the manifest does
+not record the sandbox or the tool install. It never fails on drift: each case whose reported keys differ from
 the baseline run's rows for the same tool and case is listed, since the baseline was recorded by
 earlier adapters under weaker isolation, and tools resolved their dependencies at install time
 then. Drift is evidence to read, not a regression gate.
@@ -39,10 +40,19 @@ def _keys(row: dict[str, Any] | None) -> set[str]:
     return {str(e["key"]) for e in (row or {}).get("entities") or []}
 
 
-def check(results: Path, baseline: Path) -> tuple[list[str], dict[str, Any]]:
+def check(results: Path, baseline: Path, expect: tuple[str, ...] = ()) -> tuple[list[str], dict[str, Any]]:
     """Harness problems in ``results`` and, per tool, its drift from ``baseline``."""
     manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
     problems: list[str] = []
+    tools = manifest.get("tools") or {}
+    for name, problem in sorted((manifest.get("skipped_adapters") or {}).items()):
+        problems.append(f"adapter module {name} did not load: {problem}")
+    for name in expect:
+        run = tools.get(name)
+        if run is None:
+            problems.append(f"{name}: expected, but the manifest does not list it")
+        elif run.get("skipped"):
+            problems.append(f"{name}: expected, but not run ({run['skipped']})")
     if not isinstance(manifest.get("isolation"), dict):
         problems.append("the manifest records no isolation")
     if not (manifest.get("tool_install") or {}).get("resolved"):
@@ -59,6 +69,8 @@ def check(results: Path, baseline: Path) -> tuple[list[str], dict[str, Any]]:
         if len(rows) != int(manifest.get("cases") or 0):
             problems.append(f"{tool}: {len(rows)} rows for {manifest.get('cases')} cases")
         scored = {cid: row for cid, row in rows.items() if row["status"] != "unsupported"}
+        if not scored and tool in expect:
+            problems.append(f"{tool}: expected, but every row is unsupported")
         for cid, row in sorted(scored.items()):
             if row["status"] != "ok":
                 problems.append(f"{tool} {cid}: {row['status']}: {str(row.get('note'))[:200]}")
@@ -115,8 +127,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--results", type=Path, required=True)
     ap.add_argument("--baseline", type=Path, required=True)
     ap.add_argument("--summary", type=Path, default=None)
+    ap.add_argument("--expect", default="", help="comma-separated tools that must have run")
     args = ap.parse_args(argv)
-    problems, report = check(args.results, args.baseline)
+    expect = tuple(name for name in args.expect.split(",") if name)
+    problems, report = check(args.results, args.baseline, expect)
     text = summary(problems, report)
     print(text)
     if args.summary is not None:

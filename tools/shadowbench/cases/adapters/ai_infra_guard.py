@@ -299,8 +299,11 @@ class AIInfraGuardAdapter:
         )
 
     def unavailable_reason(self, env: ToolEnv) -> str | None:
-        if not env.binary(TOOL):
+        binary = env.binary(TOOL)
+        if not binary:
             return f"no 'bin' configured for {TOOL}"
+        if not Path(binary).exists():
+            return f"{binary} does not exist"
         fps, vul = self._data_dirs(env)
         if not fps.is_dir():
             return f"fingerprint directory missing: {fps}"

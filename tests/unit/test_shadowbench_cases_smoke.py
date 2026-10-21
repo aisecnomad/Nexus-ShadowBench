@@ -69,3 +69,29 @@ def test_harness_problems_fail(
     problems, _ = smoke.check(run, tmp_path / "missing-baseline")
     assert any(expected in p for p in problems), problems
     assert smoke.main(["--results", str(run), "--baseline", str(tmp_path)]) == 1
+
+
+@pytest.mark.parametrize(
+    ("manifest", "expected"),
+    [
+        (
+            {"tools": {"t": {"version": "1"}}, "skipped_adapters": {"other": "ImportError: x"}},
+            "adapter module other did not load",
+        ),
+        ({"tools": {"t": {"version": "1"}, "u": {"skipped": "no bin"}}}, "u: expected, but not run (no bin)"),
+        ({"tools": {"t": {"version": "1"}}}, "u: expected, but the manifest does not list it"),
+    ],
+)
+def test_an_expected_tool_that_did_not_run_fails(
+    tmp_path: Path, manifest: dict[str, Any], expected: str
+) -> None:
+    """A skipped or unloaded tool left the smoke job green as long as another tool ran."""
+    run = _write(tmp_path / "run", [_row("a")], manifest)
+    problems, _ = smoke.check(run, tmp_path / "base", expect=("t", "u"))
+    assert any(expected in p for p in problems), problems
+
+
+def test_an_expected_tool_with_only_unsupported_rows_fails(tmp_path: Path) -> None:
+    run = _write(tmp_path / "run", [_row("a", "unsupported")])
+    problems, _ = smoke.check(run, tmp_path / "base", expect=("t",))
+    assert "t: expected, but every row is unsupported" in problems

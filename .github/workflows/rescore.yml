@@ -2,8 +2,9 @@ name: Clean-room rescore
 
 # Weekly, on a fresh runner with nothing cached: install the pinned
 # environment from scratch, verify every migrated and attested byte, rebuild
-# the cases corpus, re-score every published run byte for byte and check the
-# committed results for machine paths. A second job runs two third-party tools
+# the cases corpus, re-score the cases and estate 2026-10-11 runs and the
+# code-surface 2026-10-09 metrics byte for byte (older historical results are
+# not re-scored) and check the committed results for machine paths. A second job runs two third-party tools
 # (installed from their hash locks) in the hardened sandbox on every endpoint
 # and runtime case; it fails when the harness does not do its job and reports,
 # without failing, how the tools' output drifts from the 2026-10-11 run.
@@ -69,13 +70,15 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" /tmp/smoke
       - name: Fail on harness problems; report drift from the run of record
         run: |
-          python -m tools.shadowbench.cases.smoke --results /tmp/smoke \
+          python -m tools.shadowbench.cases.smoke --results /tmp/smoke --expect fleet-ai-tools,agentmesh-discovery \
             --baseline benchmarks/shadowbench/cases/results/2026-10-11 --summary "$GITHUB_STEP_SUMMARY"
-      - name: Scrub the run's records as for publication, then check them
+      - name: Scrub the manifest as for publication, then check every record
+        # The rows already carry placeholders (the runner writes them before taking their digest),
+        # so only the manifest is scrubbed; the check covers the rows and the install record too.
         run: |
-          python -m tools.shadowbench.scrub apply --map /opt/shadowbench/tools=\<tools\> --tmp \
-            /tmp/smoke/manifest.json /tmp/smoke/*.jsonl /tmp/smoke/resolved
-          python -m tools.shadowbench.scrub check --identity /tmp/smoke/manifest.json /tmp/smoke/*.jsonl
+          python -m tools.shadowbench.scrub apply --map /opt/shadowbench/tools=\<tools\> --tmp --host \
+            /tmp/smoke/manifest.json
+          python -m tools.shadowbench.scrub check /tmp/smoke
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

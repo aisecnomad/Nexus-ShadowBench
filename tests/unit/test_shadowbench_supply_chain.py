@@ -123,3 +123,75 @@ def test_record_install_copies_the_resolved_record_and_its_digests(tmp_path: Pat
 def test_record_install_without_a_record_says_so(tmp_path: Path) -> None:
     assert runner.record_install(tmp_path, tmp_path / "out") == {"resolved": None}
     assert not (tmp_path / "out").exists()
+
+
+def test_install_drift_names_changed_and_missing_binaries(tmp_path: Path) -> None:
+    root = tmp_path / "tools"
+    (root / "bin").mkdir(parents=True)
+    (root / "resolved").mkdir()
+    (root / "bin" / "a").write_bytes(b"a")
+    (root / "bin" / "b").write_bytes(b"b")
+    sums = [
+        f"{hashlib.sha256(b'a').hexdigest()}  bin/a",
+        f"{hashlib.sha256(b'b').hexdigest()}  bin/b",
+        f"{'0' * 64}  bin/c",
+    ]
+    (root / "resolved" / "SHA256SUMS").write_text("\n".join(sums) + "\n", encoding="utf-8")
+    assert runner.install_drift(root) == ["bin/c: missing"]
+    (root / "bin" / "b").write_bytes(b"rebuilt")
+    assert runner.install_drift(root) == ["bin/b: changed since it was installed", "bin/c: missing"]
+    assert runner.install_drift(tmp_path) is None
+
+
+def test_rows_are_written_with_placeholders_before_their_digest(tmp_path: Path) -> None:
+    mapping = runner.row_placeholders(
+        Path("/opt/nsb/tools"), Path("/tmp/shadowbench-x"), Path("/srv/out"), Path("/")
+    )
+    assert mapping == {"/opt/nsb/tools": "<tools>", "/tmp/shadowbench-x": "<work>", "/srv/out": "<run>"}
+
+
+@pytest.mark.parametrize("tool", ["fleet-ai-tools", "vet", "numbat", "ai-infra-guard"])
+def test_a_go_tool_whose_binary_is_missing_is_skipped_not_run(tmp_path: Path, tool: str) -> None:
+    """A subset install left the Go tools configured but absent; they ran and errored on every case."""
+    from tools.shadowbench.cases.adapters.registry import load_adapters
+    from tools.shadowbench.cases.contract import ToolEnv
+
+    adapter = load_adapters()[0][tool]
+    env = ToolEnv(tmp_path, {"tools": {tool: {"bin": str(tmp_path / "bin" / tool)}}})
+    assert "does not exist" in (adapter.unavailable_reason(env) or "")
+
+
+def test_sdists_build_with_the_hash_locked_setuptools() -> None:
+    script = INSTALL.read_text(encoding="utf-8")
+    assert "--no-build-isolation" in script and '"$locks/build.txt"' in script
+    requirements = _requirements(LOCKS / "build.txt")
+    assert [r for r in requirements if r.startswith("setuptools==")] and all(requirements.values())
+    sdist_only = {
+        r
+        for venv in PYPI_VENVS
+        for r, hashes in _requirements(LOCKS / f"{venv}.txt").items()
+        if len(hashes) == 1
+    }
+    # known sdist-only distributions; a new one must be reviewed for what its build runs
+    assert sdist_only <= {"esprima==4.0.1"}, sdist_only
+
+
+def test_each_venv_is_created_afresh() -> None:
+    script = INSTALL.read_text(encoding="utf-8")
+    assert 'rm -rf "$root/venvs/$1"' in script and "--allow-existing" not in script
+    assert "unset CDPATH" in script
+
+
+def test_record_install_leaves_no_earlier_record_behind(tmp_path: Path) -> None:
+    """A rerun into the same output kept the previous install's files beside the new digests."""
+    first, second = tmp_path / "a", tmp_path / "b"
+    (first / "resolved").mkdir(parents=True)
+    (first / "resolved" / "old.freeze.txt").write_text("x==1\n", encoding="utf-8")
+    (second / "resolved").mkdir(parents=True)
+    (second / "resolved" / "SHA256SUMS").write_text("", encoding="utf-8")
+    out = tmp_path / "out"
+    runner.record_install(first, out)
+    assert set(runner.record_install(second, out)["resolved"]) == {"SHA256SUMS"}
+    assert sorted(p.name for p in (out / "resolved").iterdir()) == ["SHA256SUMS"]
+    assert runner.record_install(tmp_path / "none", out) == {"resolved": None}
+    assert not (out / "resolved").exists()

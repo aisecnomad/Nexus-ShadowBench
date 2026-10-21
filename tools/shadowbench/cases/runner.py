@@ -8,7 +8,7 @@ For each (tool, case) the runner materializes the case under a scratch
 directory, asks the adapter for its invocations, and executes them through
 ``stage.py`` inside fresh network, PID, mount, IPC, UTS and cgroup namespaces
 (``unshare``), with the case's mock services and inert processes present, the
-host name set to ``stage.HOSTNAME`` and the stage's resource limits lowered
+host name set to ``stage.HOSTNAME`` and each tool run under resource limits
 (``stage.DEFAULT_LIMITS``, changed with ``--rlimit``). The adapter then
 normalizes the output into entities. One JSONL row per (tool, case) goes to
 ``<out>/<tool>.jsonl``; verbatim tool output goes to ``<out>/raw/<tool>/``.
@@ -80,7 +80,11 @@ OCI backend the image digest, the daemon's version and the runtime.
 ``tool_install`` records what ``install_tools.sh`` resolved: the runner copies
 ``<tool_root>/resolved/`` (frozen venvs, Go build info, the locks used and
 SHA256SUMS of every binary) into ``<out>/resolved/`` and records each file's
-SHA-256, or ``null`` when the tool root has no such record.
+SHA-256, or ``null`` when the tool root has no such record. Before any tool
+runs, every file SHA256SUMS lists is hashed again, and the runner refuses to
+start when one changed or is missing (``binaries_verified``). Rows are written
+with the tool root, scratch, output and harness paths already replaced by
+``<tools>``, ``<work>``, ``<run>`` and ``<repo>``, before their digest is taken.
 """
 
 from __future__ import annotations
@@ -127,6 +131,7 @@ from tools.shadowbench.cases.stage import (
     build_fakeproc,
     check_limits,
 )
+from tools.shadowbench.scrub import parse_map, scrub_text
 
 STAGE_TIMEOUT_GRACE = 120
 KILL_GRACE = 10.0
@@ -162,8 +167,9 @@ class Sandbox:
     memory: str = "4g"
     cpus: str = "2"
     pids: int = 1024
-    binds: tuple[str, ...] = ()
-    """Host paths bound read-only into the container at their own paths (tool trees)."""
+    binds: tuple[tuple[str, str], ...] = ()
+    """``(host path, container path)`` pairs bound read-only into the container (tool trees): each
+    tools.json path where the configuration names it, backed by what it resolves to on the host."""
 
     def describe(self) -> dict[str, Any]:
         out: dict[str, Any] = {"backend": self.backend, "hostname": HOSTNAME, "limits": dict(self.limits)}
@@ -501,8 +507,8 @@ def oci_command(
         *_bind(str(fakeproc), readonly=True),
         *_bind(str(repo / "tools"), f"{HARNESS_MOUNT}/tools", readonly=True),
     ]
-    for path in sandbox.binds:
-        cmd += _bind(path, readonly=True)
+    for source, destination in sandbox.binds:
+        cmd += _bind(source, destination, readonly=True)
     if sandbox.runtime != "runc":
         cmd += ["--runtime", sandbox.runtime]
     return [*cmd, sandbox.image, "python3", "-P", "-m", f"{__package__}.stage", str(spec_path), str(out_path)]
@@ -716,7 +722,11 @@ def run_one(
         row.update(result.to_json())
         row["seconds"] = round(sum(r.seconds for r in runs), 3)
         row["incomplete"] = bool(result.raw.get("incomplete")) or bad_exit is not None
-        row["raw"] = {"runs": [asdict(r) for r in runs], "adapter": result.raw}
+        row["raw"] = {
+            "runs": [asdict(r) for r in runs],
+            "adapter": result.raw,
+            "limits": staged.get("limits"),
+        }
     except Exception as exc:  # noqa: BLE001 - an adapter bug is an error row, never a crash of the whole run
         row.update(
             {
@@ -758,10 +768,12 @@ def run_tool(
     for case in cases:
         safe_name(case.case_id, "case id")
     rows_path = out / f"{adapter.name}.jsonl"
+    placeholders = row_placeholders(env.tool_root, scratch, out, repo)
     raw_dir = out / "raw" / adapter.name
     raw_dir.mkdir(parents=True, exist_ok=True)
     lock = threading.Lock()
     rows: dict[str, dict[str, Any]] = {}
+    applied: set[str] = set()
     started = time.time()
 
     def task(case: Case) -> None:
@@ -785,6 +797,10 @@ def run_tool(
             raw = row.pop("raw", {})
             with gzip.open(raw_dir / f"{case.case_id}.json.gz", "wt", encoding="utf-8") as fh:
                 json.dump(raw, fh)
+            limits = raw.get("limits") if isinstance(raw, dict) else None
+            if isinstance(limits, dict):
+                with lock:
+                    applied.add(json.dumps(limits, sort_keys=True))
         with lock:
             rows[case.case_id] = row
 
@@ -792,7 +808,8 @@ def run_tool(
         list(pool.map(task, cases))
     with rows_path.open("w", encoding="utf-8") as fh:
         for case in cases:
-            fh.write(json.dumps(rows[case.case_id], ensure_ascii=False) + "\n")
+            line, _ = scrub_text(json.dumps(rows[case.case_id], ensure_ascii=False), placeholders)
+            fh.write(line + "\n")
     statuses: dict[str, int] = {}
     for row in rows.values():
         statuses[str(row["status"])] = statuses.get(str(row["status"]), 0) + 1
@@ -802,6 +819,9 @@ def run_tool(
         "seconds": round(time.time() - started, 1),
         "statuses": statuses,
         "rows_sha256": hashlib.sha256(rows_path.read_bytes()).hexdigest(),
+        # the [soft, hard] limits the stage reported holding for the tool's runs (one entry per
+        # distinct set): the host's hard limits can hold them below what isolation.limits requests
+        "limits_applied": [json.loads(item) for item in sorted(applied)],
     }
 
 
@@ -871,11 +891,58 @@ def fakeproc_problem(exc: Exception) -> str:
     )
 
 
+def row_placeholders(tool_root: Path, scratch: Path, out: Path, repo: Path) -> dict[str, str]:
+    """Machine paths a row may echo (in a note or a tool's own text), with their publishing placeholders.
+
+    Rows are written with these in place, before ``rows_sha256`` is taken, so a published run never
+    has to edit the rows its manifest binds (``tools.shadowbench.scrub``).
+    """
+    pairs = [(tool_root, "<tools>"), (scratch, "<work>"), (out, "<run>"), (repo, "<repo>")]
+    mapping: dict[str, str] = {}
+    for path, token in pairs:
+        try:
+            mapping.update(parse_map([f"{os.path.abspath(path)}={token}"]))
+        except ValueError:
+            continue  # the root directory is never replaced
+    return mapping
+
+
+def install_drift(tool_root: Path) -> list[str] | None:
+    """Files ``resolved/SHA256SUMS`` lists whose bytes changed since ``install_tools.sh`` recorded them.
+
+    None when the tool root has no such record. A run whose tools drifted would publish a record of
+    bytes that did not run, so the runner refuses it.
+    """
+    sums = tool_root / "resolved" / "SHA256SUMS"
+    if not sums.is_file():
+        return None
+    drift: list[str] = []
+    for line in sums.read_text(encoding="utf-8").splitlines():
+        digest, sep, rel = line.partition("  ")
+        if not sep or not rel:
+            drift.append(f"unreadable SHA256SUMS line: {line[:80]!r}")
+            continue
+        try:
+            now = hashlib.sha256((tool_root / rel).read_bytes()).hexdigest()
+        except OSError:
+            drift.append(f"{rel}: missing")
+            continue
+        if now != digest:
+            drift.append(f"{rel}: changed since it was installed")
+    return drift
+
+
 def record_install(tool_root: Path, out: Path) -> dict[str, Any]:
     """Copy ``tool_root/resolved/`` into ``out/resolved/``; the SHA-256 of each regular file copied.
 
-    Symlinks and special files are skipped, so nothing outside the record is copied or followed.
+    ``out/resolved/`` is emptied first, so it holds exactly the files the digests list. Symlinks and
+    special files are skipped, so nothing outside the record is copied or followed.
     """
+    dest = out / "resolved"
+    if dest.is_symlink():
+        raise RuntimeError(f"{dest} is a symlink; refusing to write the install record through it")
+    # the output directory may hold an earlier run's record, which this run's digests do not list
+    shutil.rmtree(dest, ignore_errors=True)
     src = tool_root / "resolved"
     if not src.is_dir() or src.is_symlink():
         return {"resolved": None}
@@ -927,18 +994,31 @@ def parse_limits(values: list[str]) -> dict[str, int]:
     return check_limits(limits)
 
 
-def tool_binds(env: ToolEnv) -> tuple[str, ...]:
-    """The tool trees a container needs read-only: ``tool_root`` and every absolute path in
-    ``tools.json`` that exists, less those already inside another."""
-    candidates = {str(env.tool_root.resolve())}
+def tool_binds(env: ToolEnv) -> tuple[tuple[str, str], ...]:
+    """The tool trees a container needs read-only, as ``(host path, container path)`` pairs.
+
+    Each is ``tool_root`` or an absolute ``tools.json`` path that exists, bound at the path the
+    configuration names (the invocations use that spelling) from what it resolves to on the host,
+    so a symlinked tool root still shows its tools at their configured paths. A path inside another
+    bound path is left out when the outer bind already shows it there.
+    """
+    configured = {os.path.abspath(env.tool_root)}
     tools = env.config.get("tools")
     for cfg in (tools if isinstance(tools, dict) else {}).values():
         if isinstance(cfg, dict):
-            candidates |= {
-                str(Path(v).resolve()) for v in cfg.values() if isinstance(v, str) and v.startswith("/")
+            configured |= {
+                os.path.abspath(v) for v in cfg.values() if isinstance(v, str) and v.startswith("/")
             }
-    existing = sorted(c for c in candidates if os.path.exists(c))
-    return tuple(c for c in existing if not any(c != o and Path(c).is_relative_to(o) for o in existing))
+    pairs = {dst: os.path.realpath(dst) for dst in configured if os.path.exists(dst)}
+
+    def shown_by(dst: str, outer: str) -> bool:
+        if dst == outer or not Path(dst).is_relative_to(outer):
+            return False
+        return os.path.join(pairs[outer], os.path.relpath(dst, outer)) == pairs[dst]
+
+    return tuple(
+        (pairs[dst], dst) for dst in sorted(pairs) if not any(shown_by(dst, outer) for outer in pairs)
+    )
 
 
 def _docker_json(*args: str) -> Any:
@@ -1038,6 +1118,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     env = ToolEnv.load(args.tools)
     repo = REPO
+    drift = install_drift(env.tool_root)
+    if drift:
+        print("the installed tools differ from their install record (resolved/SHA256SUMS):", file=sys.stderr)
+        print("\n".join(drift[:20]), file=sys.stderr)
+        return 2
     try:
         limits = parse_limits(args.rlimit)
     except ValueError as exc:
@@ -1087,6 +1172,12 @@ def main(argv: list[str] | None = None) -> int:
         print(fakeproc_problem(exc), file=sys.stderr)
         return 2
     args.out.mkdir(parents=True, exist_ok=True)
+    if (args.out / "resolved").is_symlink():
+        print(
+            f"{args.out / 'resolved'} is a symlink; refusing to write the install record through it",
+            file=sys.stderr,
+        )
+        return 2
     revision = harness_revision(repo)
     manifest: dict[str, Any] = {
         "started": datetime.now(UTC).replace(microsecond=0).isoformat(),
@@ -1099,7 +1190,7 @@ def main(argv: list[str] | None = None) -> int:
         "python": platform.python_version(),
         "workers": args.workers,
         "isolation": {**sandbox.describe(), **isolation_facts},
-        "tool_install": record_install(env.tool_root, args.out),
+        "tool_install": {**record_install(env.tool_root, args.out), "binaries_verified": drift is not None},
         "cases": len(cases),
         "tools": {},
         "skipped_adapters": problems,

@@ -12,7 +12,10 @@
 # of locks/<venv>.txt (uv pip compile --universal --generate-hashes, top-level
 # pin in locks/<venv>.in), with --require-hashes and --no-deps, so nothing
 # resolves at install time and a distribution whose hash differs fails the
-# install; `uv pip check` then fails an incomplete lock. The Go tools build
+# install; `uv pip check` then fails an incomplete lock. Each venv is created
+# afresh, and a distribution published only as an sdist is built with the
+# hash-locked setuptools of locks/build.txt, not an isolated build that would
+# fetch its build requirements unchecked. The Go tools build
 # from pinned commits with their own go.mod/go.sum, and the Fleet wrapper with
 # the committed locks/fleet-ai-tools.go.mod and .go.sum, all in the default
 # -mod=readonly mode against module checksums the Go checksum database
@@ -33,7 +36,8 @@ shopt -s inherit_errexit  # a failing command inside $(checkout ...) stops the s
 
 root="${1:?usage: install_tools.sh TOOL_ROOT [TOOL...]}"
 shift
-locks="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/locks"
+unset CDPATH  # an exported CDPATH makes cd print the directory, which $(cd ...) would capture
+locks="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/locks"
 known=(snyk-agent-scan cisco-mcp-scanner agentmesh-discovery agentdiscover numbat vet ai-infra-guard fleet-ai-tools)
 for name in "$@"; do
   if [[ " ${known[*]} " != *" $name "* ]]; then
@@ -49,11 +53,20 @@ mkdir -p "$root/third_party" "$root/venvs" "$root/bin" "$root/share" "$root/reso
 root="$(cd "$root" && pwd)"
 
 venv() {  # venv-name: exactly the distributions of locks/<venv-name>.txt, hashes required
-  local lock="$locks/$1.txt"
-  uv venv --quiet --allow-existing -p 3.13 "$root/venvs/$1"
-  uv pip install --quiet --python "$root/venvs/$1/bin/python" --require-hashes --no-deps -r "$lock"
-  uv pip check --quiet --python "$root/venvs/$1/bin/python"
-  cp "$lock" "$root/resolved/locks/"
+  local lock="$locks/$1.txt" python="$root/venvs/$1/bin/python"
+  # A fresh venv every time: one left by an earlier install could keep distributions the lock no
+  # longer names, or ones installed before hashes were checked.
+  rm -rf "$root/venvs/$1"
+  uv venv --quiet -p 3.13 "$root/venvs/$1"
+  # A distribution published only as an sdist (esprima) is built, and an isolated build would fetch
+  # setuptools unchecked; build instead with the hash-locked setuptools of locks/build.txt.
+  uv pip install --quiet --python "$python" --require-hashes --no-deps -r "$locks/build.txt"
+  uv pip install --quiet --python "$python" --require-hashes --no-deps --no-build-isolation -r "$lock"
+  if ! grep -q '^setuptools==' "$lock"; then
+    uv pip uninstall --quiet --python "$python" setuptools
+  fi
+  uv pip check --quiet --python "$python"
+  cp "$lock" "$locks/build.txt" "$root/resolved/locks/"
 }
 
 checkout() {  # owner/repo sha -> prints the checkout directory, detached at sha

@@ -13,6 +13,7 @@ import json
 import os
 import resource
 import shutil
+import socket
 import subprocess
 import tempfile
 from collections.abc import Iterator
@@ -64,16 +65,30 @@ def test_parse_limits_overrides_defaults() -> None:
             runner.parse_limits(bad)
 
 
-def test_apply_limits_only_lowers(monkeypatch: pytest.MonkeyPatch) -> None:
-    current = {resource.RLIMIT_NOFILE: (1024, 1 << 20), resource.RLIMIT_CORE: (resource.RLIM_INFINITY,) * 2}
-    set_to: dict[int, tuple[int, int]] = {}
+def test_limit_pairs_hold_the_request_unless_the_host_hard_limit_is_lower(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current = {
+        resource.RLIMIT_NOFILE: (1024, 1 << 20),
+        resource.RLIMIT_CORE: (resource.RLIM_INFINITY,) * 2,
+        resource.RLIMIT_NPROC: (100, 100),
+    }
     monkeypatch.setattr(stage.resource, "getrlimit", lambda which: current[which])
-    monkeypatch.setattr(stage.resource, "setrlimit", lambda which, pair: set_to.__setitem__(which, pair))
-    applied = stage._apply_limits({"nofile": 4096, "core": 0})
-    # the soft limit is never raised, only capped by the new hard limit
-    assert set_to[resource.RLIMIT_NOFILE] == (1024, 4096)
-    assert set_to[resource.RLIMIT_CORE] == (0, 0)
-    assert applied == {"core": [0, 0], "nofile": [1024, 4096]}
+    monkeypatch.setattr(
+        stage.resource, "setrlimit", lambda *a: pytest.fail("the stage must not limit itself")
+    )
+    pairs = stage.limit_pairs({"nofile": 4096, "core": 0, "nproc": 4096})
+    # soft and hard alike: the manifest's requested value is what the tool runs with...
+    assert pairs["nofile"] == [4096, 4096] and pairs["core"] == [0, 0]
+    # ...unless the host's hard limit is lower, which the stage then reports
+    assert pairs["nproc"] == [100, 100]
+
+
+def test_limit_prefix_runs_prlimit_then_the_tool() -> None:
+    prefix = stage.limit_prefix({"core": [0, 0], "nofile": [4096, 4096]})
+    assert Path(prefix[0]).name == "prlimit"
+    assert prefix[1:] == ["--core=0:0", "--nofile=4096:4096", "--"]
+    assert stage.limit_prefix({}) == []
 
 
 # --- namespaces and containment checks ------------------------------------------------------------
@@ -112,7 +127,7 @@ def test_invalid_host_names_are_refused(name: Any) -> None:
 
 
 def _oci(tmp_path: Path, **overrides: Any) -> list[str]:
-    sandbox = runner.Sandbox(backend="oci", image=IMAGE, binds=("/opt/tools",), **overrides)
+    sandbox = runner.Sandbox(backend="oci", image=IMAGE, binds=(("/data/tools", "/opt/tools"),), **overrides)
     run_dir = tmp_path / "fake-case-abc123"
     return runner.oci_command(
         run_dir / "control" / "spec.json",
@@ -150,7 +165,7 @@ def test_only_the_run_directory_is_bound_writable(tmp_path: Path) -> None:
     mounts = _pairs(_oci(tmp_path), "--mount")
     writable = [m for m in mounts if not m.endswith(",readonly")]
     assert writable == [f"type=bind,src={tmp_path / 'fake-case-abc123'},dst={tmp_path / 'fake-case-abc123'}"]
-    assert "type=bind,src=/opt/tools,dst=/opt/tools,readonly" in mounts
+    assert "type=bind,src=/data/tools,dst=/opt/tools,readonly" in mounts
     assert f"type=bind,src={ROOT / 'tools'},dst={runner.HARNESS_MOUNT}/tools,readonly" in mounts
 
 
@@ -168,7 +183,7 @@ def test_an_image_not_pinned_by_digest_is_refused(tmp_path: Path, image: str | N
 
 
 def test_a_bind_path_docker_cannot_quote_is_refused(tmp_path: Path) -> None:
-    sandbox = runner.Sandbox(backend="oci", image=IMAGE, binds=("/opt/a,b",))
+    sandbox = runner.Sandbox(backend="oci", image=IMAGE, binds=(("/opt/a,b", "/opt/a,b"),))
     with pytest.raises(ValueError, match="cannot bind"):
         runner.oci_command(tmp_path / "s", tmp_path / "o", tmp_path / "run", tmp_path / "f", ROOT, sandbox)
 
@@ -182,9 +197,22 @@ def test_tool_binds_keep_existing_outermost_paths(tmp_path: Path) -> None:
             "tools": {"a": {"bin": str(tmp_path / "bin" / "tool")}, "b": {"bin": str(other), "x": "/no/such"}}
         }
         env = ToolEnv(tmp_path, config)
-        assert runner.tool_binds(env) == tuple(sorted([str(tmp_path.resolve()), str(other.resolve())]))
+        expected = sorted([str(tmp_path), str(other)])
+        assert runner.tool_binds(env) == tuple((os.path.realpath(p), p) for p in expected)
     finally:
         shutil.rmtree(other)
+
+
+def test_tool_binds_show_a_symlinked_tool_root_at_its_configured_path(tmp_path: Path) -> None:
+    """Binding only the resolved path left the configured paths the invocations use missing."""
+    (tmp_path / "data" / "tools" / "bin").mkdir(parents=True)
+    (tmp_path / "data" / "tools" / "bin" / "numbat").write_text("", encoding="utf-8")
+    (tmp_path / "opt").symlink_to(tmp_path / "data")
+    root = tmp_path / "opt" / "tools"
+    env = ToolEnv(root, {"tools": {"numbat": {"bin": str(root / "bin" / "numbat")}}})
+    real = os.path.realpath(root)
+    # one bind: the binary sits where the tool root's bind already shows it
+    assert runner.tool_binds(env) == ((real, str(root)),)
 
 
 def test_describe_records_the_sandbox() -> None:
@@ -297,6 +325,42 @@ def test_a_tool_that_writes_past_the_file_size_limit_fails(run_dirs: tuple[Path,
     assert "exit=0" not in staged["runs"][0]["stdout"]
 
 
+@pytest.mark.skipif(not _namespaces_available(), reason="needs root and unshare with every stage namespace")
+def test_the_stage_writes_large_output_whatever_the_tools_file_size_limit(
+    run_dirs: tuple[Path, Path],
+) -> None:
+    """The limits bound the stage itself, so a tool printing more than fsize turned into a stage error."""
+    work, control = run_dirs
+    sandbox = runner.Sandbox(limits={**stage.DEFAULT_LIMITS, "fsize": 1 << 20})
+    script = "head -c 1572864 /dev/zero | tr '\\0' x"
+    spec = {"services": [], "processes": [], "fakeproc": "/nonexistent", "work": str(work)}
+    staged = runner._stage({**spec, "invocations": [_inv(work, script)]}, control, ROOT, 60, sandbox)
+    assert staged["error"] is None, staged
+    assert len(staged["runs"][0]["stdout"]) == 1572864
+    assert staged["limits"]["fsize"] == [1 << 20, 1 << 20]
+
+
+@pytest.mark.skipif(not _namespaces_available(), reason="needs root and unshare with every stage namespace")
+def test_the_stage_masks_the_host_name_files(run_dirs: tuple[Path, Path]) -> None:
+    """Setting the UTS name left /etc/hostname and /etc/hosts naming the operator's machine."""
+    work, control = run_dirs
+    script = (
+        "cat /etc/hostname; grep -c shadowbench /etc/hosts; echo x > /etc/hostname 2>/dev/null || echo ro"
+    )
+    spec = {"services": [], "processes": [], "fakeproc": "/nonexistent", "work": str(work)}
+    staged = runner._stage({**spec, "invocations": [_inv(work, script)]}, control, ROOT, 60)
+    assert staged["error"] is None, staged
+    lines = staged["runs"][0]["stdout"].split()
+    if os.path.isfile("/etc/hostname"):
+        assert lines[0] == stage.HOSTNAME
+    assert "ro" in lines
+    host = socket.gethostname()
+    if host != stage.HOSTNAME and len(host) > 2:
+        assert host not in staged["runs"][0]["stdout"]
+    # the host's own files are untouched
+    assert stage.HOSTNAME not in Path("/etc/hostname").read_text(encoding="utf-8") or host == stage.HOSTNAME
+
+
 def _oci_image() -> str | None:
     image = os.environ.get("SHADOWBENCH_OCI_IMAGE")
     if not image or os.geteuid() != 0 or shutil.which("docker") is None:
@@ -343,6 +407,7 @@ def test_the_report_names_the_sandbox() -> None:
     assert "Tools ran" not in report.harness(manifest)
     manifest["isolation"] = runner.Sandbox().describe()
     assert "fresh namespaces (net, pid, mount, ipc, uts, cgroup)" in report.harness(manifest)
+    assert "requested resource limits core=0" in report.harness(manifest)
     manifest["isolation"] = runner.Sandbox(backend="oci", image=IMAGE, runtime="runsc").describe()
     sentence = report.harness(manifest)
     assert "gVisor" in sentence and IMAGE in sentence and "read-only root" in sentence
@@ -369,3 +434,18 @@ def test_the_runner_refuses_a_host_without_every_stage_namespace(
     assert runner.main(argv) == 2
     assert "the stage's namespaces are not available" in capsys.readouterr().err
     assert not (tmp_path / "out").exists()
+
+
+@pytest.mark.parametrize(
+    ("item", "message"),
+    [
+        (f"fsize={1 << 64}", "beyond what the kernel can set"),
+        (f"fsize={(1 << 64) - 1}", "beyond what the kernel can set"),
+        ("nofile=0", "would stop every tool"),
+        ("nproc=0", "would stop every tool"),
+    ],
+)
+def test_limits_no_tool_could_run_under_are_refused_up_front(item: str, message: str) -> None:
+    """An impossible --rlimit passed the preflight and then failed every case."""
+    with pytest.raises(ValueError, match=message):
+        runner.parse_limits([item])

@@ -8,18 +8,22 @@ network, no host processes, no host System V IPC or POSIX message queues, a
 private mount table, its own host name and its own cgroup root. Before
 anything from the case runs, the stage checks that it is the init of that
 fresh PID namespace and in neither the runner's mount nor (when the spec names
-it) the runner's UTS namespace, sets ``no_new_privs``, lowers its resource
-limits to the spec's ``limits`` (which every process it starts inherits; see
-``LIMITS``), sets the host name to the spec's ``hostname`` so no tool records
-the operator's, brings loopback up, mounts an empty tmpfs over ``/root`` and
+it) the runner's UTS namespace, sets ``no_new_privs``, sets the host name to
+the spec's ``hostname`` and binds read-only files naming it over
+``/etc/hostname`` and ``/etc/hosts`` so no tool records the operator's, brings
+loopback up, mounts an empty tmpfs over ``/root`` and
 ``/home`` so the operator's homes and credentials are out of sight, mounts a
 fresh, empty, world-writable tmpfs over ``/var/tmp`` and ``/dev/shm`` so
 nothing a tool leaves there outlives the case, and leaves the directory it was
 started in for ``/``, so no process it starts inherits a working directory
 under a hidden path. It then serves the case's mock services, spawns the
 case's inert processes under their declared names and command lines, runs the
-adapter's invocations in order, and writes their results and the pid each
-process got.
+adapter's invocations in order, each under the spec's resource limits
+(``limits``; see ``LIMITS``), set by ``prlimit`` in the tool's own process so
+the stage and its mock services are never bound by them, and writes their
+results, the pid each process got and the limits that held. The cgroup
+namespace makes ``/proc/self/cgroup`` relative to the stage; ``/sys/fs/cgroup``
+is not remounted.
 
 A spec marked ``contained`` comes from the runner's OCI backend: the stage is
 then the init of a container started from a digest-pinned image, with a
@@ -100,9 +104,14 @@ LIMITS: dict[str, int] = {
     "nproc": resource.RLIMIT_NPROC,
     "as": resource.RLIMIT_AS,
 }
-"""Resource limits a spec may set, by name. ``nproc`` counts every process of the tools' uid on the
-host, so it bounds a fork bomb rather than one case; ``as`` and ``cpu`` are off by default because
-language runtimes reserve address space they never touch, and the invocation timeouts bound time."""
+"""Resource limits a spec may set, by name, applied to each tool invocation (not to the stage or the
+inert processes) as soft and hard limit alike. ``nproc`` counts every process of the tools' uid on
+the host, so it bounds a fork bomb rather than one case; ``as`` and ``cpu`` are off by default
+because language runtimes reserve address space they never touch, and the invocation timeouts bound
+time."""
+MAX_LIMIT = 1 << 63
+"""Limits at or above this cannot be set as a finite value (``rlim_t`` is 64 bits, and the top values
+mean unlimited); leave a limit out instead of asking for unlimited."""
 DEFAULT_LIMITS: dict[str, int] = {"core": 0, "fsize": 4 << 30, "nofile": 4096, "nproc": 4096}
 """No core dumps (they would copy a tool's memory into the work tree), files up to 4 GiB, 4096 open
 files and 4096 processes of the tools' uid. A tool that exceeds one fails, which scores as an error."""
@@ -181,24 +190,66 @@ def check_limits(limits: object) -> dict[str, int]:
             raise ValueError(f"unknown resource limit {name!r}; known: {', '.join(sorted(LIMITS))}")
         if not isinstance(value, int) or isinstance(value, bool) or value < 0:
             raise ValueError(f"resource limit {name} must be a non-negative integer, not {value!r}")
+        if value >= MAX_LIMIT:
+            raise ValueError(f"resource limit {name}={value} is beyond what the kernel can set")
+        if value == 0 and name in ("nofile", "nproc"):
+            raise ValueError(f"resource limit {name}=0 would stop every tool from starting")
     return dict(limits)
 
 
-def _apply_limits(limits: dict[str, int]) -> dict[str, list[int]]:
-    """Lower this process's soft and hard limits to ``limits``, never raising either; returns what holds.
-
-    Every process the stage starts inherits them, and none can raise a hard limit again: tools run
-    unprivileged, and ``no_new_privs`` keeps a setuid binary from regaining the right.
-    """
-    applied: dict[str, list[int]] = {}
+def limit_pairs(limits: dict[str, int]) -> dict[str, list[int]]:
+    """``[soft, hard]`` per limit as tools get it: both the requested value, unless this process's
+    hard limit is lower, which no unprivileged process can exceed."""
+    pairs: dict[str, list[int]] = {}
     for name, value in sorted(check_limits(limits).items()):
-        which = LIMITS[name]
-        soft, hard = resource.getrlimit(which)
-        new_hard = value if hard == resource.RLIM_INFINITY else min(hard, value)
-        new_soft = new_hard if soft == resource.RLIM_INFINITY else min(soft, new_hard)
-        resource.setrlimit(which, (new_soft, new_hard))
-        applied[name] = [new_soft, new_hard]
-    return applied
+        hard = resource.getrlimit(LIMITS[name])[1]
+        held = value if hard == resource.RLIM_INFINITY else min(hard, value)
+        pairs[name] = [held, held]
+    return pairs
+
+
+def limit_prefix(pairs: dict[str, list[int]]) -> list[str]:
+    """The ``prlimit`` command line that sets ``pairs`` on a tool and then executes it.
+
+    The limits are set in the tool's own process, after the drop to its uid and before its program
+    runs, so the stage, its mock services and its result file are never bound by them; ``no_new_privs``
+    keeps a setuid program from raising them again. An empty ``pairs`` sets nothing.
+    """
+    if not pairs:
+        return []
+    prlimit = shutil.which("prlimit", path=SYSTEM_PATH)
+    if prlimit is None:
+        raise RuntimeError(f"prlimit (util-linux) is not on {SYSTEM_PATH}; tools cannot be limited")
+    return [prlimit, *(f"--{name}={soft}:{hard}" for name, (soft, hard) in sorted(pairs.items())), "--"]
+
+
+HOST_FILES: dict[str, str] = {
+    "/etc/hostname": "{name}\n",
+    "/etc/hosts": "127.0.0.1\tlocalhost\n127.0.1.1\t{name}\n::1\tlocalhost ip6-localhost ip6-loopback\n",
+}
+"""Files that name the host on the shared root file system, and what tools see in their place."""
+
+_MS_RDONLY, _MS_REMOUNT, _MS_BIND = 0x1, 0x20, 0x1000
+
+
+def _mask_host_files(name: str, scratch: Path) -> None:
+    """Bind read-only files naming ``name`` over :data:`HOST_FILES`; only in a private mount namespace.
+
+    ``scratch`` is the root-only control directory: tools cannot reach the sources there, only the
+    read-only mounts.
+    """
+    for target, template in HOST_FILES.items():
+        if not os.path.isfile(target):
+            continue
+        source = scratch / f"masked-{Path(target).name}"
+        source.write_text(template.format(name=name), encoding="utf-8")
+        source.chmod(0o644)
+        rc = _libc().mount(os.fsencode(source), os.fsencode(target), None, _MS_BIND, None)
+        _check_call(rc, f"bind {source} over {target}")
+        flags = _MS_REMOUNT | _MS_BIND | _MS_RDONLY
+        _check_call(
+            _libc().mount(None, os.fsencode(target), None, flags, None), f"remount {target} read-only"
+        )
 
 
 def _set_hostname(name: object) -> None:
@@ -373,18 +424,22 @@ def _drain(proc: subprocess.Popen[bytes]) -> tuple[bytes, bytes]:
 
 
 def _run(
-    inv: dict[str, Any], run_as: tuple[int, int] | None = None, sweep: set[int] | None = None
+    inv: dict[str, Any],
+    run_as: tuple[int, int] | None = None,
+    sweep: set[int] | None = None,
+    prefix: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run one invocation; with ``sweep`` (the pids to spare), kill whatever else it left running.
 
     Only the stage's ``main`` passes ``sweep``, once it has checked it is the init of its own
     PID namespace; without it nothing but the invocation's own process group is ever killed.
+    ``prefix`` (``limit_prefix``) runs the invocation under its resource limits.
     """
     started = time.monotonic()
     timed_out = False
     try:
         proc = subprocess.Popen(
-            [str(a) for a in inv["argv"]],
+            [*(prefix or []), *(str(a) for a in inv["argv"])],
             cwd=str(inv["cwd"]),
             env={str(k): str(v) for k, v in dict(inv.get("env") or {}).items()},
             stdin=subprocess.PIPE if inv.get("stdin") is not None else subprocess.DEVNULL,
@@ -440,11 +495,13 @@ def main(argv: list[str]) -> int:
         contained = spec.get("contained") is True
         _check_namespaces(spec.get("host_mnt_ns"), spec.get("host_uts_ns"))
         _no_new_privs()
-        result["limits"] = _apply_limits(spec.get("limits", DEFAULT_LIMITS))
+        result["limits"] = pairs = limit_pairs(spec.get("limits", DEFAULT_LIMITS))
+        prefix = limit_prefix(pairs)
         if contained:
             _check_contained(spec.get("host_root"))
         elif "hostname" in spec:
             _set_hostname(spec["hostname"])
+            _mask_host_files(spec["hostname"], out_path.parent)
         _loopback_up()
         if not contained:
             _hide(HIDDEN)
@@ -462,7 +519,7 @@ def main(argv: list[str]) -> int:
             result["processes"] = children
         spare = {int(child["pid"]) for child in children}
         for inv in spec["invocations"]:
-            result["runs"].append(_run(inv, run_as, spare))
+            result["runs"].append(_run(inv, run_as, spare, prefix))
     except Exception as exc:  # noqa: BLE001 - the stage must always report, never crash silently
         result["error"] = f"{type(exc).__name__}: {exc}"
     finally:
