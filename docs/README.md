@@ -12,6 +12,9 @@ some of their links still point at paths in that repository.
 |---|---|
 | What exactly is measured, and how were the corpora built and labeled? | [methodology.md](methodology.md) |
 | How is each number computed, and what happens to errors and incomplete scans? | [metrics.md](metrics.md) |
+| How are spellings of one entity's key matched? | [key-canonicalization.md](key-canonicalization.md) |
+| Where do labels and surfaces sit in OWASP and MITRE ATLAS, and how do I export an AIBOM? | [framework-mappings.md](framework-mappings.md) |
+| How is a run tied to its sandbox, its tool bytes and its published files? | [supply-chain.md](supply-chain.md) |
 | How does the harness work, and what do its files contain? | [harness.md](harness.md) |
 | How do I verify, reproduce and run the benchmark without contaminating it? | [running.md](running.md) |
 | How do I add a discovery tool? | [adding-a-tool.md](adding-a-tool.md) |
@@ -32,7 +35,7 @@ some of their links still point at paths in that repository.
 | Checking a published number | [running.md](running.md) (levels 0 and 1), [metrics.md](metrics.md), [results.md](results.md) |
 | Benchmarking your own tool | [adding-a-tool.md](adding-a-tool.md), [running.md](running.md), [submitting-results.md](submitting-results.md) |
 | Building an independent corpus | [methodology.md](methodology.md), [datasheet.md](datasheet.md), [submitting-results.md](submitting-results.md), [GOVERNANCE.md](../GOVERNANCE.md) |
-| Reviewing security | [threat-model.md](threat-model.md), [harness.md](harness.md), [SECURITY.md](../SECURITY.md) |
+| Reviewing security | [threat-model.md](threat-model.md), [harness.md](harness.md), [supply-chain.md](supply-chain.md), [SECURITY.md](../SECURITY.md) |
 
 ## Project policies
 

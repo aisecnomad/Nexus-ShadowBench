@@ -105,9 +105,14 @@ ShadowScan ran) in the run's README and the pull request.
   files into the results directory selectively instead of copying `<out>`.
 - **Local paths and identities.** Replace machine paths with placeholders
   before publishing, as the committed runs did: `<tools>`, `<run>`,
-  `<estate>`, `<repo>`, `<venvs>`, `<work>`. No script in the repository does
-  this; check `runs.json`, `tools.json` and notes by hand, and say in the
-  pull request that you did. Never rewrite any other field.
+  `<estate>`, `<repo>`, `<venvs>`, `<work>` (and `<corpus>`, `<home>`,
+  `<tmp>`, `<host>`). `python -m tools.shadowbench.scrub apply --map
+  PATH=<token> ... FILE...` does it at path boundaries and changes nothing
+  else; `python -m tools.shadowbench.scrub check --identity FILE...` then
+  reports any home, temporary or profile path and this machine's host and
+  user names left, and CI (`make paths`) checks every committed results
+  directory. Say in the pull request that you ran both. Never rewrite any
+  other field ([supply-chain.md](supply-chain.md#scrubbing-machine-paths)).
 - **Credentials or credential-shaped strings.** Run
   `git ls-files -z | xargs -0 python tools/check_secrets.py` before
   committing. Rows can echo synthetic tokens from the corpus; such a value
@@ -193,8 +198,13 @@ outputs matched byte for byte.
       their reason.
 - [ ] Errors, missing rows and incomplete runs are counted and discussed,
       and none is presented as a clean negative.
-- [ ] Local paths are placeholders; no raw output, checkout or credential is
-      committed; the secret check passes.
+- [ ] Local paths are placeholders (`make paths` passes); no raw output,
+      checkout or credential is committed; the secret check passes.
+- [ ] A cases manifest records its `isolation` and its `tool_install`
+      record, and `resolved/` is committed beside the rows.
+- [ ] After merge, the maintainer dispatches **Attest results** for the new
+      directory and commits the signed attestation
+      ([supply-chain.md](supply-chain.md#signed-results)).
 - [ ] The independence and in-sample statements are present and accurate.
 - [ ] No ranking, grade, recommendation or field-accuracy claim appears in
       the report or the pull request.

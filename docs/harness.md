@@ -26,7 +26,7 @@ normative reference; this page is a map of them, not a replacement.
 | Unit of work | one tool on one generated case | one tool on one estate unit (`estate`, `code:<repo>`, `home:<device>`, `sim`) | one tool on one pinned repository |
 | Truth unit | entity key per surface (`app:`, `caller:`, `artifact:`, `proc:` ...) | entity with facts and anchors | `<category>:<value>` fact |
 | Run record | `manifest.json` plus one `<tool>.jsonl` per tool | `runs.json` | `runs.json` |
-| Isolation | namespaces, uid/gid 65534, `no_new_privs` (needs root) | scrubbed environment, optional `setpriv` | scrubbed environment, optional `setpriv` |
+| Isolation | namespaces (net, pid, mount, ipc, uts, cgroup), uid/gid 65534, `no_new_privs`, resource limits; optionally a digest-pinned container, under gVisor if asked (needs root) | scrubbed environment, optional `setpriv` | scrubbed environment, optional `setpriv` |
 | Binds results to inputs | corpus SHA-256, generator digest, per-file `rows_sha256`, harness commit | freeze manifest digest, drift after run, harness commit | none beyond the recorded tool versions and policy |
 
 `python -m tools.shadowbench` with no arguments lists the two ShadowBench
@@ -150,12 +150,16 @@ root.
 ### Isolation
 
 The stage runs as root under
-`unshare --net --pid --fork --kill-child --mount --propagation private --mount-proc --ipc`.
-Before anything from the case runs it:
+`unshare --net --pid --fork --kill-child --mount --propagation private --mount-proc --ipc --uts --cgroup`.
+The runner checks before the first case that the host grants every one of
+those namespaces. Before anything from the case runs the stage:
 
-- checks that it is init of a fresh PID namespace and not in the runner's
-  mount namespace;
-- sets `no_new_privs` and brings loopback up;
+- checks that it is init of a fresh PID namespace and in neither the
+  runner's mount nor its UTS namespace;
+- sets `no_new_privs`, lowers its resource limits to the spec's (no core
+  dumps, 4 GiB files, 4096 open files and processes by default; every process
+  it starts inherits them), sets the host name to `shadowbench` and brings
+  loopback up;
 - mounts an empty tmpfs over `/root` and `/home`, and a fresh, empty,
   world-writable tmpfs over `/var/tmp` and `/dev/shm`;
 - leaves its starting directory for `/`;
@@ -184,11 +188,19 @@ that cannot drop privileges does not run and records `unknown`. A `version`
 string in the tool's `tools.json` entry is recorded as given instead, without
 a probe.
 
+`--sandbox oci` runs the same stage as the init of a Docker container from an
+image pinned by digest: no network, a read-only root file system, fresh tmpfs
+mounts, only the run directory writable, every capability dropped but the
+four the stage needs before it drops to uid 65534, `no-new-privileges`,
+Docker's default seccomp profile and memory, CPU and process limits;
+`--oci-runtime runsc` adds gVisor. The manifest's `isolation` records the
+backend and every limit. See [supply-chain.md](supply-chain.md#sandbox-backends).
+
 **Stated limits** ([`stage.py`](../tools/shadowbench/cases/stage.py)
-docstring): this is not a filesystem sandbox. A tool can still read whatever
-is world-readable outside `/root` and `/home`, and the host's `/tmp`, which
-usually holds the scratch directory, stays shared with the host and with
-other cases. The 2026-10-11 rows were recorded under weaker isolation (tools
+docstring): under the default backend this is not a filesystem sandbox. A
+tool can still read whatever is world-readable outside `/root` and `/home`,
+and the host's `/tmp`, which usually holds the scratch directory, stays
+shared with the host and with other cases. The OCI backend closes both. The 2026-10-11 rows were recorded under weaker isolation (tools
 and inert processes as root, host file system in view); see the cases
 README's [Integration changes](../benchmarks/shadowbench/cases/README.md#integration-changes).
 

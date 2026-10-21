@@ -8,8 +8,61 @@ recorded here.
 
 ## Unreleased
 
-Documentation and project standards. No corpus, label, freeze, recorded
-prediction, result or harness behaviour changed, and no benchmark was rerun.
+Documentation and project standards, then harness hardening, provenance and
+interoperability. No corpus, label, freeze, recorded prediction or result
+changed, no published number moved, and no published run was rerun.
+
+### Hardening, provenance and interoperability
+
+- **Canonical keys.** `tools/shadowbench/keys.py` maps every spelling of one
+  entity its platform treats as the same to one key (GUID case, `localhost`,
+  URL forms of a service, `./`, `~/` and `\` in paths, ARN partition, service
+  and region, Kubernetes kind spelling, fact-category case). The cases scorer
+  takes `--keys canonical-v1` (default `exact`), refuses a scheme that merges
+  truth keys, and records a non-default scheme as `key_scheme`. Scored under
+  `canonical-v1`, the 2026-10-11 cases run gives identical metrics
+  ([docs/key-canonicalization.md](docs/key-canonicalization.md)).
+- **Framework mappings and AIBOM export.** `tools/shadowbench/frameworks.py`
+  maps labels, surfaces and code-surface fact categories to the OWASP Top 10
+  for Agentic Applications 2026, the OWASP Top 10 for LLM Applications 2025
+  and MITRE ATLAS 2026.09; `tools/shadowbench/aibom.py` exports truth or a
+  tool's rows as a deterministic CycloneDX 1.6 BOM
+  ([docs/framework-mappings.md](docs/framework-mappings.md)).
+- **Sandbox.** The cases stage also runs in fresh UTS and cgroup namespaces,
+  sets the host name `shadowbench`, and lowers its resource limits (no core
+  dumps, 4 GiB files, 4096 open files and processes; `--rlimit` overrides);
+  the runner probes every namespace first. `--sandbox oci` runs the stage in a
+  digest-pinned Docker container (read-only root, only the run directory
+  writable, four capabilities for the stage and none for tools,
+  `no-new-privileges`, seccomp, memory, CPU and pids limits), with gVisor
+  through `--oci-runtime runsc`. The manifest records `isolation` and the
+  report states it.
+- **Hash-locked tool installs.** `install_tools.sh` installs PyPI tools from
+  committed universal hash locks (`--require-hashes --no-deps`), builds the
+  Fleet wrapper against a committed `go.mod` and `go.sum` instead of `go mod
+  tidy`, takes an optional tool list, and records the resolved set in
+  `resolved/`, which the runner copies into each run (`tool_install`). A
+  Containerfile builds the tool tree from digest-pinned base images.
+- **Signed results.** `tools/attest.py` binds a results directory to the
+  SHA-256 of every file in it; the Attest results workflow signs that binding
+  keylessly with Sigstore. `make verify` and CI fail on a changed attested
+  directory or a bundle that does not verify.
+- **Scrubbing.** `tools/shadowbench/scrub.py` replaces machine paths with the
+  committed placeholders and checks records for home, temporary and profile
+  paths; `make paths` (now part of `make check`) and CI check every committed
+  results directory of the live tracks.
+- **Clean-room rescore.** A weekly workflow installs from scratch, verifies,
+  rebuilds the cases corpus, re-scores every published run (`make rescore`
+  now includes the code-surface 2026-10-09 metrics) and runs two tools from
+  their locks in the sandbox on every endpoint and runtime case, failing on
+  harness problems and reporting drift from the 2026-10-11 run
+  ([docs/supply-chain.md](docs/supply-chain.md)).
+- **Roadmap.** Added the remaining recommendations of the 2026-10-21 review:
+  a third-party-held test split, a contamination policy, inter-annotator
+  agreement, neutral stewardship, a pre-registered run of record, power
+  analysis, vendor-authored adapters, an adversarial split, cost and
+  prevalence-adjusted metrics, versioned releases with DOIs, a results page
+  and a right of reply.
 
 - Rewrote the README around the case for an open standard (why), the
   methodology and metrics (what) and the harness and how to run it
