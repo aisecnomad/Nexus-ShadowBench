@@ -548,6 +548,7 @@ sets the conflict-of-interest rules that apply until it is done.
 | Adding a discovery tool | [docs/adding-a-tool.md](docs/adding-a-tool.md) |
 | Publishing a new run or an independent corpus | [docs/submitting-results.md](docs/submitting-results.md) |
 | Every run of record, historical run and archive | [docs/results.md](docs/results.md) |
+| Corrections to stale statements in preserved files | [docs/errata.md](docs/errata.md) |
 | Threat model: operator safety and benchmark validity | [docs/threat-model.md](docs/threat-model.md) |
 | Benchmark card and datasheet | [docs/benchmark-card.md](docs/benchmark-card.md), [docs/datasheet.md](docs/datasheet.md) |
 | Glossary and FAQ | [docs/glossary.md](docs/glossary.md), [docs/faq.md](docs/faq.md) |

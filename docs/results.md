@@ -32,10 +32,11 @@ committed report is preserved unchanged as historical evidence.
 
 **Regression baseline selection.** ShadowScan's weekly
 [`benchmark.yml`](https://github.com/aisecnomad/Nexus-ShadowScan/blob/main/.github/workflows/benchmark.yml)
-uses the newest directory under `benchmarks/shadow-ai-discovery/results/`
-as its baseline. A new directory there becomes the baseline once
-ShadowScan's submodule pin moves to it; see
-[submitting-results.md](submitting-results.md) before adding one.
+compares against the run its `BASELINE_RUN` names (currently `2026-10-09`),
+not the newest directory under `benchmarks/shadow-ai-discovery/results/`,
+since [aisecnomad/Nexus-ShadowScan#289](https://github.com/aisecnomad/Nexus-ShadowScan/pull/289).
+A later directory there is reported and ignored; moving the baseline is a
+reviewed change in ShadowScan. See [submitting-results.md](submitting-results.md).
 
 ## Historical benchmarks
 

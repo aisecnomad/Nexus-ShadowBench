@@ -67,6 +67,17 @@ prediction, result or harness behaviour changed, and no benchmark was rerun.
   installed environment and on each hash-locked set, so a new advisory
   fails the next run instead of going unnoticed.
 
+### Errata
+
+- Added `docs/errata.md` for stale statements in byte-bound files: the four
+  `clean (incomplete)` cells of the code-surface 2026-10-09 report, the
+  estate README's pointer to an October 14 changelog entry that now lives in
+  ShadowScan's engineering log, the "newest baseline" wording superseded by
+  Nexus-ShadowScan#289, the cases reproduce block's single-repository
+  layout, and relative links to files that stayed in ShadowScan. The
+  companion docs that described the old baseline selection now describe
+  `BASELINE_RUN`.
+
 ## e027b98: extraction from Nexus ShadowScan
 
 Preserved 555 original files from Nexus ShadowScan commit
