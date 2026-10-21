@@ -99,6 +99,96 @@
       "reason": "The installer test asserts hash-locked installs (--require-hashes --no-deps, no go mod tidy) instead of the old version-pinned header.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
       "sha256": "d24ca56397cf3d0563f535eb1b628cc1f70f43fddbb64972a93ebdeccda3ac3a"
+    },
+    {
+      "bytes": 37799,
+      "from_sha256": "292762438db5cd716f019073eeab5cd36f3eecaaa5e2629489a1d3471b1772d4",
+      "git_blob": "c2454c55cb0c4de05bdfb7bf30336ffcbdd1cc81",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/score.py",
+      "reason": "Review fixes: a reported artifact path with a .. segment lies inside no truth directory, and a key reported more than once is labeled agent when any report is, so the agent tier does not depend on report order; no committed row has either shape, so every run of record re-scores byte for byte.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "8884a50762970c45b945bd8ef2e39d32981d4bc2897567cdcdd26e0df84779e2"
+    },
+    {
+      "bytes": 16113,
+      "from_sha256": "31d60259f1cec63c130aa47efd50d51d83a40680fbf6abf42365741b8345db0d",
+      "git_blob": "a5d24c081ac1b62f5ac406b58be02d7479cfb61c",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/report.py",
+      "reason": "Review fix: the report calls the manifest's limits the requested ones, since each tool's manifest entry records the limits that held.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "edb31a5b11d78f3825ac873c1611c99743219364f452c75243d725e487c6de16"
+    },
+    {
+      "bytes": 23652,
+      "from_sha256": "8af26fb09d74667b4ec0d08b7eefc5a2b8c3740abee444f3c459baeb8b2847f4",
+      "git_blob": "10075b77fdcf422cb54ce80fecf9957d12ffcde7",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/stage.py",
+      "reason": "Review fixes: resource limits are set by prlimit in each tool invocation, soft and hard alike, not on the stage, whose result file and mock services were bound by them; the stage reports the limits that held, masks /etc/hostname and /etc/hosts with read-only files naming its host, and refuses limits no tool could run under.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "54bbccef0bba0a6abd3fcd7101e9b9df6f8025e449418b8e1f0755502d07ed70"
+    },
+    {
+      "bytes": 51413,
+      "from_sha256": "477fb29adca883e584e8ca81430985e26855fc7464f4a28e8b88cecc4c3de78f",
+      "git_blob": "97c83f7255052aea95daaf18f941866463cbc070",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/runner.py",
+      "reason": "Review fixes: record the limits each tool ran under, bind OCI tool trees at their configured paths, re-hash every binary install_tools.sh recorded and refuse to start on drift, empty out/resolved before copying the install record, and write rows with the tool root, scratch, output and harness paths replaced before their digest is taken.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "3b09e1bc422c8b2ecd753997ab0b01d3d36e7826514e136a4dc7808c546a00bd"
+    },
+    {
+      "bytes": 11400,
+      "from_sha256": "bd5354eb696c5233d7c82565d8b1b8c2db163d70cee57d4cdff73770f43154e8",
+      "git_blob": "10b9f51192dabacec59cda04e2ad231da11cdfa3",
+      "mode": "100755",
+      "path": "tools/shadowbench/cases/install_tools.sh",
+      "reason": "Review fixes: create each venv afresh, build sdist-only distributions with the hash-locked setuptools of locks/build.txt and --no-build-isolation (uv does not enforce hashes on build constraints), and unset CDPATH so the locks path is a single line.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "b4041863fef5cd44248ed6bfd6c7735193ac18ce08744e4e13165dc607120581"
+    },
+    {
+      "bytes": 9741,
+      "from_sha256": "62a57d95c5fa3d284ad7941d77050ae09ba2057c74f155e2898f5a3e75e6dd6c",
+      "git_blob": "771e1b1108fac23f0a76cb8bc45dabe03e7a0636",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/fleet_ai_tools.py",
+      "reason": "Review fix: skip the tool when its configured binary does not exist, as the PyPI adapters already did, so a subset install does not run absent binaries and score an error on every case.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "ade6488ac3bdb1c1143e4a6aeb11b331a097e338e71ea01ce17161985db6ccf8"
+    },
+    {
+      "bytes": 12394,
+      "from_sha256": "b609e0f4109298c13779f28a5575f24b1c5dbd29571b852e412979b5be0e992a",
+      "git_blob": "0c7b4fc9c438a4c00c194b132ec5b68d0dc86e4a",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/vet.py",
+      "reason": "Review fix: skip the tool when its configured binary does not exist, as the PyPI adapters already did, so a subset install does not run absent binaries and score an error on every case.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "d0e1b81cdef49c5cf8ae76fac80037e5ca3c631d444114acc86b5a12e6e04a39"
+    },
+    {
+      "bytes": 9214,
+      "from_sha256": "683fc8785a956759ff9708a2bee02a9244ff6dc9f6433fbd1b489f400e9a3ac5",
+      "git_blob": "010738c0acb5880a9c26de7cafc67f4e47268ec2",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/numbat.py",
+      "reason": "Review fix: skip the tool when its configured binary does not exist, as the PyPI adapters already did, so a subset install does not run absent binaries and score an error on every case.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "c7446046387fc582c981d9597806e7b34a3787efee8169fe910f1e0544143769"
+    },
+    {
+      "bytes": 16765,
+      "from_sha256": "df51859e9d581018d03cf2d5ce97725f6f4d2c73d3083221b292c360696beff1",
+      "git_blob": "ba9e2aa12fd9328118685c7e45f0e49a8e64076d",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/ai_infra_guard.py",
+      "reason": "Review fix: skip the tool when its configured binary does not exist, as the PyPI adapters already did, so a subset install does not run absent binaries and score an error on every case.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
+      "sha256": "3494a2802c0781f341cb300bdf4907dfd720098ef7c8a6d06ee76026b4c9f93f"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",
