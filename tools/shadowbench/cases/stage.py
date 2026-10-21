@@ -3,11 +3,15 @@
 ``python -m tools.shadowbench.cases.stage SPEC.json OUT.json``
 
 The runner starts this module as root under ``unshare --net --pid --fork
---kill-child --mount --mount-proc --ipc`` so the tool sees no network, no host
-processes, no host System V IPC or POSIX message queues and a private mount
-table. Before anything from the case runs, the stage checks that it is the
-init of that fresh PID namespace and not in the runner's mount namespace, sets
-``no_new_privs``, brings loopback up, mounts an empty tmpfs over ``/root`` and
+--kill-child --mount --mount-proc --ipc --uts --cgroup`` so the tool sees no
+network, no host processes, no host System V IPC or POSIX message queues, a
+private mount table, its own host name and its own cgroup root. Before
+anything from the case runs, the stage checks that it is the init of that
+fresh PID namespace and in neither the runner's mount nor (when the spec names
+it) the runner's UTS namespace, sets ``no_new_privs``, lowers its resource
+limits to the spec's ``limits`` (which every process it starts inherits; see
+``LIMITS``), sets the host name to the spec's ``hostname`` so no tool records
+the operator's, brings loopback up, mounts an empty tmpfs over ``/root`` and
 ``/home`` so the operator's homes and credentials are out of sight, mounts a
 fresh, empty, world-writable tmpfs over ``/var/tmp`` and ``/dev/shm`` so
 nothing a tool leaves there outlives the case, and leaves the directory it was
@@ -16,6 +20,14 @@ under a hidden path. It then serves the case's mock services, spawns the
 case's inert processes under their declared names and command lines, runs the
 adapter's invocations in order, and writes their results and the pid each
 process got.
+
+A spec marked ``contained`` comes from the runner's OCI backend: the stage is
+then the init of a container started from a digest-pinned image, with a
+read-only root file system, fresh tmpfs mounts, its own host name and only the
+capabilities the stage needs (see ``runner.oci_command``). The container's
+root file system holds no operator home and its temporary directories are
+already private, so the stage mounts nothing and leaves the host name to the
+container; every other step is the same.
 
 Tools run as the unprivileged identity the spec names (the runner passes
 uid/gid 65534 with no supplementary groups) with exactly the environment
@@ -32,10 +44,12 @@ and reaped, including descendants that left the tool's process group with
 ``setsid``, and the inert processes are continued. A process still alive
 after that is an error for the case, never a silent leftover.
 
-This is not a filesystem sandbox: a tool can still read whatever is
-world-readable outside ``/root`` and ``/home``, and the host's ``/tmp``, which
-usually holds the scratch directory, stays shared with the host and with
-other cases.
+Under ``unshare`` this is not a filesystem sandbox: a tool can still read
+whatever is world-readable outside ``/root`` and ``/home``, and the host's
+``/tmp``, which usually holds the scratch directory, stays shared with the host
+and with other cases. The OCI backend closes that: the container sees only its
+image, its own tmpfs mounts and the run directory, harness and tool trees the
+runner binds into it, the tool trees read-only.
 """
 
 from __future__ import annotations
@@ -45,6 +59,7 @@ import fcntl
 import functools
 import json
 import os
+import resource
 import shutil
 import signal
 import socket
@@ -74,6 +89,23 @@ KILL_GRACE = 3.0
 """Seconds to collect a killed invocation's output before its pipes are closed."""
 SWEEP_GRACE = 5.0
 """Seconds a killed stray may take to exit before the stage reports the case as an error."""
+
+HOSTNAME = "shadowbench"
+"""The host name tools see in the stage's UTS namespace, in place of the operator's."""
+LIMITS: dict[str, int] = {
+    "core": resource.RLIMIT_CORE,
+    "cpu": resource.RLIMIT_CPU,
+    "fsize": resource.RLIMIT_FSIZE,
+    "nofile": resource.RLIMIT_NOFILE,
+    "nproc": resource.RLIMIT_NPROC,
+    "as": resource.RLIMIT_AS,
+}
+"""Resource limits a spec may set, by name. ``nproc`` counts every process of the tools' uid on the
+host, so it bounds a fork bomb rather than one case; ``as`` and ``cpu`` are off by default because
+language runtimes reserve address space they never touch, and the invocation timeouts bound time."""
+DEFAULT_LIMITS: dict[str, int] = {"core": 0, "fsize": 4 << 30, "nofile": 4096, "nproc": 4096}
+"""No core dumps (they would copy a tool's memory into the work tree), files up to 4 GiB, 4096 open
+files and 4096 processes of the tools' uid. A tool that exceeds one fails, which scores as an error."""
 
 _MS_NOSUID, _MS_NODEV, _MS_NOEXEC = 0x2, 0x4, 0x8
 _PR_SET_NO_NEW_PRIVS = 38
@@ -116,12 +148,64 @@ def _tool_identity(spec: dict[str, Any]) -> tuple[int, int]:
     return ids[0], ids[1]
 
 
-def _check_namespaces(host_mnt_ns: object) -> None:
-    """Refuse to touch mounts or sweep processes unless this is a fresh PID and mount namespace."""
+def _check_namespaces(host_mnt_ns: object, host_uts_ns: object = None) -> None:
+    """Refuse to touch mounts, the host name or processes unless this is a fresh PID and mount
+    namespace and, when the runner names its UTS namespace, a fresh UTS namespace too."""
     if os.getpid() != 1:
         raise RuntimeError("the stage is not the init of a fresh PID namespace")
     if not isinstance(host_mnt_ns, str) or os.readlink("/proc/self/ns/mnt") == host_mnt_ns:
         raise RuntimeError("the stage shares the runner's mount namespace; refusing to mount over host paths")
+    if host_uts_ns is not None and (
+        not isinstance(host_uts_ns, str) or os.readlink("/proc/self/ns/uts") == host_uts_ns
+    ):
+        raise RuntimeError("the stage shares the runner's UTS namespace; refusing to set the host name")
+
+
+def _check_contained(host_root: object) -> None:
+    """Refuse to skip the mounts unless ``/`` is not the runner's root file system.
+
+    The runner records the device and inode of its own ``/`` in a contained spec; a stage that sees
+    the same root was not started in a container, and hiding the operator's homes is then its job.
+    """
+    root = os.stat("/")
+    if not isinstance(host_root, list) or len(host_root) != 2 or [root.st_dev, root.st_ino] == host_root:
+        raise RuntimeError("a contained stage sees the runner's root file system; refusing to run unmounted")
+
+
+def check_limits(limits: object) -> dict[str, int]:
+    """``limits`` as ``{name: value}`` with known names and non-negative integer values, or raise."""
+    if not isinstance(limits, dict):
+        raise ValueError(f"limits must be an object, not {limits!r}")
+    for name, value in limits.items():
+        if name not in LIMITS:
+            raise ValueError(f"unknown resource limit {name!r}; known: {', '.join(sorted(LIMITS))}")
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"resource limit {name} must be a non-negative integer, not {value!r}")
+    return dict(limits)
+
+
+def _apply_limits(limits: dict[str, int]) -> dict[str, list[int]]:
+    """Lower this process's soft and hard limits to ``limits``, never raising either; returns what holds.
+
+    Every process the stage starts inherits them, and none can raise a hard limit again: tools run
+    unprivileged, and ``no_new_privs`` keeps a setuid binary from regaining the right.
+    """
+    applied: dict[str, list[int]] = {}
+    for name, value in sorted(check_limits(limits).items()):
+        which = LIMITS[name]
+        soft, hard = resource.getrlimit(which)
+        new_hard = value if hard == resource.RLIM_INFINITY else min(hard, value)
+        new_soft = new_hard if soft == resource.RLIM_INFINITY else min(soft, new_hard)
+        resource.setrlimit(which, (new_soft, new_hard))
+        applied[name] = [new_soft, new_hard]
+    return applied
+
+
+def _set_hostname(name: object) -> None:
+    """Set the host name; only call this in a fresh UTS namespace (``_check_namespaces``)."""
+    if not isinstance(name, str) or not name or len(name) > 64:
+        raise ValueError(f"invalid host name {name!r}")
+    socket.sethostname(name)
 
 
 def _no_new_privs() -> None:
@@ -151,11 +235,17 @@ def _private_tmp(paths: tuple[str, ...]) -> None:
 
 
 def _loopback_up() -> None:
-    """Bring ``lo`` up in the fresh network namespace (iproute2 may be absent, so use ioctl)."""
+    """Bring ``lo`` up in the fresh network namespace (iproute2 may be absent, so use ioctl).
+
+    A container engine's empty network namespace already has it up, and the contained stage lacks
+    the capability to change it, so an interface that is up is left alone.
+    """
     siocgifflags, siocsifflags, iff_up, iff_running = 0x8913, 0x8914, 0x1, 0x40
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         ifr = struct.pack("16sH14s", b"lo", 0, b"\0" * 14)
         flags = struct.unpack("16sH14s", fcntl.ioctl(sock, siocgifflags, ifr))[1]
+        if flags & iff_up:
+            return
         fcntl.ioctl(
             sock, siocsifflags, struct.pack("16sH14s", b"lo", flags | iff_up | iff_running, b"\0" * 14)
         )
@@ -347,11 +437,18 @@ def main(argv: list[str]) -> int:
     children: list[dict[str, Any]] = []
     try:
         run_as = _tool_identity(spec)
-        _check_namespaces(spec.get("host_mnt_ns"))
+        contained = spec.get("contained") is True
+        _check_namespaces(spec.get("host_mnt_ns"), spec.get("host_uts_ns"))
         _no_new_privs()
+        result["limits"] = _apply_limits(spec.get("limits", DEFAULT_LIMITS))
+        if contained:
+            _check_contained(spec.get("host_root"))
+        elif "hostname" in spec:
+            _set_hostname(spec["hostname"])
         _loopback_up()
-        _hide(HIDDEN)
-        _private_tmp(PRIVATE_TMP)
+        if not contained:
+            _hide(HIDDEN)
+            _private_tmp(PRIVATE_TMP)
         # The stage may have been started inside a now-hidden directory; children inherit the cwd.
         os.chdir("/")
         work = Path(spec["work"])
@@ -360,7 +457,8 @@ def main(argv: list[str]) -> int:
         if spec.get("services"):
             services.start()
         if spec.get("processes"):
-            children = _spawn(spec["processes"], Path(spec["fakeproc"]), work / "procbin", run_as, work)
+            bindir = Path(spec["procbin"]) if spec.get("procbin") else work / "procbin"
+            children = _spawn(spec["processes"], Path(spec["fakeproc"]), bindir, run_as, work)
             result["processes"] = children
         spare = {int(child["pid"]) for child in children}
         for inv in spec["invocations"]:

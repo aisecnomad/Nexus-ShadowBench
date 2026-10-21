@@ -69,7 +69,27 @@ def harness(manifest: dict[str, Any]) -> str:
         state = "with uncommitted or untracked files under `tools/`, which that commit does not describe"
     else:
         state = "with an unknown working-tree state"
-    return f" The runner, stage and adapters ran from harness commit `{commit}` {state}."
+    return f" The runner, stage and adapters ran from harness commit `{commit}` {state}." + isolation(
+        manifest
+    )
+
+
+def isolation(manifest: dict[str, Any]) -> str:
+    """The sandbox the run recorded, as a sentence to append; empty for manifests without one."""
+    record = manifest.get("isolation")
+    if not isinstance(record, dict):
+        return ""
+    recorded = record.get("limits")
+    limits: dict[str, Any] = recorded if isinstance(recorded, dict) else {}
+    limit_text = ", ".join(f"{k}={v}" for k, v in sorted(limits.items())) or "none"
+    if record.get("backend") == "oci":
+        runtime = "gVisor (`runsc`)" if record.get("runtime") == "runsc" else f"`{record.get('runtime')}`"
+        return (
+            f" Tools ran in containers from `{record.get('image')}` under {runtime}, with no network,"
+            f" a read-only root file system and resource limits {limit_text}."
+        )
+    namespaces = ", ".join(record.get("namespaces") or [])
+    return f" Tools ran in fresh namespaces ({namespaces}) with resource limits {limit_text}."
 
 
 def withheld(metrics: dict[str, Any]) -> list[str]:
@@ -130,6 +150,13 @@ def render(metrics: dict[str, Any], corpus_path: Path) -> str:
         "results describe how each tool behaves on these inputs, not field precision or recall."
     )
     lines.append("")
+    key_scheme = metrics.get("key_scheme")
+    if key_scheme:
+        lines.append(
+            f"Keys were compared under the `{key_scheme}` scheme (`tools/shadowbench/keys.py`): reported and "
+            "truth keys were mapped to one canonical spelling before matching, not compared as written."
+        )
+        lines.append("")
     unbound = metrics.get("rows_unbound") or []
     if unbound:
         whose = "any" if set(unbound) >= set(metrics["tools"]) else "the"

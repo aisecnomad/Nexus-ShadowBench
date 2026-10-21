@@ -1,12 +1,15 @@
 """Run every adapter on every case it supports, in isolation, and store normalized results.
 
 ``python -m tools.shadowbench.cases run --corpus corpus.json --tools tools.json --out results/``
-(optional ``--only a,b``, ``--surfaces x,y``, ``--cases id,...``, ``--workers 4``)
+(optional ``--only a,b``, ``--surfaces x,y``, ``--cases id,...``, ``--workers 4``,
+``--rlimit name=value``, ``--sandbox oci --oci-image IMAGE@sha256:...``)
 
 For each (tool, case) the runner materializes the case under a scratch
 directory, asks the adapter for its invocations, and executes them through
-``stage.py`` inside fresh network, PID, mount and IPC namespaces (``unshare``),
-with the case's mock services and inert processes present. The adapter then
+``stage.py`` inside fresh network, PID, mount, IPC, UTS and cgroup namespaces
+(``unshare``), with the case's mock services and inert processes present, the
+host name set to ``stage.HOSTNAME`` and the stage's resource limits lowered
+(``stage.DEFAULT_LIMITS``, changed with ``--rlimit``). The adapter then
 normalizes the output into entities. One JSONL row per (tool, case) goes to
 ``<out>/<tool>.jsonl``; verbatim tool output goes to ``<out>/raw/<tool>/``.
 
@@ -45,13 +48,35 @@ when it is not root, ``unshare`` is missing, a case or checkout id is unsafe,
 the scratch directory or a configured path fails the checks above, or ``gcc``
 cannot build the static inert binary that live-runtime cases spawn.
 
+Sandbox backends. ``--sandbox namespaces`` (the default) is the above.
+``--sandbox oci`` runs the same stage as the init of a Docker container
+started from ``--oci-image``, which must be pinned by digest and present
+locally (it is never pulled during a run): no network, a read-only root file
+system, fresh tmpfs ``/tmp``, ``/var/tmp`` and ``/run``, a private IPC
+namespace, the fixed host name, ``no-new-privileges``, Docker's default
+seccomp profile, every capability dropped but the four the stage needs as
+root before it drops to uid 65534 (``SETUID``, ``SETGID``, ``KILL``,
+``DAC_READ_SEARCH``), and memory, CPU and process-count limits
+(``--oci-memory``, ``--oci-cpus``, ``--oci-pids``). ``--oci-runtime runsc``
+runs it under gVisor, which puts a user-space kernel between the tool and
+the host's. Only the run directory is writable from the container; the
+harness's ``tools/`` package, ``tool_root`` and every absolute path in
+``tools.json`` are bound read-only at their own paths, so the image must
+provide what those binaries need at run time (an interpreter for a venv, a C
+library for a dynamically linked binary): build the tool tree in the same
+image (``images/Containerfile``). The runner refuses an image without a
+digest, one that is not present, and a rootless or user-namespace-remapped
+daemon, under which uid 65534 would not be the uid that owns the work tree.
+
 ``manifest.json`` records the corpus path and SHA-256, the generator digest,
 the platform, the harness commit (``harness_commit``, the checkout's ``HEAD``,
 null when git cannot name it) and whether ``tools/`` differs from that commit
 (``harness_dirty``, null when unknown), and per tool its version, row-status
 counts and the SHA-256 of its ``<tool>.jsonl`` (``rows_sha256``). A tool's
 version is the ``version`` string its ``tools.json`` entry gives, recorded as
-given, or else what its adapter's ``version()`` probes.
+given, or else what its adapter's ``version()`` probes. ``isolation`` records
+the sandbox: backend, namespaces, host name and resource limits, and for the
+OCI backend the image digest, the daemon's version and the runtime.
 """
 
 from __future__ import annotations
@@ -73,7 +98,7 @@ import tempfile
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -90,7 +115,14 @@ from tools.shadowbench.cases.contract import (
 )
 from tools.shadowbench.cases.corpus import Case, Corpus, corpus_digest, load_corpus
 from tools.shadowbench.cases.fetch_code import checkout_problem
-from tools.shadowbench.cases.stage import HIDDEN, PRIVATE_TMP, build_fakeproc
+from tools.shadowbench.cases.stage import (
+    DEFAULT_LIMITS,
+    HIDDEN,
+    HOSTNAME,
+    PRIVATE_TMP,
+    build_fakeproc,
+    check_limits,
+)
 
 STAGE_TIMEOUT_GRACE = 120
 KILL_GRACE = 10.0
@@ -101,6 +133,55 @@ REPO = Path(__file__).resolve().parents[3]
 
 _SAFE_NAME = re.compile(r"[A-Za-z0-9._-]+")
 _COMMIT = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
+_PINNED_IMAGE = re.compile(r"[a-z0-9][a-z0-9._/:-]*@sha256:[0-9a-f]{64}")
+
+NAMESPACES: tuple[str, ...] = ("net", "pid", "mount", "ipc", "uts", "cgroup")
+"""The namespaces ``unshare`` gives the stage under the default backend."""
+OCI_CAPABILITIES: tuple[str, ...] = ("SETUID", "SETGID", "KILL", "DAC_READ_SEARCH")
+"""What the contained stage keeps as root: dropping to uid 65534 (``SETUID``, ``SETGID``, with
+``setgroups``), stopping and killing that uid's processes (``KILL``) and entering the work tree it
+owns, mode 0700, to start a tool there (``DAC_READ_SEARCH``). Tools lose all of them at the uid
+change, and ``no-new-privileges`` keeps them from coming back."""
+HARNESS_MOUNT = "/opt/shadowbench/harness"
+"""Where the contained stage finds the harness's ``tools`` package (read-only)."""
+OCI_RUNTIMES: tuple[str, ...] = ("runc", "runsc")
+
+
+@dataclass(frozen=True)
+class Sandbox:
+    """How the stage is isolated; ``describe`` is what the manifest records."""
+
+    backend: str = "namespaces"
+    limits: dict[str, int] = field(default_factory=lambda: dict(DEFAULT_LIMITS))
+    image: str | None = None
+    runtime: str = "runc"
+    memory: str = "4g"
+    cpus: str = "2"
+    pids: int = 1024
+    binds: tuple[str, ...] = ()
+    """Host paths bound read-only into the container at their own paths (tool trees)."""
+
+    def describe(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"backend": self.backend, "hostname": HOSTNAME, "limits": dict(self.limits)}
+        if self.backend == "namespaces":
+            out["namespaces"] = list(NAMESPACES)
+        else:
+            out.update(
+                {
+                    "image": self.image,
+                    "runtime": self.runtime,
+                    "memory": self.memory,
+                    "cpus": self.cpus,
+                    "pids": self.pids,
+                    "capabilities": list(OCI_CAPABILITIES),
+                    "read_only_root": True,
+                    "network": "none",
+                }
+            )
+        return out
+
+
+DEFAULT_SANDBOX = Sandbox()
 
 
 def safe_name(value: str, what: str) -> str:
@@ -334,6 +415,8 @@ def stage_command(spec_path: Path, out_path: Path) -> list[str]:
         "private",
         "--mount-proc",
         "--ipc",
+        "--uts",
+        "--cgroup",
         "--",
         sys.executable,
         "-P",
@@ -342,6 +425,98 @@ def stage_command(spec_path: Path, out_path: Path) -> list[str]:
         str(spec_path),
         str(out_path),
     ]
+
+
+def container_name(run_dir: Path) -> str:
+    """The container's name: the run directory's (unique, ``[A-Za-z0-9._-]``) under a fixed prefix."""
+    return f"shadowbench-{safe_name(run_dir.name, 'run directory')}"
+
+
+def _bind(src: str, dst: str | None = None, *, readonly: bool) -> list[str]:
+    for path in (src, dst or src):
+        if "," in path or "=" in path:
+            raise ValueError(f"cannot bind {path!r}: Docker's --mount syntax cannot quote ',' or '='")
+    spec = f"type=bind,src={src},dst={dst or src}"
+    return ["--mount", spec + (",readonly" if readonly else "")]
+
+
+def oci_command(
+    spec_path: Path, out_path: Path, run_dir: Path, fakeproc: Path, repo: Path, sandbox: Sandbox
+) -> list[str]:
+    """``docker run`` for the contained stage (see the module docstring); nothing is pulled."""
+    if sandbox.image is None or not _PINNED_IMAGE.fullmatch(sandbox.image):
+        raise ValueError(f"the OCI backend needs an image pinned by digest, not {sandbox.image!r}")
+    tmpfs = "rw,nosuid,nodev"
+    cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--name",
+        container_name(run_dir),
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "--read-only",
+        "--ipc",
+        "private",
+        "--hostname",
+        HOSTNAME,
+        "--user",
+        "0:0",
+        "--workdir",
+        "/",
+        "--cap-drop",
+        "ALL",
+        *[arg for cap in OCI_CAPABILITIES for arg in ("--cap-add", cap)],
+        "--security-opt",
+        "no-new-privileges",
+        "--pids-limit",
+        str(sandbox.pids),
+        "--memory",
+        sandbox.memory,
+        "--memory-swap",
+        sandbox.memory,
+        "--cpus",
+        sandbox.cpus,
+        "--tmpfs",
+        f"/tmp:{tmpfs},size=1g",
+        "--tmpfs",
+        f"/var/tmp:{tmpfs},size=256m",
+        "--tmpfs",
+        f"/run:{tmpfs},size=16m",
+        "--env",
+        f"PATH={SYSTEM_PATH}",
+        "--env",
+        f"PYTHONPATH={HARNESS_MOUNT}",
+        "--env",
+        "LANG=C.UTF-8",
+        "--env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        *_bind(str(run_dir), readonly=False),
+        *_bind(str(fakeproc), readonly=True),
+        *_bind(str(repo / "tools"), f"{HARNESS_MOUNT}/tools", readonly=True),
+    ]
+    for path in sandbox.binds:
+        cmd += _bind(path, readonly=True)
+    if sandbox.runtime != "runc":
+        cmd += ["--runtime", sandbox.runtime]
+    return [*cmd, sandbox.image, "python3", "-P", "-m", f"{__package__}.stage", str(spec_path), str(out_path)]
+
+
+def _remove_container(name: str) -> None:
+    """Force-remove a container a killed ``docker run`` client left behind; errors are ignored."""
+    try:
+        subprocess.run(
+            ["docker", "rm", "--force", name],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            timeout=60,
+            check=False,
+            env={"PATH": SYSTEM_PATH},
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
 
 
 def _kill_stage(proc: subprocess.Popen[bytes]) -> None:
@@ -362,11 +537,34 @@ def _kill_stage(proc: subprocess.Popen[bytes]) -> None:
             pass
 
 
-def _stage(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> dict[str, Any]:
-    """Run the stage on ``spec``; its spec and result files live in ``control``, never in the work tree."""
+def _stage(
+    spec: dict[str, Any], control: Path, repo: Path, timeout: float, sandbox: Sandbox = DEFAULT_SANDBOX
+) -> dict[str, Any]:
+    """Run the stage on ``spec``; its spec and result files live in ``control``, never in the work tree.
+
+    ``control`` is ``<run_dir>/control``; the OCI backend binds ``<run_dir>`` into the container.
+    """
     spec_path = control / "stage_spec.json"
     out_path = control / "stage_out.json"
-    full = {**spec, "run_as": [TOOL_UID, TOOL_GID], "host_mnt_ns": os.readlink("/proc/self/ns/mnt")}
+    full = {
+        **spec,
+        "run_as": [TOOL_UID, TOOL_GID],
+        "host_mnt_ns": os.readlink("/proc/self/ns/mnt"),
+        "host_uts_ns": os.readlink("/proc/self/ns/uts"),
+        "limits": dict(sandbox.limits),
+    }
+    run_dir = control.parent
+    name: str | None = None
+    if sandbox.backend == "oci":
+        root = os.stat("/")
+        procbin = run_dir / "procbin"
+        procbin.mkdir(mode=0o755, exist_ok=True)
+        full.update({"contained": True, "host_root": [root.st_dev, root.st_ino], "procbin": str(procbin)})
+        name = container_name(run_dir)
+        command = oci_command(spec_path, out_path, run_dir, Path(spec["fakeproc"]), repo, sandbox)
+    else:
+        full["hostname"] = HOSTNAME
+        command = stage_command(spec_path, out_path)
     spec_path.write_text(json.dumps(full), encoding="utf-8")
     env = {
         "PATH": SYSTEM_PATH,
@@ -375,7 +573,7 @@ def _stage(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> d
         "PYTHONDONTWRITEBYTECODE": "1",
     }
     proc = subprocess.Popen(
-        stage_command(spec_path, out_path),
+        command,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -387,6 +585,8 @@ def _stage(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> d
         _, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         _kill_stage(proc)
+        if name is not None:
+            _remove_container(name)  # killing the client leaves the container running
         return _stage_error(f"stage timed out after {timeout:.0f}s")
     if not out_path.exists():
         stderr = err.decode("utf-8", "replace")[-500:]
@@ -416,6 +616,7 @@ def run_one(
     repo: Path,
     fakeproc: Path,
     checkouts: Path | None,
+    sandbox: Sandbox = DEFAULT_SANDBOX,
 ) -> dict[str, Any]:
     prefix = f"{adapter.name}-{safe_name(case.case_id, 'case id')}-"
     run_dir = Path(tempfile.mkdtemp(prefix=prefix, dir=scratch))
@@ -456,7 +657,7 @@ def run_one(
         }
         total_timeout = sum(inv.timeout for inv in invocations) + STAGE_TIMEOUT_GRACE
         _chown_tree(work, TOOL_UID, TOOL_GID)
-        staged = _stage(spec, control, repo, total_timeout)
+        staged = _stage(spec, control, repo, total_timeout, sandbox)
         unsafe = _reclaim_tree(work)
         unsafe += _drop_unsafe_entries(work)
         runs = [
@@ -548,6 +749,7 @@ def run_tool(
     repo: Path,
     fakeproc: Path,
     checkouts: Path | None,
+    sandbox: Sandbox = DEFAULT_SANDBOX,
 ) -> dict[str, Any]:
     for case in cases:
         safe_name(case.case_id, "case id")
@@ -575,7 +777,7 @@ def run_tool(
                 "incomplete": False,
             }
         else:
-            row = run_one(adapter, case, env, scratch, repo, fakeproc, checkouts)
+            row = run_one(adapter, case, env, scratch, repo, fakeproc, checkouts, sandbox)
             raw = row.pop("raw", {})
             with gzip.open(raw_dir / f"{case.case_id}.json.gz", "wt", encoding="utf-8") as fh:
                 json.dump(raw, fh)
@@ -665,6 +867,97 @@ def fakeproc_problem(exc: Exception) -> str:
     )
 
 
+def namespace_problem() -> str | None:
+    """Why ``unshare`` cannot give the stage every namespace it needs on this host; None when it can."""
+    command = stage_command(Path("/dev/null"), Path("/dev/null"))
+    probe = [*command[: command.index("--") + 1], "true"]
+    try:
+        done = subprocess.run(probe, stdin=subprocess.DEVNULL, capture_output=True, timeout=30, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return f"cannot run {' '.join(probe)}: {exc}"
+    if done.returncode != 0:
+        stderr = done.stderr.decode("utf-8", "replace").strip()[-300:]
+        return f"{' '.join(probe)} exited {done.returncode}: {stderr}"
+    return None
+
+
+def parse_limits(values: list[str]) -> dict[str, int]:
+    """``stage.DEFAULT_LIMITS`` with each ``name=value`` of ``--rlimit`` applied over it."""
+    limits = dict(DEFAULT_LIMITS)
+    for item in values:
+        name, sep, value = item.partition("=")
+        if not sep or not value.isdigit():
+            raise ValueError(f"--rlimit takes name=<non-negative integer>, not {item!r}")
+        limits[name] = int(value)
+    return check_limits(limits)
+
+
+def tool_binds(env: ToolEnv) -> tuple[str, ...]:
+    """The tool trees a container needs read-only: ``tool_root`` and every absolute path in
+    ``tools.json`` that exists, less those already inside another."""
+    candidates = {str(env.tool_root.resolve())}
+    tools = env.config.get("tools")
+    for cfg in (tools if isinstance(tools, dict) else {}).values():
+        if isinstance(cfg, dict):
+            candidates |= {
+                str(Path(v).resolve()) for v in cfg.values() if isinstance(v, str) and v.startswith("/")
+            }
+    existing = sorted(c for c in candidates if os.path.exists(c))
+    return tuple(c for c in existing if not any(c != o and Path(c).is_relative_to(o) for o in existing))
+
+
+def _docker_json(*args: str) -> Any:
+    done = subprocess.run(
+        ["docker", *args, "--format", "{{json .}}"],
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+        env={"PATH": SYSTEM_PATH},
+    )
+    if done.returncode != 0:
+        raise RuntimeError(done.stderr.strip()[-300:] or f"docker {' '.join(args)} exited {done.returncode}")
+    return json.loads(done.stdout)
+
+
+def oci_problems(sandbox: Sandbox) -> tuple[list[str], dict[str, Any]]:
+    """Why the OCI backend cannot run here, and what the manifest records about the daemon and image."""
+    if sandbox.image is None or not _PINNED_IMAGE.fullmatch(sandbox.image):
+        return [
+            f"--oci-image must name an image pinned by digest (name@sha256:<64 hex>), not {sandbox.image!r}"
+        ], {}
+    if sandbox.runtime not in OCI_RUNTIMES:
+        return [f"--oci-runtime must be one of {', '.join(OCI_RUNTIMES)}"], {}
+    if shutil.which("docker", path=SYSTEM_PATH) is None:
+        return [f"docker is not on {SYSTEM_PATH}"], {}
+    problems: list[str] = []
+    try:
+        info = _docker_json("info")
+    except (OSError, subprocess.SubprocessError, RuntimeError, ValueError) as exc:
+        return [f"cannot reach the Docker daemon: {exc}"], {}
+    options = [str(o) for o in info.get("SecurityOptions") or []]
+    if any("rootless" in o or "userns" in o for o in options):
+        problems.append(
+            "the Docker daemon is rootless or remaps user namespaces; uid 65534 in the container would not "
+            "own the work tree"
+        )
+    if sandbox.runtime not in (info.get("Runtimes") or {}):
+        problems.append(f"the Docker daemon has no {sandbox.runtime} runtime")
+    facts: dict[str, Any] = {"engine": "docker", "engine_version": info.get("ServerVersion")}
+    try:
+        image = _docker_json("image", "inspect", sandbox.image)
+    except (OSError, subprocess.SubprocessError, RuntimeError, ValueError) as exc:
+        problems.append(
+            f"image {sandbox.image} is not present locally (pull it first; runs never pull): {exc}"
+        )
+        return problems, facts
+    entry = image[0] if isinstance(image, list) and image else image
+    facts["image_id"] = entry.get("Id")
+    facts["image_repo_digests"] = sorted(entry.get("RepoDigests") or [])
+    return problems, facts
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--corpus", type=Path, required=True)
@@ -680,6 +973,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--checkouts", type=Path, default=None, help="directory of pinned repository checkouts for code cases"
     )
+    ap.add_argument("--sandbox", choices=("namespaces", "oci"), default="namespaces")
+    ap.add_argument(
+        "--rlimit",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help=f"override a stage resource limit ({', '.join(f'{k}={v}' for k, v in DEFAULT_LIMITS.items())})",
+    )
+    ap.add_argument("--oci-image", default=None, help="image@sha256:<digest> the contained stage runs in")
+    ap.add_argument("--oci-runtime", choices=OCI_RUNTIMES, default="runc", help="runsc runs under gVisor")
+    ap.add_argument("--oci-memory", default="4g")
+    ap.add_argument("--oci-cpus", default="2")
+    ap.add_argument("--oci-pids", type=int, default=1024)
     args = ap.parse_args(argv)
     if os.geteuid() != 0:
         print(
@@ -697,6 +1003,32 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     env = ToolEnv.load(args.tools)
     repo = REPO
+    try:
+        limits = parse_limits(args.rlimit)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    sandbox = Sandbox(
+        backend=args.sandbox,
+        limits=limits,
+        image=args.oci_image,
+        runtime=args.oci_runtime,
+        memory=args.oci_memory,
+        cpus=args.oci_cpus,
+        pids=args.oci_pids,
+        binds=tool_binds(env) if args.sandbox == "oci" else (),
+    )
+    isolation_facts: dict[str, Any] = {}
+    if sandbox.backend == "oci":
+        oci, isolation_facts = oci_problems(sandbox)
+        if oci:
+            print("\n".join(oci), file=sys.stderr)
+            return 2
+    else:
+        problem = namespace_problem()
+        if problem:
+            print(f"the stage's namespaces are not available: {problem}", file=sys.stderr)
+            return 2
     adapters, problems = load_adapters()
     for name, problem in problems.items():
         print(f"adapter module {name} skipped: {problem}", file=sys.stderr)
@@ -731,6 +1063,7 @@ def main(argv: list[str] | None = None) -> int:
         "platform": platform.platform(),
         "python": platform.python_version(),
         "workers": args.workers,
+        "isolation": {**sandbox.describe(), **isolation_facts},
         "cases": len(cases),
         "tools": {},
         "skipped_adapters": problems,
@@ -743,7 +1076,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         print(f"{adapter.name}: running {len(cases)} cases ...", flush=True)
         summary = run_tool(
-            adapter, cases, env, args.out, args.workers, scratch, repo, fakeproc, args.checkouts
+            adapter, cases, env, args.out, args.workers, scratch, repo, fakeproc, args.checkouts, sandbox
         )
         print(f"  {summary}")
         manifest["tools"][adapter.name] = summary
