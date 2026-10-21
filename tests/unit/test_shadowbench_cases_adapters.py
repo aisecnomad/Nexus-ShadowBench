@@ -764,7 +764,11 @@ def test_install_script_fails_closed() -> None:
     assert "|| true" not in script
     assert ">/dev/null 2>&1" not in script
     assert "-mod=mod" not in script
-    assert "version-pinned, not hash-locked" in script
+    # hash-locked: PyPI tools install exactly their locks, and nothing resolves modules at install time
+    assert "--require-hashes --no-deps" in script
+    assert "go mod tidy" not in "\n".join(
+        line for line in script.splitlines() if not line.lstrip().startswith("#")
+    )
 
 
 # --- fetch_code.py: hardened git, pinned HEAD, no symlinks -----------------------------------------

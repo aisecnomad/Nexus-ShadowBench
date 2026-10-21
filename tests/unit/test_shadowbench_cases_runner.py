@@ -134,7 +134,9 @@ def _run(code: int = 0, stdout: str = "", stderr: str = "") -> dict[str, Any]:
 def _fake_stage(runs: list[dict[str, Any]], seen: dict[str, Any]) -> Callable[..., dict[str, Any]]:
     """Stand in for the stage: record what it was given and return ``runs``."""
 
-    def fake(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> dict[str, Any]:
+    def fake(
+        spec: dict[str, Any], control: Path, repo: Path, timeout: float, sandbox: Any = None
+    ) -> dict[str, Any]:
         control = Path(control)
         seen.update(
             spec=spec,
@@ -1109,7 +1111,9 @@ def test_run_one_reads_tool_output_that_no_other_process_can_relink_after_the_sw
     assert python is not None
     planter: dict[str, subprocess.Popen[str]] = {}
 
-    def stage_as_tool(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> dict[str, Any]:
+    def stage_as_tool(
+        spec: dict[str, Any], control: Path, repo: Path, timeout: float, sandbox: Any = None
+    ) -> dict[str, Any]:
         # What a tool leaves, and a process of the same uid that outlives the stage holding fds into it.
         work = Path(spec["work"])
         (work / "sub").mkdir(mode=0o777)
@@ -1230,7 +1234,9 @@ def test_run_one_removes_a_hard_link_the_tool_left_before_the_adapter_reads(
     """The adapter read, as root, another account's file through a hard link the tool planted."""
     shared = _shared_file(scratch)
 
-    def stage_as_tool(spec: dict[str, Any], control: Path, repo: Path, timeout: float) -> dict[str, Any]:
+    def stage_as_tool(
+        spec: dict[str, Any], control: Path, repo: Path, timeout: float, sandbox: Any = None
+    ) -> dict[str, Any]:
         work = Path(spec["work"])
         (work / "out.txt").write_text("tool-output", encoding="utf-8")
         os.chown(work / "out.txt", runner.TOOL_UID, runner.TOOL_GID)

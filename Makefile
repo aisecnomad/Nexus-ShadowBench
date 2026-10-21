@@ -11,6 +11,8 @@ SCANNER_DIR := scanner-source
 CASES_CORPUS := benchmarks/shadowbench/cases/corpus.json
 CASES_RUN := benchmarks/shadowbench/cases/results/2026-10-11
 ESTATE_RUN := benchmarks/shadowbench/estate/results/2026-10-11
+CODE_CORPUS := benchmarks/shadow-ai-discovery/corpus.json
+CODE_RUN := benchmarks/shadow-ai-discovery/results/2026-10-09
 
 # --- Setup -----------------------------------------------------------------
 
@@ -40,8 +42,9 @@ audit: ## Audit the installed environment and every hash-locked dependency set, 
 	done
 
 .PHONY: verify
-verify: ## Check every migrated file against MIGRATION.json (identity only; runs no benchmark)
+verify: ## Check migrated files against MIGRATION.json and attested results against their Sigstore bundles
 	$(PYTHON) -m tools.verify_migration
+	$(PYTHON) -m tools.attest verify
 
 .PHONY: test
 test: ## Run the harness test suite
@@ -63,8 +66,19 @@ typecheck: ## Type-check the harness against the pinned scanner checkout
 secrets: ## Scan every tracked file for credential-shaped strings
 	git ls-files -z | xargs -0 $(PYTHON) tools/check_secrets.py
 
+# Committed results of the live tracks, checked for machine paths a scrub missed;
+# paths the corpora themselves contain (echoed by tools) are not findings.
+RESULTS_DIRS := benchmarks/shadow-ai-discovery/results benchmarks/shadowbench/cases/results \
+	benchmarks/shadowbench/estate/results
+CORPORA := benchmarks/shadowbench/estate/artifacts benchmarks/shadowbench/cases/corpus.json \
+	benchmarks/shadow-ai-discovery/corpus.json
+
+.PHONY: paths
+paths: ## Check committed results for machine paths left unscrubbed
+	$(PYTHON) -m tools.shadowbench.scrub check $(addprefix --corpus ,$(CORPORA)) $(RESULTS_DIRS)
+
 .PHONY: check
-check: audit verify test lint format-check typecheck secrets ## Run every CI gate, in CI's order
+check: audit verify test lint format-check typecheck secrets paths ## Run every CI gate, in CI's order
 
 # --- Evidence ---------------------------------------------------------------
 
@@ -77,9 +91,11 @@ integrity: ## Rebuild the cases corpus and check the estate corpus and freeze (n
 # Scoring and rendering the committed rows with the scorers at this commit
 # reproduces each run's metrics.json and REPORT.md byte for byte, so any
 # difference means the scorer, the report or the committed evidence changed.
-# Nothing is written outside a temporary directory.
+# The 2026-10-09 code-surface baseline re-scores its metrics.json byte for
+# byte; its REPORT.md differs in four cells (docs/results.md). Nothing is
+# written outside a temporary directory.
 .PHONY: rescore
-rescore: ## Re-score the committed 2026-10-11 cases and estate runs and compare them byte for byte
+rescore: ## Re-score the committed cases, estate and code-surface runs and compare them byte for byte
 	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
 	$(PYTHON) -m tools.shadowbench.cases score --corpus $(CASES_CORPUS) \
 		--results $(CASES_RUN) --out "$$tmp/cases-metrics.json" >/dev/null && \
@@ -94,7 +110,11 @@ rescore: ## Re-score the committed 2026-10-11 cases and estate runs and compare 
 		--out "$$tmp/estate-REPORT.md" >/dev/null && \
 	cmp "$$tmp/estate-metrics.json" $(ESTATE_RUN)/metrics.json && \
 	cmp "$$tmp/estate-REPORT.md" $(ESTATE_RUN)/REPORT.md && \
-	echo "estate: re-scored metrics.json and REPORT.md match $(ESTATE_RUN) byte for byte"
+	echo "estate: re-scored metrics.json and REPORT.md match $(ESTATE_RUN) byte for byte" && \
+	$(PYTHON) -m tools.discovery_benchmark score --corpus $(CODE_CORPUS) --runs $(CODE_RUN)/runs.json \
+		--out "$$tmp/code-metrics.json" >/dev/null && \
+	cmp "$$tmp/code-metrics.json" $(CODE_RUN)/metrics.json && \
+	echo "code surface: re-scored metrics.json matches $(CODE_RUN) byte for byte"
 
 # --- Housekeeping -----------------------------------------------------------
 

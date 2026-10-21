@@ -68,8 +68,9 @@ without becoming the baseline, but keep runs on other corpora out of it.
 - `metrics.json` from `python -m tools.shadowbench.cases score`, and
   `REPORT.md` from `report`;
 - the `tools.json` shape with paths replaced by placeholders, and the
-  installed-dependency records (`uv pip freeze` per venv, `go.sum` for built
-  wrappers), since installs are version-pinned, not hash-locked.
+  `resolved/` directory the runner copies from the tool root (freeze lists, Go
+  build info, the locks used and SHA256SUMS), whose digests the manifest
+  records as `tool_install`.
 
 **Estate track:**
 
@@ -105,9 +106,20 @@ ShadowScan ran) in the run's README and the pull request.
   files into the results directory selectively instead of copying `<out>`.
 - **Local paths and identities.** Replace machine paths with placeholders
   before publishing, as the committed runs did: `<tools>`, `<run>`,
-  `<estate>`, `<repo>`, `<venvs>`, `<work>`. No script in the repository does
-  this; check `runs.json`, `tools.json` and notes by hand, and say in the
-  pull request that you did. Never rewrite any other field.
+  `<estate>`, `<repo>`, `<venvs>`, `<work>` (and `<corpus>`, `<home>`,
+  `<tmp>`, `<host>`). The cases runner already writes its rows with the tool
+  root, scratch, output and harness paths replaced, before it records their
+  digest, so **never edit a `<tool>.jsonl`**: the scorer would refuse it.
+  Scrub the other records (`manifest.json`, `tools.json`, `runs.json`, notes)
+  with `python -m tools.shadowbench.scrub apply --map PATH=<token> ...
+  [--home] [--tmp] [--host] FILE...`, which replaces a path only where one
+  starts and ends and changes nothing else, then run
+  `python -m tools.shadowbench.scrub check --identity` on every file you
+  publish, rows included; CI (`make paths`) checks every committed results
+  directory. Estate and code-surface rows carry no recorded digest; scrub
+  them the same way and say so. Say in the pull request that you ran both.
+  Never rewrite any other field
+  ([supply-chain.md](supply-chain.md#scrubbing-machine-paths)).
 - **Credentials or credential-shaped strings.** Run
   `git ls-files -z | xargs -0 python tools/check_secrets.py` before
   committing. Rows can echo synthetic tokens from the corpus; such a value
@@ -193,8 +205,13 @@ outputs matched byte for byte.
       their reason.
 - [ ] Errors, missing rows and incomplete runs are counted and discussed,
       and none is presented as a clean negative.
-- [ ] Local paths are placeholders; no raw output, checkout or credential is
-      committed; the secret check passes.
+- [ ] Local paths are placeholders (`make paths` passes); no raw output,
+      checkout or credential is committed; the secret check passes.
+- [ ] A cases manifest records its `isolation` and its `tool_install`
+      record, and `resolved/` is committed beside the rows.
+- [ ] After merge, the maintainer dispatches **Attest results** for the new
+      directory and commits the signed attestation
+      ([supply-chain.md](supply-chain.md#signed-results)).
 - [ ] The independence and in-sample statements are present and accurate.
 - [ ] No ranking, grade, recommendation or field-accuracy claim appears in
       the report or the pull request.

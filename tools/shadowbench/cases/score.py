@@ -38,11 +38,23 @@ Matching. A reported key equal to a tolerated key is neither credited nor
 penalized. Otherwise it matches an expected or decoy key when they are equal,
 or, for ``artifact:`` keys, when the reported path lies inside the expected or
 decoy directory (a tool that cites a file in Claude Code's ``.claude``
-directory has found it). A reported ancestor directory of an expected file is
+directory has found it); a reported path with a ``..`` segment lies inside no
+directory. A reported ancestor directory of an expected file is
 never a match: the rubric lists the directories a tool may name instead as
-tolerated. Reported keys are de-duplicated. A reported key that matches
+tolerated. Reported keys are de-duplicated; a key reported more than once is
+labeled ``agent`` when any of its reports is. A reported key that matches
 nothing expected or tolerated is a false positive; when it matches a decoy it
 also counts against specificity.
+
+Key scheme. ``--keys`` names how reported and truth keys are compared before
+any of the above. ``exact`` (the default, and the scheme every committed run
+was scored with) compares them as written. ``canonical-v1`` first maps both
+through ``tools.shadowbench.keys.canonical``, so spellings of one entity that
+its platform treats as the same (a GUID's case, ``localhost`` for
+``127.0.0.1``, ``./`` before a path) match; de-duplication is then by
+canonical form. The scorer refuses a scheme that would merge two truth keys
+of one case, and records any scheme but ``exact`` as ``key_scheme`` in the
+metrics. Truth keys are reported as the corpus writes them.
 
 Code surface. Truth there is ``<category>:<value>`` facts from
 ``tools.discovery_benchmark.taxonomy``. A reported code key that is not such a
@@ -117,6 +129,7 @@ from tools.discovery_benchmark.taxonomy import is_fact
 from tools.shadowbench.cases.adapters.registry import load_adapters
 from tools.shadowbench.cases.contract import SURFACES, Status
 from tools.shadowbench.cases.corpus import Case, Corpus, corpus_digest, load_corpus
+from tools.shadowbench.keys import EXACT, SCHEMES, Canonicalizer, corpus_problems, exact, scheme
 
 STATUSES: frozenset[str] = frozenset(get_args(Status))
 """The row statuses the runner writes; any other status is refused, never skipped."""
@@ -225,11 +238,17 @@ def mcnemar_exact(b: int, c: int) -> float:
 
 
 def _key_match(reported: str, truth: str) -> bool:
-    """Whether ``reported`` names ``truth``: the same key, or an artifact path inside the truth directory."""
+    """Whether ``reported`` names ``truth``: the same key, or an artifact path inside the truth directory.
+
+    A reported path with a ``..`` segment is inside no directory: ``.claude/../../x`` starts with
+    ``.claude/`` but names a file outside it.
+    """
     if reported == truth:
         return True
     if reported.startswith("artifact:") and truth.startswith("artifact:"):
         inner, outer = reported[9:].rstrip("/"), truth[9:].rstrip("/")
+        if ".." in inner.split("/"):
+            return False
         return inner.startswith(outer + "/")
     return False
 
@@ -243,7 +262,9 @@ class CaseScore:
 
     ``withheld`` holds the key prefixes of the decoys the tool's adapter never passed to it on this
     case's surface and modality. ``missing_status`` is how a missing row is scored: an ``error``,
-    or ``unsupported`` where the tool does not run (``missing_row_status``).
+    or ``unsupported`` where the tool does not run (``missing_row_status``). ``canon`` is the key
+    scheme: reported and truth keys are compared by their image under it, and the sets below hold
+    truth keys as the corpus writes them.
     """
 
     def __init__(
@@ -252,6 +273,7 @@ class CaseScore:
         row: dict[str, Any] | None,
         withheld: tuple[str, ...] = (),
         missing_status: Status = "error",
+        canon: Canonicalizer = exact,
     ) -> None:
         self.case = case
         self.missing = row is None
@@ -262,8 +284,9 @@ class CaseScore:
         # only a complete ok run can vouch for what it did not report
         self.complete = self.status == "ok" and not self.incomplete
         self.seconds = float(row.get("seconds") or 0.0)
-        expected = {e.key: e for e in case.expected}
-        tolerated = set(case.tolerated)
+        expected = {canon(e.key): e for e in case.expected}
+        tolerated = {canon(k) for k in case.tolerated}
+        decoys = {canon(k): k for k in case.decoys}
         self.tp: set[str] = set()
         self.tp_agent: set[str] = set()
         self.fp_keys: set[str] = set()
@@ -278,28 +301,31 @@ class CaseScore:
             return
         # code hits the adapter could not map to a fact and dropped, counted in the row
         self.dropped_out_of_taxonomy = int(row.get("out_of_taxonomy") or 0)
-        seen: set[str] = set()
+        # One report per key, in first-seen order; a key reported more than once (as the same spelling,
+        # or as spellings the scheme maps together) is labeled agent when any of its reports is, so the
+        # agent tier never depends on the order a tool printed its findings in.
+        reports: dict[str, str] = {}
         for ent in row["entities"]:
-            key = str(ent["key"])
+            key = canon(str(ent["key"]))
             label = str(ent["label"])
-            if key in seen:
-                continue
-            seen.add(key)
+            if key not in reports or label == "agent":
+                reports[key] = label if key not in reports else "agent"
+        for key, label in reports.items():
             if case.surface == "code" and not is_fact(key):
                 self.out_of_taxonomy.add(key)
                 continue
             if key in tolerated:
                 continue
-            hit_expected = _matches(key, list(expected))
-            hit_decoy = _matches(key, case.decoys)
+            hit_expected = [expected[k] for k in _matches(key, list(expected))]
+            hit_decoy = [decoys[k] for k in _matches(key, list(decoys))]
             if hit_expected:
-                for k in hit_expected:
-                    self.tp.add(k)
+                for entity in hit_expected:
+                    self.tp.add(entity.key)
                     if label == "agent":
-                        if expected[k].label == "agent":
-                            self.tp_agent.add(k)
+                        if entity.label == "agent":
+                            self.tp_agent.add(entity.key)
                         else:
-                            self.agent_false_alarms.add(k)
+                            self.agent_false_alarms.add(entity.key)
             elif hit_decoy:
                 self.decoy_hits.update(hit_decoy)
                 if label == "agent":
@@ -582,8 +608,17 @@ def score(
     *,
     corpus_sha256: str,
     force: bool = False,
+    key_scheme: str = EXACT,
 ) -> dict[str, Any]:
-    """Metrics for every tool under ``results``; ``corpus_sha256`` is the digest of the corpus file scored."""
+    """Metrics for every tool under ``results``; ``corpus_sha256`` is the digest of the corpus file scored.
+
+    ``key_scheme`` names a ``tools.shadowbench.keys`` scheme; one that merges two truth keys of a
+    case is refused, ``--force`` or not.
+    """
+    canon = scheme(key_scheme)
+    merged = corpus_problems(corpus.cases, canon) if key_scheme != EXACT else []
+    if merged:
+        raise ResultsError(f"key scheme {key_scheme} merges truth keys: {'; '.join(merged[:5])}")
     manifest_path = results / "manifest.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
@@ -630,6 +665,10 @@ def score(
         "surfaces": {},
         "tools": {},
     }
+    if key_scheme != EXACT:
+        # recorded only when it is not the default, so runs scored before schemes existed re-score
+        # byte for byte
+        out["key_scheme"] = key_scheme
     for surface in SURFACES:
         cs = [c for c in corpus.cases if c.surface == surface]
         out["surfaces"][surface] = {
@@ -653,6 +692,7 @@ def score(
                 by_case.get(c.case_id),
                 withheld[tool].get((c.surface, c.modality), ()),
                 missing_row_status(pairs_run, support, c),
+                canon,
             )
             for c in corpus.cases
         }
@@ -723,11 +763,22 @@ def main(argv: list[str] | None = None) -> int:
         "a tool it does not record as run, row statuses that differ from its counts, or a results file "
         "whose SHA-256 differs from the one it recorded (recorded in the metrics)",
     )
+    ap.add_argument(
+        "--keys",
+        default=EXACT,
+        choices=sorted(SCHEMES),
+        help="how reported and truth keys are compared (default exact; see tools/shadowbench/keys.py)",
+    )
     args = ap.parse_args(argv)
     corpus = load_corpus(args.corpus)
     try:
         metrics = score(
-            corpus, args.results, args.reference, corpus_sha256=corpus_digest(args.corpus), force=args.force
+            corpus,
+            args.results,
+            args.reference,
+            corpus_sha256=corpus_digest(args.corpus),
+            force=args.force,
+            key_scheme=args.keys,
         )
     except ResultsError as exc:
         print(f"refusing to score: {exc}", file=sys.stderr)

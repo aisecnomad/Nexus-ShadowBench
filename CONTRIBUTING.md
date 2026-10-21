@@ -38,8 +38,10 @@ touches a scorer, a corpus or an adapter; those changes move published numbers.
 ## Getting started
 
 Use CPython 3.11 to 3.14 and Git on Linux. The cases track's runner needs Linux
-namespaces and `gcc`; scoring, verification and the test suite do not run any
-third-party discovery tool. Fork the repository if you need a branch you can
+namespaces, `gcc` and `prlimit` (util-linux); scoring, verification and the
+test suite do not run any third-party discovery tool. Verifying signed results
+(`make verify`) needs [cosign](https://github.com/sigstore/cosign) v3 once an
+attestation with a Sigstore bundle is committed; CI installs it. Fork the repository if you need a branch you can
 push, then, in a local checkout:
 
 ```bash
@@ -123,11 +125,13 @@ runs the same gates locally, in the same order:
 |---|---|---|
 | Dependencies | `make audit` (`pip-audit` on the environment and on each hash-locked set) | No known vulnerability |
 | Evidence identity | `python -m tools.verify_migration` | All 555 migrated files match their recorded identity or their latest amendment |
+| Result attestations | `python -m tools.attest verify` (part of `make verify`) | Every attested results directory holds exactly its attested files; every Sigstore bundle verifies (needs cosign v3 once a bundle is committed) |
 | Tests | `python -m pytest -q` | All pass |
 | Lint | `ruff check tests tools benchmarks` | No errors |
 | Format | `ruff format --check tests tools benchmarks` | No changes |
 | Types | `MYPYPATH=scanner-source mypy tools benchmarks` | No errors |
 | Secrets | `git ls-files -z \| xargs -0 python tools/check_secrets.py` | Every tracked file checked; only exact reviewed approvals accepted |
+| Published paths | `make paths` (`python -m tools.shadowbench.scrub check` over every committed results directory) | No home, temporary or profile path left, other than paths the corpora themselves contain |
 
 Some tests start loopback servers or synthetic subprocesses and need a host
 that permits those local operations. Explain in the pull request any gate you

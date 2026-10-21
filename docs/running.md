@@ -71,7 +71,9 @@ python -m tools.shadowbench estate verify-freeze
 python -m tools.shadowbench450_archive
 ```
 
-`make verify integrity` runs the same checks. Expected results at the
+`make verify integrity` runs the same checks, plus `python -m tools.attest
+verify`, which needs cosign v3 on `PATH` once a committed attestation carries
+a Sigstore bundle. Expected results at the
 current commit:
 
 | Check | Expected output |
@@ -154,7 +156,7 @@ re-normalized the rows with the fixed adapters.
 ```bash
 git clone . /opt/nsb/ShadowBench && cd /opt/nsb/ShadowBench   # a clean copy outside /root and /home
 python -m tools.shadowbench.cases verify --corpus benchmarks/shadowbench/cases/corpus.json
-bash tools/shadowbench/cases/install_tools.sh /opt/nsb/tools   # review it first; writes /opt/nsb/tools/tools.json
+bash tools/shadowbench/cases/install_tools.sh /opt/nsb/tools   # review it first; hash-locked; writes /opt/nsb/tools/tools.json
 # add to "tools" in /opt/nsb/tools/tools.json:
 #   "shadowscan": {"bin": "<python with the locked environment>", "repo": "<ShadowScan checkout to measure>"}
 python -m tools.shadowbench.cases.fetch_code /opt/nsb/checkouts
@@ -167,8 +169,17 @@ python -m tools.shadowbench.cases report --corpus benchmarks/shadowbench/cases/c
     --metrics /opt/nsb/results/<date>/metrics.json --out /opt/nsb/results/<date>/REPORT.md
 ```
 
-`run` accepts `--only a,b`, `--surfaces x,y`, `--cases id,...` and
-`--scratch`; a run of some surfaces writes `unsupported` rows for the rest.
+`run` accepts `--only a,b`, `--surfaces x,y`, `--cases id,...`,
+`--scratch` and `--rlimit name=value`; a run of some surfaces writes
+`unsupported` rows for the rest. `install_tools.sh` takes tool names to
+install only those, installs PyPI tools from hash locks and records what it
+installed in `/opt/nsb/tools/resolved/`, which the runner copies into the
+run. For the strongest isolation, build the tool tree in the pinned image
+and add `--sandbox oci --oci-image <digest>` (with `--oci-runtime runsc` for
+gVisor); see [supply-chain.md](supply-chain.md). Before publishing, replace
+machine paths in the manifest and other records with `python -m
+tools.shadowbench.scrub apply` (the rows already carry placeholders; never edit
+them) and confirm with `scrub check --identity`.
 `fetch_code` uses hardened `git` calls (HTTPS only, hooks and filter
 drivers off, pins checked before and after checkout), and the runner
 refuses a checkout whose HEAD differs from the pin or whose `git status`
@@ -252,8 +263,10 @@ Record all of these next to any result you publish:
 - The corpus file's SHA-256 (the cases manifest records it), and for the
   estate the `FREEZE.json` digest (the runner records it).
 - Every tool's version or commit (`tools.json`, the manifest's
-  `tool_versions`), plus `uv pip freeze` for each tool venv and the Fleet
-  wrapper's `go.sum`: tool installs are version-pinned, not hash-locked.
+  `tool_versions`). Cases-track installs are hash-locked and the runner copies
+  their `resolved/` record (freeze lists, Go build info, locks, SHA256SUMS)
+  into the run; for estate and code-surface installs, which are version-pinned
+  only, add `uv pip freeze` for each tool venv and any `go.sum` yourself.
 - The host: kernel, distribution, CPU count, worker count and timeouts.
 - Which isolation you used, and anything you changed in the harness.
 

@@ -52,7 +52,17 @@ reported key matches an expected or decoy key when they are equal or, for
 `artifact:` keys (home-directory paths), when the reported path lies
 **inside** the expected or decoy directory: a tool that cites a file in
 Claude Code's `.claude` directory has found it. Matching is one-way; a
-reported ancestor directory never matches. Reported keys are de-duplicated.
+reported ancestor directory never matches, and a reported path with a `..`
+segment lies inside no directory. Reported keys are de-duplicated; a key
+reported more than once counts as labeled `agent` when any of its reports
+is, so the agent tier never depends on the order a tool printed its
+findings in.
+Keys are compared as written (the `exact` scheme, under which every committed
+run was scored); `score --keys canonical-v1` first maps reported and truth
+keys to one spelling per entity (a GUID's case, `localhost` for `127.0.0.1`,
+`./` before a path) and refuses a corpus whose truth keys it would merge
+([key-canonicalization.md](key-canonicalization.md)). On the 2026-10-11 run
+the two schemes give identical metrics.
 
 **Estate track.** Predictions are free text with a fact, so the scorer
 **attributes** each to at most one entity by its anchors: the candidates are

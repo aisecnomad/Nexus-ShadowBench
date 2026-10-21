@@ -46,9 +46,11 @@ def test_fetch_code_documents_the_command_that_runs() -> None:
 
 
 def _main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tools: dict[str, object] | None = None) -> int:
-    """Run ``runner.main`` on an empty corpus as if root, with ``unshare`` present and isolation clean."""
+    """Run ``runner.main`` on an empty corpus as if root, with ``unshare`` and its namespaces present and
+    isolation clean."""
     monkeypatch.setattr(runner.os, "geteuid", lambda: 0)
     monkeypatch.setattr(runner.shutil, "which", lambda name, path=None: f"/usr/bin/{name}")
+    monkeypatch.setattr(runner, "namespace_problem", lambda: None)
     monkeypatch.setattr(runner, "isolation_problems", lambda scratch, env: [])
     corpus = tmp_path / "corpus.json"
     dump_corpus(Corpus([], 1, "generator", "2026-10-11T00:00:00Z"), corpus)

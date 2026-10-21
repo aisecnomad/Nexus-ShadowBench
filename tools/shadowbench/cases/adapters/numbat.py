@@ -109,7 +109,12 @@ class NumbatAdapter:
     surfaces: Mapping[str, frozenset[str]] = {"endpoint": frozenset({"home"})}
 
     def unavailable_reason(self, env: ToolEnv) -> str | None:
-        return None if env.binary(TOOL) else f"no 'bin' configured for {TOOL}"
+        binary = env.binary(TOOL)
+        if not binary:
+            return f"no 'bin' configured for {TOOL}"
+        if not Path(binary).exists():
+            return f"{binary} does not exist"
+        return None
 
     def version(self, env: ToolEnv) -> str:
         binary = env.binary(TOOL)

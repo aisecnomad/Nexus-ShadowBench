@@ -243,9 +243,11 @@ the manifest as given, for every tool, without a probe; otherwise the runner
 calls `version()` once per tool. Every path in `tools.json` must lie outside
 `/root`, `/home`, `/var/tmp` and `/dev/shm`, and be readable and executable by
 uid 65534, or the runner refuses to start. Record how you installed the tool
-(exact version or commit, and a `uv pip freeze` or `go.sum` for transitive
-dependencies): [`install_tools.sh`](../tools/shadowbench/cases/install_tools.sh)
-pins versions, not hashes. See the cases harness README's
+(exact version or commit, and its transitive dependencies):
+[`install_tools.sh`](../tools/shadowbench/cases/install_tools.sh) installs the
+cases-track tools from hash locks in `tools/shadowbench/cases/locks/` and
+records the resolved set; a new tool should add its lock there
+([supply-chain.md](supply-chain.md#hash-locked-tool-installs)). See the cases harness README's
 [Tool configuration](../tools/shadowbench/cases/README.md#tool-configuration).
 
 ### Calibrating without touching the scored corpus

@@ -1,0 +1,52 @@
+# Build the cases track's third-party tool tree in digest-pinned images.
+#
+#   docker buildx build -f tools/shadowbench/cases/images/Containerfile --target tools \
+#     --output type=local,dest=/opt/shadowbench/tools [--build-arg TOOLS="agentdiscover numbat"] .
+#   python -m tools.shadowbench.cases run --tools /opt/shadowbench/tools/tools.json ... \
+#     --sandbox oci --oci-image <PYTHON_IMAGE below>
+#
+# The build context is the repository root. install_tools.sh installs from the
+# hash locks in tools/shadowbench/cases/locks/ and records the resolved set in
+# /opt/shadowbench/tools/resolved/, which the runner copies into every run.
+#
+# The tree is built at /opt/shadowbench/tools in an image whose root file
+# system is PYTHON_IMAGE's, so its venvs point at that image's
+# /usr/local/bin/python3.13 and its dynamically linked binaries (SafeDep vet)
+# at that image's C library. Export it to the same path on the host and run it
+# with --sandbox oci --oci-image set to the same PYTHON_IMAGE digest; the
+# runner binds the tree read-only into the container. On the host the tree is
+# data, not something to execute.
+#
+# Every base image is pinned by digest (a tag alone can move). The build stage's
+# Debian packages (gcc, git and their dependencies) come from the archive at
+# build time and are build tools, not part of the exported tree; the C library
+# the exported binaries link against is the runtime image's. Go modules are
+# verified against go.sum and the Go checksum database, Python distributions
+# against the lock hashes.
+
+ARG PYTHON_IMAGE=python:3.13-slim-bookworm@sha256:73aa5faee130c60da030e105ec971ccf57473fbd22ce73bd6fc9ba99a40b838d
+ARG GO_IMAGE=golang:1.24-bookworm@sha256:1a6d4452c65dea36aac2e2d606b01b4a029ec90cc1ae53890540ce6173ea77ac
+ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.9.5@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7
+
+FROM ${GO_IMAGE} AS go
+FROM ${UV_IMAGE} AS uv
+
+FROM ${PYTHON_IMAGE} AS build
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates gcc git libc6-dev \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=go /usr/local/go /usr/local/go
+COPY --from=uv /uv /usr/local/bin/uv
+ENV PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    GOTOOLCHAIN=auto \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON_PREFERENCE=only-system
+COPY tools/shadowbench/cases/install_tools.sh /src/install_tools.sh
+COPY tools/shadowbench/cases/locks /src/locks
+ARG TOOLS=""
+RUN bash /src/install_tools.sh /opt/shadowbench/tools ${TOOLS} \
+ && rm -rf /opt/shadowbench/tools/third_party
+
+# Only the tool tree: venvs, binaries, data, tools.json and resolved/.
+FROM scratch AS tools
+COPY --from=build /opt/shadowbench/tools /
