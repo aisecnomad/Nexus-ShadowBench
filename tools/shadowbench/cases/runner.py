@@ -900,7 +900,14 @@ def namespace_problem() -> str | None:
     command = stage_command(Path("/dev/null"), Path("/dev/null"))
     probe = [*command[: command.index("--") + 1], "true"]
     try:
-        done = subprocess.run(probe, stdin=subprocess.DEVNULL, capture_output=True, timeout=30, check=False)
+        done = subprocess.run(
+            probe,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            timeout=30,
+            check=False,
+            env={"PATH": SYSTEM_PATH},
+        )
     except (OSError, subprocess.SubprocessError) as exc:
         return f"cannot run {' '.join(probe)}: {exc}"
     if done.returncode != 0:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -71,7 +72,7 @@ def test_equivalent_spellings_of_a_relative_path_match(segments: list[str], pref
 
 @given(st.lists(_SEGMENT, min_size=1, max_size=4))
 def test_a_path_keeps_its_case(segments: list[str]) -> None:
-    path = "/".join(segments)
+    path = unicodedata.normalize("NFC", "/".join(segments))  # NFC may fold compatibility characters
     assert keys.canonical(f"artifact:{path}") == f"artifact:{path}"
 
 

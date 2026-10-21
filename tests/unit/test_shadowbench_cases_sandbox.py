@@ -346,3 +346,26 @@ def test_the_report_names_the_sandbox() -> None:
     manifest["isolation"] = runner.Sandbox(backend="oci", image=IMAGE, runtime="runsc").describe()
     sentence = report.harness(manifest)
     assert "gVisor" in sentence and IMAGE in sentence and "read-only root" in sentence
+
+
+def test_the_runner_refuses_a_host_without_every_stage_namespace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from tools.shadowbench.cases.corpus import Corpus, dump_corpus
+
+    def refused(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+        assert "--uts" in argv and "--cgroup" in argv and kwargs["env"] == {"PATH": runner.SYSTEM_PATH}
+        return subprocess.CompletedProcess(argv, 1, b"", b"unshare: unshare failed: Operation not permitted")
+
+    monkeypatch.setattr(runner.subprocess, "run", refused)
+    assert "Operation not permitted" in (runner.namespace_problem() or "")
+    monkeypatch.setattr(runner.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(runner.shutil, "which", lambda name, path=None: f"/usr/bin/{name}")
+    corpus = tmp_path / "corpus.json"
+    dump_corpus(Corpus([], 1, "generator", "2026-10-11T00:00:00Z"), corpus)
+    tools_json = tmp_path / "tools.json"
+    tools_json.write_text(json.dumps({"tool_root": str(tmp_path), "tools": {}}), encoding="utf-8")
+    argv = ["--corpus", str(corpus), "--tools", str(tools_json), "--out", str(tmp_path / "out")]
+    assert runner.main(argv) == 2
+    assert "the stage's namespaces are not available" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()

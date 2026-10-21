@@ -102,9 +102,9 @@ if want ai-infra-guard; then
 fi
 
 # Fleet's ai_tools table (MIT), compiled into a small program that prints its rows as JSON.
+fleet_commit=cf1217bafcd5cdce367165b1c604f94ed559e3d0
+fleet_version="fleet ai_tools (fleetdm/fleet main $fleet_commit, 2026-10-11; upstream karmine05/agentic-detector v0.3.0 7c942d0)"
 if want fleet-ai-tools; then
-  fleet_commit=cf1217bafcd5cdce367165b1c604f94ed559e3d0
-  fleet_version="fleet ai_tools (fleetdm/fleet main $fleet_commit, 2026-10-11; upstream karmine05/agentic-detector v0.3.0 7c942d0)"
   fleet="$root/third_party/fleet-sparse"
   if [[ ! -d "$fleet/.git" ]]; then
     git -c core.hooksPath=/dev/null clone --quiet --filter=blob:none --no-checkout https://github.com/fleetdm/fleet "$fleet"
@@ -220,7 +220,12 @@ for bin in "$root"/bin/*; do
   [[ -f "$bin" ]] || continue
   (cd "$root/bin" && go version -m "$(basename "$bin")") > "$root/resolved/$(basename "$bin").buildinfo.txt"
 done
-(cd "$root" && find bin venvs/*/bin -maxdepth 1 -type f ! -name 'activate*' 2>/dev/null \
-  | LC_ALL=C sort | xargs -r sha256sum) > "$root/resolved/SHA256SUMS"
+(
+  cd "$root"
+  shopt -s nullglob
+  for file in bin/* venvs/*/bin/*; do
+    if [[ -f "$file" && "$(basename "$file")" != activate* ]]; then printf '%s\0' "$file"; fi
+  done | LC_ALL=C sort -z | xargs -0r sha256sum
+) > "$root/resolved/SHA256SUMS"
 
 echo "tools installed under $root; add a shadowscan entry (python interpreter and repo path) to $root/tools.json"
