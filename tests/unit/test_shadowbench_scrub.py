@@ -86,7 +86,7 @@ def test_scrubbing_text_without_the_path_changes_nothing(text: str) -> None:
     ],
 )
 def test_check_finds_machine_paths(line: str, kind: str) -> None:
-    assert [k for _, k, _ in scrub.findings(line)] == [kind]
+    assert [f.kind for f in scrub.findings(line)] == [kind]
 
 
 @pytest.mark.parametrize(
@@ -134,6 +134,7 @@ def test_check_never_follows_symlinks(tmp_path: Path) -> None:
     results = tmp_path / "results"
     results.mkdir()
     (results / "link.json").symlink_to(outside)
+    (results / "rows.jsonl").write_text("{}\n", encoding="utf-8")
     assert scrub.main(["check", str(results)]) == 0
 
 
@@ -148,11 +149,101 @@ def test_the_committed_results_are_scrubbed() -> None:
         ROOT / "benchmarks/shadowbench/cases/results",
         ROOT / "benchmarks/shadowbench/estate/results",
     ]
-    echoed = scrub.corpus_matches(corpora)
+    corpus = scrub.corpus_matches(corpora)
+    targets, problems = scrub.files(results)
+    assert problems == [] and targets
     left = [
-        (path, match)
-        for path in scrub.files(results)
-        for _, _, match in scrub.findings(path.read_text(encoding="utf-8"))
-        if match not in echoed
+        (path, finding.path)
+        for path in targets
+        for finding in scrub.findings(path.read_text(encoding="utf-8"))
+        if not scrub.echoed(finding.path, corpus)
     ]
     assert left == []
+
+
+# --- review regressions ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "/var/tmp/cache/x",
+        "/private/tmp/y",
+        "https://x.example/tmp/a",
+        "/srv/mirror/tmp/z",
+    ],
+)
+def test_a_mapped_path_is_never_replaced_inside_a_longer_path(text: str) -> None:
+    """Only a lookahead bounded the match, so /tmp was replaced inside /var/tmp and URLs."""
+    assert scrub.scrub_text(text, scrub.parse_map(["/tmp=<tmp>"])) == (text, 0)
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ('{"n": "boom\\n/tmp/x"}', '{"n": "boom\\n<tmp>/x"}'),
+        ("--out=/tmp/x", "--out=<tmp>/x"),
+        ("PATH=/usr/bin:/tmp/x", "PATH=/usr/bin:<tmp>/x"),
+        ("\x1b[0m/tmp/x", "\x1b[0m<tmp>/x"),
+    ],
+)
+def test_a_mapped_path_after_an_escape_or_separator_is_replaced(text: str, expected: str) -> None:
+    assert scrub.scrub_text(text, scrub.parse_map(["/tmp=<tmp>"]))[0] == expected
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        '{"n": "a\\n/home/alice/x"}',
+        '{"n": "x\\t/tmp/nsb-run-1234/raw"}',
+        "\x1b[0m/home/alice/x",
+        '"/var/home/alice/nsb/tools"',
+        '"/mnt/c/Users/alice/AppData"',
+        '"/System/Volumes/Data/Users/alice/x"',
+        '{"note": "cannot open /root\\nTraceback"}',
+        '{"PATH": "/root:/usr/bin"}',
+        "stat /root, permission denied",
+    ],
+)
+def test_check_finds_paths_after_escapes_and_under_prefixed_homes(line: str) -> None:
+    assert list(scrub.findings(line)), line
+
+
+def test_the_corpus_exempts_its_own_paths_not_others_under_the_same_home(tmp_path: Path) -> None:
+    corpus = tmp_path / "corpus.json"
+    corpus.write_text('{"cwd": "/home/jenkins/agent/tools/x"}', encoding="utf-8")
+    exempt = scrub.corpus_matches([corpus])
+    assert scrub.echoed("/home/jenkins/agent/tools/x", exempt)
+    assert scrub.echoed("/home/jenkins", exempt)  # an ancestor directory the corpus names
+    assert scrub.echoed("/home/jenkins/agent/to", exempt)  # cut short by a report
+    assert not scrub.echoed("/home/jenkins/workspace/nsb/tools/bin/x", exempt)
+    assert not scrub.echoed("/home/jenk", exempt)
+
+
+def test_apply_keeps_line_endings(tmp_path: Path) -> None:
+    path = tmp_path / "rows.csv"
+    path.write_bytes(b"x,/opt/nsb/tools/bin/x\r\ny,z\r\n")
+    assert scrub.main(["apply", "--map", "/opt/nsb/tools=<tools>", str(path)]) == 0
+    assert path.read_bytes() == b"x,<tools>/bin/x\r\ny,z\r\n"
+
+
+@pytest.mark.parametrize("command", ["check", "apply"])
+def test_a_missing_or_unusable_path_fails_instead_of_passing(tmp_path: Path, command: str) -> None:
+    binary = tmp_path / "blob.bin"
+    binary.write_bytes(b"\0")
+    extra = ["--map", "/opt/x=<tools>"] if command == "apply" else []
+    assert scrub.main([command, *extra, str(tmp_path / "missing")]) == 2
+    assert scrub.main([command, *extra, str(binary)]) == 2
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert scrub.main([command, *extra, str(empty)]) == 2
+
+
+def test_apply_replaces_the_host_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(scrub.socket, "gethostname", lambda: "build-host-7")
+    path = tmp_path / "manifest.json"
+    path.write_text('{"node": "ci@build-host-7", "other": "build-host-77"}', encoding="utf-8")
+    assert scrub.main(["apply", "--host", str(path)]) == 0
+    assert path.read_text(encoding="utf-8") == '{"node": "ci@<host>", "other": "build-host-77"}'
+    monkeypatch.setattr(scrub.socket, "gethostname", lambda: "vm")
+    assert scrub.main(["apply", "--host", str(path)]) == 2

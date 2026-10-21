@@ -136,3 +136,91 @@ def test_a_results_directory_of_another_corpus_is_refused(
     assert aibom.main(args) == 2
     assert "not recorded against this corpus" in capsys.readouterr().err
     assert not out.exists()
+
+
+# --- review regressions ---------------------------------------------------------------------------
+
+
+def _copy_run(tmp_path: Path) -> Path:
+    results = tmp_path / "results"
+    shutil.copytree(RUN, results)
+    return results
+
+
+def _export(tmp_path: Path, results: Path, tool: str = "numbat") -> int:
+    out = tmp_path / "t.cdx.json"
+    return aibom.main(["--corpus", str(CORPUS), "--results", str(results), "--tool", tool, "--out", str(out)])
+
+
+@pytest.mark.parametrize(
+    ("edit", "message"),
+    [
+        (lambda m: m["tools"].pop("numbat"), "does not record numbat as run"),
+        (
+            lambda m: m["tools"].__setitem__("numbat", {"skipped": "no binary"}),
+            "does not record numbat as run",
+        ),
+        (lambda m: m["tools"]["numbat"].__setitem__("statuses", {"ok": 1}), "row statuses"),
+        (lambda m: m["tools"]["numbat"].__setitem__("rows_sha256", "0" * 64), "SHA-256"),
+    ],
+)
+def test_a_tool_export_needs_rows_the_manifest_vouches_for(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], edit: Any, message: str
+) -> None:
+    """Only the corpus digest was checked, so stale or edited rows were exported as this corpus's."""
+    results = _copy_run(tmp_path)
+    manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
+    edit(manifest)
+    (results / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert _export(tmp_path, results) == 2
+    assert message in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "line",
+    ["[1, 2]", '{"case": ', '{"case": "x"}'],
+)
+def test_a_malformed_row_is_refused_not_a_traceback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], line: str
+) -> None:
+    results = _copy_run(tmp_path)
+    with (results / "numbat.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(line + "\n")
+    assert _export(tmp_path, results) == 2
+    assert "refusing to export" in capsys.readouterr().err
+
+
+def test_rows_with_unicode_line_separators_export(tmp_path: Path) -> None:
+    """splitlines() cut a valid row at U+2028 and the export crashed."""
+    results = _copy_run(tmp_path)
+    rows = (results / "numbat.jsonl").read_text(encoding="utf-8").splitlines()
+    first = json.loads(rows[0])
+    first["note"] = "caf e\u0085"
+    rows[0] = json.dumps(first, ensure_ascii=False)
+    (results / "numbat.jsonl").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
+    manifest["tools"]["numbat"].pop("rows_sha256", None)
+    (results / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert _export(tmp_path, results) == 0
+
+
+def test_an_untiered_ai_report_maps_as_llm_and_facts_only_on_the_code_surface() -> None:
+    assert frameworks.references("ai", "saas", "app") == frameworks.references("llm", "saas", "app")
+    on_endpoint = frameworks.references("agent", "endpoint", "mcp")
+    assert on_endpoint == frameworks.references("agent", "endpoint", "artifact")
+    assert "AML.T0010.005" in frameworks.references("agent", "code", "mcp")["mitre-atlas"]
+
+
+def test_placement_follows_the_canonical_namespace() -> None:
+    case = load_corpus(CORPUS).cases[0]
+    section, obj = aibom.entry(case, "Service:127.0.0.1:11434", "agent", "tool:t")
+    assert section == "services" and obj["group"] == "service"
+
+
+def test_the_serial_number_changes_with_the_mapping_version(monkeypatch: pytest.MonkeyPatch) -> None:
+    corpus = load_corpus(CORPUS)
+    before = aibom.truth_bom(corpus, corpus_digest(CORPUS))
+    monkeypatch.setattr(frameworks, "MAPPING_VERSION", "2099-01-01")
+    after = aibom.truth_bom(corpus, corpus_digest(CORPUS))
+    assert before["serialNumber"] != after["serialNumber"]
+    _valid(after)

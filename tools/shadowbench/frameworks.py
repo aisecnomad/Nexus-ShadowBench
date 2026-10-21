@@ -23,9 +23,10 @@ from __future__ import annotations
 import json
 import sys
 from dataclasses import asdict, dataclass, field
+from typing import get_args
 
 from tools.discovery_benchmark.taxonomy import CATEGORIES
-from tools.shadowbench.cases.contract import SURFACES
+from tools.shadowbench.cases.contract import SURFACES, Label, Reported
 
 MAPPING_VERSION = "2026-10-21"
 """Date the mapping and its catalogs were last checked against their sources."""
@@ -123,7 +124,13 @@ LABELS: dict[str, Mapping] = {
         rationale="Unsanctioned model use sends data to an inference API or AI product outside review.",
     ),
 }
-"""Per truth label. ``none`` (a decoy) maps to nothing: it is not AI."""
+LABELS["ai"] = Mapping(
+    owasp_llm=LABELS["llm"].owasp_llm,
+    mitre_atlas=LABELS["llm"].mitre_atlas,
+    rationale="A report the tool could not tier: at least AI use, so it bears on what llm does.",
+)
+"""Per label, truth or reported. ``ai`` is a report a tool could not tier and maps as ``llm``, its
+lower bound; ``none`` (a decoy) maps to nothing: it is not AI."""
 
 SURFACE_MAP: dict[str, Mapping] = {
     "code": Mapping(
@@ -270,7 +277,7 @@ def references(label: str | None, surface: str | None, namespace: str | None) ->
     rows = [
         LABELS.get(label or ""),
         SURFACE_MAP.get(surface or ""),
-        FACTS.get(namespace or ""),
+        FACTS.get(namespace or "") if surface == "code" else None,  # fact categories are code-surface truth
     ]
     out: dict[str, list[str]] = {"owasp-asi": [], "owasp-llm": [], "mitre-atlas": []}
     for row in rows:
@@ -300,6 +307,8 @@ def problems() -> list[str]:
             if not row.rationale:
                 found.append(f"{table}.{name}: no rationale")
     found.extend(f"surface {s} is not mapped" for s in SURFACES if s not in SURFACE_MAP)
+    labels = {*get_args(Label), *get_args(Reported)} - {"none"}
+    found.extend(f"label {label} is not mapped" for label in sorted(labels) if label not in LABELS)
     found.extend(f"fact category {c} is not mapped" for c in CATEGORIES if c not in FACTS)
     return found
 

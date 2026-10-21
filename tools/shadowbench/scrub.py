@@ -35,29 +35,38 @@ import sys
 import tempfile
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import NamedTuple
 
 PLACEHOLDERS: frozenset[str] = frozenset(
     {"<corpus>", "<estate>", "<home>", "<host>", "<repo>", "<run>", "<tmp>", "<tools>", "<venvs>", "<work>"}
 )
 """The tokens a published record may use in place of a machine path."""
 
-_ROOTED = r"(?<![>\w.~$-])"
-"""A path that starts here is absolute; one right after a placeholder (``<estate>/home/x``) or a
-name is relative to it, as the estate's own ``home/<device>`` trees are."""
+_AFTER_ESCAPE = r"(?<=\\[ntr])|(?<=\[[0-9]m)|(?<=\[[0-9][0-9]m)|(?<=;[0-9]m)|(?<=;[0-9][0-9]m)"
+"""A path may follow a JSON escape (``\\n``, ``\\t``, ``\\r``) or an ANSI colour code (``...[0m``),
+whose last character is a letter."""
+
+_START = rf"(?:(?<![>\w.~$/-])|{_AFTER_ESCAPE})"
+"""Where an absolute path can start. One right after a placeholder (``<estate>/home/x``), a name or
+another path is relative to it, as the estate's own ``home/<device>`` trees are."""
 
 PATTERNS: dict[str, re.Pattern[str]] = {
     "home directory": re.compile(
-        _ROOTED + r"(?:/home/[A-Za-z0-9._-]+|/root(?=[/\"'\s]|$)|/Users/[A-Za-z0-9._ -]+)"
+        _START
+        + r"(?:/home/[A-Za-z0-9._-]+|/var/home/[A-Za-z0-9._-]+|/root(?![\w.-])"
+        + r"|(?:/System/Volumes/Data|/mnt/[A-Za-z])?/Users/[A-Za-z0-9._ -]+)"
     ),
     "Windows profile": re.compile(r"[A-Za-z]:(?:\\\\|\\)Users(?:\\\\|\\)[^\\\"]+", re.IGNORECASE),
     "temporary path": re.compile(
-        _ROOTED + r"(?:/tmp/[A-Za-z0-9._-]+|/var/folders/|/private/var/|/run/user/\d+)"
+        _START + r"(?:/tmp/[A-Za-z0-9._-]+|/var/folders/|/private/var/|/run/user/\d+)"
     ),
 }
 """Patterns that mark a machine path a published record should not keep."""
 
 TEXT_SUFFIXES: frozenset[str] = frozenset({".json", ".jsonl", ".md", ".txt", ".csv", ".log", ".yml", ".yaml"})
 _BOUNDARY = r"(?=[/\\\"'\s:;,)\]}]|$)"
+_DELIMITERS = frozenset(" \t\r\n\"'\\,;:)]}<>|`")
+"""Characters that end a path token in a record: quotes, JSON escapes, list and shell separators."""
 
 
 def parse_map(items: Iterable[str]) -> dict[str, str]:
@@ -89,46 +98,102 @@ def _token(token: str, _: re.Match[str]) -> str:
 
 
 def scrub_text(text: str, mapping: dict[str, str]) -> tuple[str, int]:
-    """``text`` with each mapped path replaced at path boundaries, longest first; and how many."""
+    """``text`` with each mapped path replaced where a path starts and ends, longest first; and how many.
+
+    ``/tmp`` mapped to ``<tmp>`` replaces ``/tmp/x`` and ``"/tmp"`` but not the ``/tmp`` inside
+    ``/var/tmp`` or ``https://host/tmp``.
+    """
     total = 0
     for path in sorted(mapping, key=len, reverse=True):
         # a function, not a replacement string, so a token is never read as a backreference
         replace = functools.partial(_token, mapping[path])
         for form in _forms(path):
-            text, count = re.subn(re.escape(form) + _BOUNDARY, replace, text)
+            text, count = re.subn(_START + re.escape(form) + _BOUNDARY, replace, text)
             total += count
     return text, total
 
 
-def findings(text: str, extra: Iterable[str] = ()) -> Iterator[tuple[int, str, str]]:
-    """``(line, kind, match)`` for every machine path or identity left in ``text``."""
+def scrub_words(text: str, words: dict[str, str]) -> tuple[str, int]:
+    """``text`` with each word (a host name) replaced where it stands as a whole name; and how many."""
+    total = 0
+    for word in sorted(words, key=len, reverse=True):
+        replace = functools.partial(_token, words[word])
+        text, count = re.subn(rf"(?<![A-Za-z0-9_.-]){re.escape(word)}(?![A-Za-z0-9_-])", replace, text)
+        total += count
+    return text, total
+
+
+class Finding(NamedTuple):
+    line: int
+    kind: str
+    match: str
+    path: str
+    """The whole path token the match starts, up to a quote, an escape or a separator."""
+
+
+def _token_at(line: str, start: int) -> str:
+    end = start
+    while end < len(line) and line[end] not in _DELIMITERS:
+        end += 1
+    return line[start:end]
+
+
+def findings(text: str, extra: Iterable[str] = ()) -> Iterator[Finding]:
+    """Every machine path or identity left in ``text``."""
     words = [w for w in extra if w]
-    for number, line in enumerate(text.splitlines(), 1):
+    for number, line in enumerate(text.split("\n"), 1):
         for kind, pattern in PATTERNS.items():
             for found in pattern.finditer(line):
-                yield number, kind, found.group(0)
+                yield Finding(number, kind, found.group(0), _token_at(line, found.start()))
         for word in words:
             if re.search(rf"(?<![A-Za-z0-9_.-]){re.escape(word)}(?![A-Za-z0-9_-])", line):
-                yield number, "machine identity", word
+                yield Finding(number, "machine identity", word, word)
 
 
-def files(paths: Iterable[Path]) -> Iterator[Path]:
-    """Text files under ``paths``, recursing into directories; symlinks are never followed."""
-    for path in paths:
+def files(paths: Iterable[Path]) -> tuple[list[Path], list[str]]:
+    """Text files under ``paths``, recursing into directories, and why any path named was unusable.
+
+    A path named outright that does not exist, is a symlink or is not a text file is a problem, not a
+    silent skip; inside a directory, symlinks and other files are passed over.
+    """
+    found: list[Path] = []
+    problems: list[str] = []
+
+    def walk(path: Path, named: bool) -> None:
         if path.is_symlink():
-            continue
+            if named:
+                problems.append(f"{path}: a symlink; name the file it points to")
+            return
         if path.is_dir():
-            yield from files(sorted(path.iterdir()))
+            for child in sorted(path.iterdir()):
+                walk(child, False)
         elif path.is_file() and path.suffix in TEXT_SUFFIXES:
-            yield path
+            found.append(path)
+        elif named:
+            problems.append(f"{path}: " + ("not a text record" if path.exists() else "does not exist"))
+
+    for path in paths:
+        walk(path, True)
+    return found, problems
 
 
 CORPUS_FILE_LIMIT = 8 << 20
 """Corpus files larger than this are not read for echoed paths."""
 
 
+def echoed(token: str, corpus: set[str]) -> bool:
+    """Whether a record's path token is corpus content: a corpus path or one of its ancestor
+    directories, or one cut short inside its last component by a report (``/home/dana/freight/ra``).
+    ``/home/ci/x`` in a corpus does not exempt ``/home/ci/y``, nor ``/home/c`` a home named ``c``."""
+    if token in corpus:
+        return True
+    parent = token.rsplit("/", 1)[0]
+    return parent in corpus and any(path.startswith(token) for path in corpus)
+
+
 def corpus_matches(paths: Iterable[Path]) -> set[str]:
-    """Every pattern match in the files under ``paths``: corpus content a tool may echo."""
+    """Every whole path token a pattern matches in the files under ``paths``, with each ancestor
+    directory below the home or temporary root (see :func:`echoed`)."""
     found: set[str] = set()
     for path in paths:
         if path.is_symlink():
@@ -137,7 +202,9 @@ def corpus_matches(paths: Iterable[Path]) -> set[str]:
             found |= corpus_matches(sorted(path.iterdir()))
         elif path.is_file() and path.stat().st_size <= CORPUS_FILE_LIMIT:
             text = path.read_text(encoding="utf-8", errors="replace")
-            found |= {m for _, _, m in findings(text)}
+            for finding in findings(text):
+                parts = finding.path.rstrip("/").split("/")
+                found |= {"/".join(parts[:end]) for end in range(3, len(parts) + 1)}
     return found
 
 
@@ -159,6 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--map", action="append", default=[], metavar="PATH=<token>")
     p.add_argument("--home", action="store_true", help="also replace the home directory with <home>")
     p.add_argument("--tmp", action="store_true", help="also replace the temporary directory with <tmp>")
+    p.add_argument("--host", action="store_true", help="also replace this machine's host name with <host>")
     p.add_argument("--dry-run", action="store_true")
     p = sub.add_parser("check", help="report machine paths and identities left in files or directories")
     p.add_argument("paths", nargs="+", type=Path)
@@ -177,25 +245,45 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             print(exc, file=sys.stderr)
             return 2
-        if not mapping:
-            print("nothing to replace: give --map, --home or --tmp", file=sys.stderr)
+        words: dict[str, str] = {}
+        if args.host:
+            host = socket.gethostname()
+            if len(host) < 3:
+                print(f"host name {host!r} is too short to replace safely; edit it by hand", file=sys.stderr)
+                return 2
+            words[host] = "<host>"
+        if not mapping and not words:
+            print("nothing to replace: give --map, --home, --tmp or --host", file=sys.stderr)
             return 2
-        for path in files(args.files):
-            original = path.read_text(encoding="utf-8")
+        targets, problems = files(args.files)
+        if problems or not targets:
+            print("\n".join(problems) or "no text record to scrub", file=sys.stderr)
+            return 2
+        for path in targets:
+            # newline="": line endings are bytes like any other and stay as they are
+            with path.open(encoding="utf-8", newline="") as handle:
+                original = handle.read()
             text, count = scrub_text(original, mapping)
+            text, named = scrub_words(text, words)
+            count += named
             if count and not args.dry_run:
-                path.write_text(text, encoding="utf-8")
+                with path.open("w", encoding="utf-8", newline="") as handle:
+                    handle.write(text)
             print(f"{path}: {count} replaced")
         return 0
+    targets, problems = files(args.paths)
+    if problems or not targets:
+        print("\n".join(problems) or "no text record to check", file=sys.stderr)
+        return 2
     extra = identity() if args.identity else []
-    echoed = corpus_matches(args.corpus)
+    corpus = corpus_matches(args.corpus)
     found = skipped = 0
-    for path in files(args.paths):
-        for number, kind, match in findings(path.read_text(encoding="utf-8", errors="replace"), extra):
-            if kind != "machine identity" and match in echoed:
+    for path in targets:
+        for finding in findings(path.read_text(encoding="utf-8", errors="replace"), extra):
+            if finding.kind != "machine identity" and echoed(finding.path, corpus):
                 skipped += 1
                 continue
-            print(f"{path}:{number}: {kind}: {match}")
+            print(f"{path}:{finding.line}: {finding.kind}: {finding.match}")
             found += 1
     print(f"{found} finding(s); {skipped} corpus path(s) echoed by tools", file=sys.stderr)
     return 1 if found else 0
