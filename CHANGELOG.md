@@ -54,6 +54,19 @@ prediction, result or harness behaviour changed, and no benchmark was rerun.
   holds exactly the pinned tree). Checkouts made by the earlier fetcher
   should be fetched again. `tests/unit/test_discovery_fetch.py` covers it.
 
+### Dependency security
+
+- Updated certifi from 2026.7.22 to 2026.10.19 in `requirements.lock` and
+  `requirements-ci.lock` for GHSA-6q48-6c7w-9gw2, with the same pins and
+  hashes as Nexus-ShadowScan#290 and both hashes checked against PyPI. The
+  ledger now also covers the copied `requirements-ci.lock` and
+  `requirements-build.lock`, so they can follow ShadowScan's security
+  updates; `migration/requirements.source.lock` stays as the original
+  record.
+- CI and `make audit` (now part of `make check`) run `pip-audit` on the
+  installed environment and on each hash-locked set, so a new advisory
+  fails the next run instead of going unnoticed.
+
 ## e027b98: extraction from Nexus ShadowScan
 
 Preserved 555 original files from Nexus ShadowScan commit

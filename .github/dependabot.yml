@@ -3,11 +3,12 @@
 #
 # pip is deliberately not tracked. requirements-ci.lock and
 # requirements-build.lock are ShadowScan's hash locks at the pinned scanner
-# revision and, with the original runtime lock kept at
-# migration/requirements.source.lock, are byte-bound provenance in
-# MIGRATION.json. requirements.lock is that runtime lock with only the aiohttp
-# security update applied. Lock updates come from ShadowScan, together with a
-# new scanner pin, never from a Dependabot bump here.
+# revision, bound in MIGRATION.json and changed only through AMENDMENTS.json;
+# the original runtime lock at migration/requirements.source.lock is
+# provenance and never changes. requirements.lock is that runtime lock with
+# security updates applied (aiohttp, certifi). Updates copy ShadowScan's pins
+# and hashes rather than come from a Dependabot bump here, and CI's pip-audit
+# step reports a new advisory against any installed lock.
 version: 2
 updates:
   - package-ecosystem: github-actions

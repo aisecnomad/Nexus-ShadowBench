@@ -32,11 +32,13 @@ reports only `ai` earns no agent-tier credit.
 
 **amendment, AMENDMENTS.json.** A recorded change to a migrated file of
 live harness code or tests (`tools/shadowbench/`, `tools/discovery_benchmark/`,
-`tests/`). Each entry names the SHA-256 the file changes from (its migrated
+`tests/`) or to the copied `requirements-ci.lock` or
+`requirements-build.lock`. Each entry names the SHA-256 the file changes from (its migrated
 bytes or its previous amendment), the bytes, Git blob, mode and SHA-256 it
 changes to, a reason and a reference. `python -m tools.verify_migration
 --amend PATH` appends one. Evidence, the cases generator and families, the
-labeler, the taxonomies and the legacy harnesses can never be amended.
+labeler, the taxonomies, the legacy harnesses and the original runtime
+lock can never be amended.
 
 **anchor, primary anchor.** In the estate track, a lowercase token grounded
 in an entity's artifacts (an app id, an ARN, a server name, a client IP or a

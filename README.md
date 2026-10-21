@@ -500,7 +500,8 @@ run and archive, with its status.
 | Layer | What binds it | Checked by |
 |---|---|---|
 | Migrated evidence | `MIGRATION.json`: 555 files from ShadowScan commit `0792106b`, each with path, Git blob, mode, size and SHA-256 | `python -m tools.verify_migration` (CI, every push) |
-| Harness changes | `AMENDMENTS.json`: an append-only chain per migrated harness or test file, each entry giving the SHA-256 it changes from and to, a reason and the pull request; corpora, labels, freezes, results, generators, labelers, taxonomies and legacy harnesses cannot be amended | the same verifier, which refuses a broken chain or an amendment to evidence |
+| Harness changes | `AMENDMENTS.json`: an append-only chain per migrated harness file, test or copied CI/build lock, each entry giving the SHA-256 it changes from and to, a reason and the pull request; corpora, labels, freezes, results, generators, labelers, taxonomies, legacy harnesses and the original runtime lock cannot be amended | the same verifier, which refuses a broken chain or an amendment to evidence |
+| Dependencies | `requirements.lock`, `requirements-ci.lock`, `requirements-build.lock`: hash-locked, binary-only | `pip-audit` on the installed environment and each lock (CI, every push; `make audit`) |
 | Cases corpus | Generator seed, per-surface count, stream scheme and source digest in the corpus header | `cases verify` rebuilds and compares every case |
 | Estate artifacts | `FREEZE.json`: SHA-256 of `corpus.json` and 138 artifact files | `estate verify-freeze`; a test fails if a frozen file is untracked |
 | Result rows | Run manifest: corpus SHA-256, tool versions, row-status counts and, from the current runner on, `rows_sha256` and the harness commit | The scorer refuses mismatches without `--force` and lists unbound rows under `rows_unbound` |

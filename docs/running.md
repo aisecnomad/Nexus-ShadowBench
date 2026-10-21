@@ -43,8 +43,8 @@ python -m pip install --no-deps --no-build-isolation -e ./scanner-source
 ```
 
 `make install` does the same. The locks are hash-locked and binary-only:
-`requirements.lock` is the runtime lock (it carries an aiohttp security
-update), and `requirements-ci.lock` and `requirements-build.lock` add the
+`requirements.lock` is the runtime lock (it carries aiohttp and certifi
+security updates), and `requirements-ci.lock` and `requirements-build.lock` add the
 test and build tools. The original runtime lock is preserved at
 `migration/requirements.source.lock` for provenance only; do not install it.
 
