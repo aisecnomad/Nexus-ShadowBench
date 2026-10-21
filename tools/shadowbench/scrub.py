@@ -26,6 +26,7 @@ does not prove a record names nothing private; it proves none of these patterns 
 from __future__ import annotations
 
 import argparse
+import functools
 import getpass
 import json
 import re
@@ -83,13 +84,18 @@ def _forms(path: str) -> list[str]:
     return sorted(forms, key=len, reverse=True)
 
 
+def _token(token: str, _: re.Match[str]) -> str:
+    return token
+
+
 def scrub_text(text: str, mapping: dict[str, str]) -> tuple[str, int]:
     """``text`` with each mapped path replaced at path boundaries, longest first; and how many."""
     total = 0
     for path in sorted(mapping, key=len, reverse=True):
-        token = mapping[path]
+        # a function, not a replacement string, so a token is never read as a backreference
+        replace = functools.partial(_token, mapping[path])
         for form in _forms(path):
-            text, count = re.subn(re.escape(form) + _BOUNDARY, lambda _, token=token: token, text)
+            text, count = re.subn(re.escape(form) + _BOUNDARY, replace, text)
             total += count
     return text, total
 
