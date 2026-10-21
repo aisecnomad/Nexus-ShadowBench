@@ -80,10 +80,17 @@ first.
 
 ### Results
 
-- **Committed results are immutable.** Every byte that `MIGRATION.json` binds
-  stays as imported, and a new run never overwrites an earlier one. A fix to a
-  scorer or adapter reaches committed runs only as a documented re-score in a
-  new directory that names the run it re-scores.
+- **Committed results are immutable.** Every evidence byte that
+  `MIGRATION.json` binds stays as imported, and a new run never overwrites an
+  earlier one. A fix to a scorer or adapter reaches committed runs only as a
+  documented re-score in a new directory that names the run it re-scores.
+- **Harness amendments are recorded and reviewed.** Migrated harness code and
+  tests change only through an `AMENDMENTS.json` entry that names the old and
+  new SHA-256, the reason and the pull request. An amendment to a scorer, an
+  adapter or a test that guards one needs the non-author approval, and must
+  leave `make rescore` passing or say which committed numbers it would move
+  and re-score them in a new directory. The verifier refuses amendments to
+  evidence and to the code that generates or labels it.
 - **Run of record.** Each track's README names its run of record (for both
   ShadowBench tracks, the 2026-10-11 run). A later run replaces it only when it
   is not in-sample and its manifest records the corpus digest, the harness

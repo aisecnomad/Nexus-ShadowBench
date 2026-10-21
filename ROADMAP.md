@@ -8,8 +8,12 @@ answers a limit that a track's README already documents.
 ## Now
 
 - Keep the companion verifiable: every migrated byte bound by
-  `MIGRATION.json`, the estate freeze holding, the cases corpus rebuilding
-  case for case, and the harness tests green against the pinned scanner.
+  `MIGRATION.json` or a recorded `AMENDMENTS.json` entry, the estate freeze
+  holding, the cases corpus rebuilding case for case, and the harness tests
+  green against the pinned scanner.
+- Benchmark the next discovery tools through the amendment path: a new
+  adapter module plus a recorded amendment to its track's registry (or, for
+  the cases track, its installer and layout test).
 - Keep community standards complete: contribution, security, support and
   governance policies, issue forms for disputes, adapters, runs and corpora,
   and an honest statement of who wrote what.
@@ -26,12 +30,6 @@ answers a limit that a track's README already documents.
   commit, the scanner commit and the freeze. On the 2026-10-11 corpora it is
   in-sample, so it is published as a recorded regression run, not as a run
   of record; a new run of record needs a held-out corpus.
-- **A versioned extension path for adapters.** The estate and code-surface
-  adapter registries, and the cases installer and its layout test, are
-  byte-bound evidence in `MIGRATION.json`, so adding a tool currently means
-  proposing a change to a bound file. Define how new adapters are added
-  (for example a registry outside the migrated set, or a new harness
-  version) without touching preserved evidence.
 - **Hash-locked tool installs.** Third-party tools are installed at pinned
   versions, but their transitive dependencies resolve at install time. Lock
   them, or record the resolved set with each run.

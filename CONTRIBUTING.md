@@ -72,11 +72,18 @@ by it: each run keeps its own recorded tool and source provenance. Run
 These rules are why the repository can be trusted at all. A pull request that
 breaks one is not merged, however good the code is.
 
-1. **Never change a byte that `MIGRATION.json` binds.** The 555 imported files
-   keep their original path, Git blob, mode, length and SHA-256.
+1. **Never change evidence that `MIGRATION.json` binds.** The 555 imported
+   files keep their original path, Git blob, mode, length and SHA-256, and
    `python -m tools.verify_migration` checks every one, in CI and in the
    pre-commit hook. A historical file that is wrong gets an erratum in a new
-   file, not an edit.
+   file, not an edit. The one exception is live harness code and tests
+   (`tools/shadowbench/`, `tools/discovery_benchmark/` and `tests/`), which
+   may change only through a recorded amendment: edit the file, then run
+   `python -m tools.verify_migration --amend PATH --reason "..." --reference
+   <pull request URL>`, which appends the old and new SHA-256 to
+   `AMENDMENTS.json`. Corpora, labels, freezes, results, the cases generator
+   and its families, the labeler, the taxonomies and the legacy harnesses
+   are never amendable, and the verifier refuses an entry for them.
 2. **Make new experiments in new paths with new provenance.** A new run goes
    in a new dated results directory with its own manifest. A new corpus gets a
    new directory, its own freeze or generator digest and its own README.

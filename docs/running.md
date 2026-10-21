@@ -284,7 +284,9 @@ Record all of these next to any result you publish:
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `verify_migration` raises `migrated bytes or mode changed` | an imported file was edited, renormalized or lost its mode | restore it from git; check that no editor or hook rewrote line endings (`.gitattributes` marks these paths `-text`) |
+| `verify_migration` raises `migrated bytes or mode changed` | an imported file was edited, renormalized or lost its mode | restore it from git; check that no editor or hook rewrote line endings (`.gitattributes` marks these paths `-text`); a deliberate change to live harness code needs `--amend` (see [adding-a-tool.md](adding-a-tool.md)) |
+| `verify_migration` raises `amended bytes or mode changed since the last amendment` | an amended harness file changed again without a new ledger entry | record it with `python -m tools.verify_migration --amend PATH --reason ... --reference ...` |
+| `verify_migration` raises `never amendable` | `AMENDMENTS.json` names evidence or the code that generates or labels it | remove the entry; publish a correction in a new path instead |
 | Cases `score` refuses the results | the manifest's corpus hash, tool list, row counts or `rows_sha256` do not match the files | score the corpus the run used; never mix files from two runs in one directory |
 | Cases `run` refuses to start | scratch directory or tool paths unreachable by uid 65534, wrong permissions, or `gcc` missing | move them outside `/root`, `/home`, `/var/tmp` and `/dev/shm`; let the runner create the scratch directory (mode 0711); install `gcc` |
 | Estate `run` prints `DRIFT` and exits 1 | an estate file or `corpus.json` differs from `FREEZE.json` | restore the frozen bytes; a deliberate change needs a new estate version, not a refreshed freeze |

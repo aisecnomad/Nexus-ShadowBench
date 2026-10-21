@@ -1,0 +1,16 @@
+{
+  "amendments": [
+    {
+      "bytes": 2868,
+      "from_sha256": "ac05b1a92be93026c2d45c382b5ed3e965ae6544a5aa1d468582a29503b0019d",
+      "git_blob": "326a341b6556ae93121edd55591a5fcac2150248",
+      "mode": "100644",
+      "path": "tools/discovery_benchmark/fetch.py",
+      "reason": "Delegate the code-surface fetch to the cases track's hardened fetcher: https only, no operator git configuration, hooks, submodules or filter drivers, GIT_* dropped, pin checked before checkout, and a checkout reused only when it holds exactly the pinned tree.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/2",
+      "sha256": "e6337a06a929d14e746859565868680fd26a5091ae4c1e6c2631203fa1fc5d0a"
+    }
+  ],
+  "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",
+  "schema": 1
+}

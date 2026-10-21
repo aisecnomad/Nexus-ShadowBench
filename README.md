@@ -323,7 +323,7 @@ submodule: `git submodule update --init --depth 1 -- benchmark-suite`, then
 Integrity only. Nothing is executed from the corpus, and no tool runs.
 
 ```bash
-python -m tools.verify_migration          # 555 files: bytes, mode, Git blob and SHA-256
+python -m tools.verify_migration          # 555 files: bytes, mode, Git blob, SHA-256 and recorded amendments
 python -m tools.shadowbench cases verify --corpus benchmarks/shadowbench/cases/corpus.json
 python -m tools.shadowbench estate validate
 python -m tools.shadowbench estate verify-freeze
@@ -486,11 +486,12 @@ run and archive, with its status.
 │   ├── shadowbench/             cases and estate harnesses (python -m tools.shadowbench)
 │   ├── discovery_benchmark/     code-surface harness (python -m tools.discovery_benchmark)
 │   ├── benchmark/ benchmark_realworld/   legacy harnesses (run only in scanner-source)
-│   ├── verify_migration.py      checks every migrated file against MIGRATION.json
+│   ├── verify_migration.py      checks every migrated file against MIGRATION.json and AMENDMENTS.json
 │   └── check_secrets.py         credential-shape scanner with a hash-bound allowlist
 ├── tests/                       harness, scorer, corpus and migration tests
 ├── docs/                        methodology, metrics, harness, operator and policy docs
 ├── MIGRATION.json               original path, Git blob, mode, size and SHA-256 of 555 files
+├── AMENDMENTS.json              append-only ledger of reviewed changes to migrated harness code
 └── requirements*.lock           hash-locked environments (runtime, CI, build)
 ```
 
@@ -499,13 +500,15 @@ run and archive, with its status.
 | Layer | What binds it | Checked by |
 |---|---|---|
 | Migrated evidence | `MIGRATION.json`: 555 files from ShadowScan commit `0792106b`, each with path, Git blob, mode, size and SHA-256 | `python -m tools.verify_migration` (CI, every push) |
+| Harness changes | `AMENDMENTS.json`: an append-only chain per migrated harness or test file, each entry giving the SHA-256 it changes from and to, a reason and the pull request; corpora, labels, freezes, results, generators, labelers, taxonomies and legacy harnesses cannot be amended | the same verifier, which refuses a broken chain or an amendment to evidence |
 | Cases corpus | Generator seed, per-surface count, stream scheme and source digest in the corpus header | `cases verify` rebuilds and compares every case |
 | Estate artifacts | `FREEZE.json`: SHA-256 of `corpus.json` and 138 artifact files | `estate verify-freeze`; a test fails if a frozen file is untracked |
 | Result rows | Run manifest: corpus SHA-256, tool versions, row-status counts and, from the current runner on, `rows_sha256` and the harness commit | The scorer refuses mismatches without `--force` and lists unbound rows under `rows_unbound` |
 | Repository hygiene | `tools/secret_allowlist.json` approves synthetic credentials by path, family and SHA-256 | `tools/check_secrets.py` over every tracked file |
 
 No corpus, label, freeze record, recorded prediction or report was
-regenerated during the migration from ShadowScan. Historical links and
+regenerated during the migration from ShadowScan, and none can be amended
+since. Historical links and
 commands in imported files are retained as source evidence; some refer to
 paths in the original shared repository.
 
