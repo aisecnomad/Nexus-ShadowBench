@@ -35,9 +35,14 @@ jobs:
           for lock in requirements.lock requirements-ci.lock requirements-build.lock; do
             pip-audit --require-hashes --strict --progress-spinner off --disable-pip -r "$lock"
           done
-      - name: Verify preserved evidence and run the harness tests
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.4"
+      - name: Verify preserved evidence, result attestations and published paths, and run the harness tests
         run: |
           python -m tools.verify_migration
+          python -m tools.attest verify
+          make paths PYTHON=python
           python -m pytest -q
       - name: Check harness source and synthetic-secret approvals
         run: |

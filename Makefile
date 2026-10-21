@@ -40,8 +40,9 @@ audit: ## Audit the installed environment and every hash-locked dependency set, 
 	done
 
 .PHONY: verify
-verify: ## Check every migrated file against MIGRATION.json (identity only; runs no benchmark)
+verify: ## Check migrated files against MIGRATION.json and attested results against their Sigstore bundles
 	$(PYTHON) -m tools.verify_migration
+	$(PYTHON) -m tools.attest verify
 
 .PHONY: test
 test: ## Run the harness test suite
@@ -63,8 +64,19 @@ typecheck: ## Type-check the harness against the pinned scanner checkout
 secrets: ## Scan every tracked file for credential-shaped strings
 	git ls-files -z | xargs -0 $(PYTHON) tools/check_secrets.py
 
+# Committed results of the live tracks, checked for machine paths a scrub missed;
+# paths the corpora themselves contain (echoed by tools) are not findings.
+RESULTS_DIRS := benchmarks/shadow-ai-discovery/results benchmarks/shadowbench/cases/results \
+	benchmarks/shadowbench/estate/results
+CORPORA := benchmarks/shadowbench/estate/artifacts benchmarks/shadowbench/cases/corpus.json \
+	benchmarks/shadow-ai-discovery/corpus.json
+
+.PHONY: paths
+paths: ## Check committed results for machine paths left unscrubbed
+	$(PYTHON) -m tools.shadowbench.scrub check $(addprefix --corpus ,$(CORPORA)) $(RESULTS_DIRS)
+
 .PHONY: check
-check: audit verify test lint format-check typecheck secrets ## Run every CI gate, in CI's order
+check: audit verify test lint format-check typecheck secrets paths ## Run every CI gate, in CI's order
 
 # --- Evidence ---------------------------------------------------------------
 
