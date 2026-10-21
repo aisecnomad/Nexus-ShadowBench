@@ -1,12 +1,14 @@
 """Verify migrated file bytes without importing or executing corpus artifacts.
 
 Every imported file must keep the bytes, mode and Git blob that MIGRATION.json
-records. Harness code and tests may change only through AMENDMENTS.json, an
-append-only ledger in which each entry names a migrated file, the SHA-256 it
-changes from (the migrated bytes or the previous entry for that file), the
-bytes it changes to, a reason and a reference. Evidence never changes: corpora,
-labels, freezes, recorded predictions, results and the code that generates
-cases, labels ground truth or defines the taxonomies are not amendable.
+records. Harness code, tests and the copied CI and build dependency locks may
+change only through AMENDMENTS.json, an append-only ledger in which each entry
+names a migrated file, the SHA-256 it changes from (the migrated bytes or the
+previous entry for that file), the bytes it changes to, a reason and a
+reference. Evidence never changes: corpora, labels, freezes, recorded
+predictions, results, the original runtime lock kept for provenance and the
+code that generates cases, labels ground truth or defines the taxonomies are
+not amendable.
 
 ``python -m tools.verify_migration`` verifies; ``python -m tools.verify_migration
 --amend PATH --reason TEXT --reference URL`` appends an entry for a changed file.
@@ -36,10 +38,16 @@ _TOP_KEYS = {
 _ENTRY_KEYS = {"bytes", "disposition", "git_blob", "mode", "path", "sha256"}
 _LEDGER_KEYS = {"amendments", "note", "schema"}
 _AMENDMENT_KEYS = {"bytes", "from_sha256", "git_blob", "mode", "path", "reason", "reference", "sha256"}
-# Harness code and tests of the live tracks. The legacy harnesses under
-# tools/benchmark and tools/benchmark_realworld hash their own sources into
-# recorded freezes, so they stay as migrated.
-_AMENDABLE = re.compile(r"(?:tools/(?:shadowbench|discovery_benchmark)/[^/].*\.(?:py|sh)|tests/[^/].*\.py)")
+# Harness code and tests of the live tracks, and the CI and build locks copied
+# from ShadowScan, which must follow its security updates. The legacy harnesses
+# under tools/benchmark and tools/benchmark_realworld hash their own sources
+# into recorded freezes, and migration/requirements.source.lock records the
+# original runtime lock, so they stay as migrated.
+_AMENDABLE = re.compile(
+    r"(?:tools/(?:shadowbench|discovery_benchmark)/[^/].*\.(?:py|sh)"
+    r"|tests/[^/].*\.py"
+    r"|requirements-(?:ci|build)\.lock)"
+)
 # Code whose output is evidence: the cases generator, its families and case
 # model, the ground-truth labeler and the taxonomies the labels are written in.
 _NEVER_AMENDABLE = re.compile(
@@ -127,7 +135,7 @@ def _manifest(root: Path) -> dict[str, Any]:
 
 
 def amendable(path: str) -> bool:
-    """Whether a migrated file is harness code or a test that AMENDMENTS.json may change."""
+    """Whether a migrated file is harness code, a test or a copied lock that AMENDMENTS.json may change."""
     return _AMENDABLE.fullmatch(path) is not None and _NEVER_AMENDABLE.fullmatch(path) is None
 
 

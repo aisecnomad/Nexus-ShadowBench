@@ -76,14 +76,18 @@ breaks one is not merged, however good the code is.
    files keep their original path, Git blob, mode, length and SHA-256, and
    `python -m tools.verify_migration` checks every one, in CI and in the
    pre-commit hook. A historical file that is wrong gets an erratum in a new
-   file, not an edit. The one exception is live harness code and tests
-   (`tools/shadowbench/`, `tools/discovery_benchmark/` and `tests/`), which
-   may change only through a recorded amendment: edit the file, then run
+   file, not an edit. The exceptions are live harness code and tests
+   (`tools/shadowbench/`, `tools/discovery_benchmark/` and `tests/`) and the
+   copied `requirements-ci.lock` and `requirements-build.lock`, which may
+   change only through a recorded amendment: edit the file, then run
    `python -m tools.verify_migration --amend PATH --reason "..." --reference
    <pull request URL>`, which appends the old and new SHA-256 to
    `AMENDMENTS.json`. Corpora, labels, freezes, results, the cases generator
-   and its families, the labeler, the taxonomies and the legacy harnesses
-   are never amendable, and the verifier refuses an entry for them.
+   and its families, the labeler, the taxonomies, the legacy harnesses and
+   the original runtime lock at `migration/requirements.source.lock` are
+   never amendable, and the verifier refuses an entry for them. Lock updates
+   follow ShadowScan's: copy its pins and hashes, and check the hashes
+   against PyPI.
 2. **Make new experiments in new paths with new provenance.** A new run goes
    in a new dated results directory with its own manifest. A new corpus gets a
    new directory, its own freeze or generator digest and its own README.
@@ -117,7 +121,8 @@ runs the same gates locally, in the same order:
 
 | Gate | Command | Requirement |
 |---|---|---|
-| Evidence identity | `python -m tools.verify_migration` | All 555 migrated files match their recorded identity |
+| Dependencies | `make audit` (`pip-audit` on the environment and on each hash-locked set) | No known vulnerability |
+| Evidence identity | `python -m tools.verify_migration` | All 555 migrated files match their recorded identity or their latest amendment |
 | Tests | `python -m pytest -q` | All pass |
 | Lint | `ruff check tests tools benchmarks` | No errors |
 | Format | `ruff format --check tests tools benchmarks` | No changes |

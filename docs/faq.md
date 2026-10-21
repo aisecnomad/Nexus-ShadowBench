@@ -290,8 +290,8 @@ repository as its optional `benchmark-suite` submodule, and a required job in
 its CI runs this repository's migration check, linters and tests against the
 candidate scanner checkout. ShadowScan's weekly
 [benchmark workflow](https://github.com/aisecnomad/Nexus-ShadowScan/blob/main/.github/workflows/benchmark.yml)
-runs the code-surface track for ShadowScan alone against the newest
-committed baseline. Both repositories have the same maintainer, which is the
+runs the code-surface track for ShadowScan alone against the committed run
+its `BASELINE_RUN` names (currently `2026-10-09`). Both repositories have the same maintainer, which is the
 conflict of interest stated at the top of every page.
 
 ### Is ShadowBench a standard?

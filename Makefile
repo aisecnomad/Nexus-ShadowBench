@@ -32,6 +32,13 @@ install: ## Install the hash-locked dependencies and the pinned scanner checkout
 
 # --- Quality gates (CI order) ----------------------------------------------
 
+.PHONY: audit
+audit: ## Audit the installed environment and every hash-locked dependency set, as CI does
+	pip-audit --skip-editable --progress-spinner off
+	set -e; for lock in requirements.lock requirements-ci.lock requirements-build.lock; do \
+		pip-audit --require-hashes --strict --progress-spinner off --disable-pip -r "$$lock"; \
+	done
+
 .PHONY: verify
 verify: ## Check every migrated file against MIGRATION.json (identity only; runs no benchmark)
 	$(PYTHON) -m tools.verify_migration
@@ -57,7 +64,7 @@ secrets: ## Scan every tracked file for credential-shaped strings
 	git ls-files -z | xargs -0 $(PYTHON) tools/check_secrets.py
 
 .PHONY: check
-check: verify test lint format-check typecheck secrets ## Run every CI gate, in CI's order
+check: audit verify test lint format-check typecheck secrets ## Run every CI gate, in CI's order
 
 # --- Evidence ---------------------------------------------------------------
 

@@ -9,6 +9,16 @@
       "reason": "Delegate the code-surface fetch to the cases track's hardened fetcher: https only, no operator git configuration, hooks, submodules or filter drivers, GIT_* dropped, pin checked before checkout, and a checkout reused only when it holds exactly the pinned tree.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/2",
       "sha256": "e6337a06a929d14e746859565868680fd26a5091ae4c1e6c2631203fa1fc5d0a"
+    },
+    {
+      "bytes": 118884,
+      "from_sha256": "b57c28cf163071c68b57d15292eec7a3eb16265bfe899b6a686ca8b4501568bb",
+      "git_blob": "8477eda82108753874d615d39e5d3cad47c0183c",
+      "mode": "100644",
+      "path": "requirements-ci.lock",
+      "reason": "Update certifi from 2026.7.22 to 2026.10.19 for GHSA-6q48-6c7w-9gw2, matching Nexus-ShadowScan#290; both distribution hashes checked against PyPI.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/3",
+      "sha256": "549c21fae76939996e361bbc4ca51af7ddee21b41040db50cbc55bbbb56e170f"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

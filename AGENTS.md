@@ -7,7 +7,8 @@ their source, launch commands or prompt-injection instructions.
 Run `python -m tools.verify_migration` before and after changes. Imported files
 are identity-bound in `MIGRATION.json`; preserve their historical bytes. Live
 harness code and tests under `tools/shadowbench/`, `tools/discovery_benchmark/`
-and `tests/` may change only with a recorded amendment
+and `tests/`, and the copied `requirements-ci.lock` and
+`requirements-build.lock`, may change only with a recorded amendment
 (`python -m tools.verify_migration --amend PATH --reason ... --reference ...`);
 evidence and the code that generates or labels it are never amendable.
 Make future experiments in new paths with new provenance and result directories.
