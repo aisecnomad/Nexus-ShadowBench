@@ -17,6 +17,7 @@ some of their links still point at paths in that repository.
 | How do I add a discovery tool? | [adding-a-tool.md](adding-a-tool.md) |
 | How do I publish a new run, or an independent corpus? | [submitting-results.md](submitting-results.md) |
 | Which results exist, and which can I quote? | [results.md](results.md) |
+| Which statements in preserved files are stale, and how should I read them? | [errata.md](errata.md) |
 | What can go wrong, for the operator and for the validity of the numbers? | [threat-model.md](threat-model.md) |
 | What is this benchmark for, and not for? | [benchmark-card.md](benchmark-card.md) |
 | What is in the data, and where did it come from? | [datasheet.md](datasheet.md) |

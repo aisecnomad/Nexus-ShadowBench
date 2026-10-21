@@ -50,10 +50,10 @@ the committed one (another seed, an independently authored estate, other
 labels) must say so in its directory name and report, for example
 `results/2026-11-02-seed-7/`, and commit that corpus in its own path.
 
-The code-surface `results/` directory is special: ShadowScan's weekly
-regression gate treats whichever subdirectory sorts last as its baseline
-(see [Regression baselines](#regression-baselines)). Add a directory there
-only when it is meant to become that baseline.
+The code-surface `results/` directory is where ShadowScan's weekly
+regression gate finds its baseline, the directory its `BASELINE_RUN` names
+(see [Regression baselines](#regression-baselines)). Other runs may go there
+without becoming the baseline, but keep runs on other corpora out of it.
 
 ## What to commit, per track
 
@@ -204,8 +204,9 @@ outputs matched byte for byte.
 The weekly ShadowScan-only regression workflow lives in ShadowScan:
 [`.github/workflows/benchmark.yml`](https://github.com/aisecnomad/Nexus-ShadowScan/blob/main/.github/workflows/benchmark.yml).
 It runs the code-surface discovery benchmark with read-only permissions and
-no third-party tools, compares against the newest committed baseline in
-`benchmarks/shadow-ai-discovery/results/`, and uploads its outputs as an
+no third-party tools, compares against the committed run that its
+`BASELINE_RUN` names in `benchmarks/shadow-ai-discovery/results/`
+(currently `2026-10-09`), and uploads its outputs as an
 artifact. Publishing a new baseline is a manual step: copy the scrubbed run
 into a new `results/<date>/` directory here, with a `README.md` that
 describes what changed since the previous baseline. The historical
@@ -215,15 +216,17 @@ carries it. A baseline produced after tuning on this corpus measures fit to
 it, not field accuracy, and must say so.
 
 The workflow initializes this repository as ShadowScan's `benchmark-suite`
-submodule at the commit ShadowScan pins, and takes as its baseline the
-directory that sorts last: `ls -d benchmarks/shadow-ai-discovery/results/*/ |
-sort | tail -1`, reading its `metrics.json` and `runs.json`. So, once the pin
-moves to a commit that contains it:
+submodule at the commit ShadowScan pins and reads `metrics.json` and
+`runs.json` from `benchmarks/shadow-ai-discovery/results/<BASELINE_RUN>/`.
+Until [aisecnomad/Nexus-ShadowScan#289](https://github.com/aisecnomad/Nexus-ShadowScan/pull/289)
+it took whichever directory sorted last, so a later directory silently
+became the baseline. Now:
 
-- any directory added under `benchmarks/shadow-ai-discovery/results/` that
-  sorts after the current baseline becomes the baseline, whatever its name
-  says (`2026-11-02-seed-7/` sorts after `2026-11-02/`);
-- a directory without both files breaks the gate.
+- a later directory is reported with a `::notice::` and not used;
+- a missing `metrics.json` or `runs.json` in the named directory fails the
+  gate with an `::error::`;
+- moving the baseline is a reviewed one-line change to `BASELINE_RUN` in
+  ShadowScan that says why, together with the submodule pin.
 
 Put code-surface runs that are not meant to be ShadowScan's regression
 baseline (other corpora, independent runs, multi-tool comparisons that
