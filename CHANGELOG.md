@@ -132,6 +132,15 @@ up the benchmark's own fixtures. No committed metric changes.
   from the case runs; the runner refuses a scratch directory or tool path that
   lies under one of them. The manifest's `isolation` names what was hidden,
   not where.
+- A configured ShadowScan checkout is the repository this benchmark was
+  migrated from, so it too holds the corpus, generator and results (and it is
+  on ShadowScan's own `PYTHONPATH`): the namespaced stage hides every entry of
+  it but its `shadowscan/` package and the paths `tools.json` names (a virtual
+  environment, say), and `--sandbox oci` binds only the package.
+- Version probes, which run tool code outside the stage, hide the same paths.
+- The runner checks a tool path against what is hidden by its configured
+  spelling as well as what it resolves to: a venv's `python` resolves out of a
+  hidden checkout while the stage still runs it at its configured path.
 - Run directories are `run-XXXX`, and `case.json` keeps the surface and
   modality but not the case id.
 - The stage's private `/var/tmp` and `/dev/shm` are capped at 256 MiB each (a

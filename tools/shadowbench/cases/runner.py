@@ -115,6 +115,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from tools.shadowbench.cases.adapters import _probe
 from tools.shadowbench.cases.adapters.registry import load_adapters
 from tools.shadowbench.cases.contract import (
     SYSTEM_PATH,
@@ -221,7 +222,7 @@ class Sandbox:
         if self.backend == "namespaces":
             out["namespaces"] = list(NAMESPACES)
             if self.hide:
-                out["hidden"] = [what for what, _ in self.hide]
+                out["hidden"] = list(dict.fromkeys(what for what, _ in self.hide))
         else:
             out.update(
                 {
@@ -422,11 +423,16 @@ def isolation_problems(scratch: Path, env: ToolEnv, hide: Iterable[str] = ()) ->
     The stage also replaces ``/var/tmp`` and ``/dev/shm`` with an empty tmpfs, and covers ``hide``
     (the sandbox's checkout, results and corpus), which hides them alike.
     """
-    hidden = [Path(p).resolve() for p in (*HIDDEN, *PRIVATE_TMP, *hide)]
+    roots = (*HIDDEN, *PRIVATE_TMP, *hide)
+    hidden = list(
+        dict.fromkeys([Path(os.path.abspath(p)) for p in roots] + [Path(p).resolve() for p in roots])
+    )
 
     def hidden_root(path: Path) -> Path | None:
-        resolved = path.resolve()
-        return next((h for h in hidden if resolved.is_relative_to(h)), None)
+        # Both spellings: a venv's python is a symlink that resolves out of a hidden checkout while
+        # the stage still looks it up at its configured path, which the stage then hides.
+        spellings = (Path(os.path.abspath(path)), path.resolve())
+        return next((h for h in hidden for spelt in spellings if spelt.is_relative_to(h)), None)
 
     problems: list[str] = []
     covered = hidden_root(scratch)
@@ -1050,6 +1056,60 @@ def parse_limits(values: list[str]) -> dict[str, int]:
     return check_limits(limits)
 
 
+def shadowscan_checkout(env: ToolEnv) -> str | None:
+    """The ShadowScan checkout ``tools.json`` puts on ShadowScan's ``PYTHONPATH``, if it holds the package."""
+    tools = env.config.get("tools")
+    cfg = tools.get("shadowscan") if isinstance(tools, dict) else None
+    repo = cfg.get("repo") if isinstance(cfg, dict) else None
+    if (
+        not isinstance(repo, str)
+        or not os.path.isabs(repo)
+        or not os.path.isdir(os.path.join(repo, "shadowscan"))
+    ):
+        return None
+    return os.path.abspath(repo)
+
+
+def checkout_answer_keys(env: ToolEnv) -> tuple[str, ...]:
+    """Every entry of the ShadowScan checkout but its package, for the stage and the probes to hide.
+
+    That checkout is the repository this benchmark was migrated from, so it holds the corpus, its
+    generator and recorded results (``benchmarks/``, ``tools/``, ``tests/``, ``.git``), readable by
+    every tool and on ShadowScan's own ``PYTHONPATH``. Only ``shadowscan/`` is needed to run it; an
+    entry a ``tools.json`` path lies in (a virtual environment, say) is left in view.
+    """
+    checkout = shadowscan_checkout(env)
+    if checkout is None:
+        return ()
+    used: set[Path] = {Path(os.path.abspath(env.tool_root)), Path(env.tool_root).resolve()}
+    tools = env.config.get("tools")
+    for cfg in (tools if isinstance(tools, dict) else {}).values():
+        if isinstance(cfg, dict):
+            for value in cfg.values():
+                if isinstance(value, str) and os.path.isabs(value):
+                    used |= {Path(os.path.abspath(value)), Path(value).resolve()}
+    out: list[str] = []
+    for entry in sorted(os.listdir(checkout)):
+        path = Path(checkout, entry)
+        if entry == "shadowscan" or any(spelt == path or spelt.is_relative_to(path) for spelt in used):
+            continue
+        out.append(str(path))
+    return tuple(out)
+
+
+def exposed_answer_keys(binds: Iterable[tuple[str, str]], keys: Iterable[str]) -> list[str]:
+    """Why a container bind would show tools the checkout, results or corpus: each bind whose host
+    path is one of them or holds one (a tool root set to the checkout, say)."""
+    problems = []
+    for source, destination in binds:
+        for key in keys:
+            if Path(key).resolve().is_relative_to(Path(source).resolve()):
+                problems.append(
+                    f"{destination} would show tools {key} in the container; keep tool paths outside it"
+                )
+    return problems
+
+
 def tool_binds(env: ToolEnv) -> tuple[tuple[str, str], ...]:
     """The tool trees a container needs read-only, as ``(host path, container path)`` pairs.
 
@@ -1065,6 +1125,11 @@ def tool_binds(env: ToolEnv) -> tuple[tuple[str, str], ...]:
             configured |= {
                 os.path.abspath(v) for v in cfg.values() if isinstance(v, str) and v.startswith("/")
             }
+    checkout = shadowscan_checkout(env)
+    if checkout is not None:
+        # Its package, not the checkout around it, which holds this benchmark's corpus and generator.
+        configured.discard(checkout)
+        configured.add(os.path.join(checkout, "shadowscan"))
     pairs = {dst: os.path.realpath(dst) for dst in configured if os.path.exists(dst)}
 
     def shown_by(dst: str, outer: str) -> bool:
@@ -1199,14 +1264,18 @@ def main(argv: list[str] | None = None) -> int:
                 ("checkout", str(repo)),
                 ("results", str(args.out.resolve())),
                 ("corpus", str(args.corpus.resolve())),
+                *(("ShadowScan checkout", path) for path in checkout_answer_keys(env)),
             )
             if args.sandbox == "namespaces"
             else ()
         ),
     )
+    # Version probes run tools outside the stage: they get the same paths hidden, whichever backend.
+    _probe.HIDE = (str(repo), str(args.out.resolve()), str(args.corpus.resolve()), *checkout_answer_keys(env))
     isolation_facts: dict[str, Any] = {}
     if sandbox.backend == "oci":
         oci, isolation_facts = oci_problems(sandbox)
+        oci += exposed_answer_keys(sandbox.binds, (str(repo), str(args.out), str(args.corpus)))
         if oci:
             print("\n".join(oci), file=sys.stderr)
             return 2

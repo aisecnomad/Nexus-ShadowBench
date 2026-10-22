@@ -9,7 +9,7 @@ no proxy, cloud, token or other credential variables. stdin is empty and a
 timeout bounds the run. The runner needs root for its own namespaces, so a
 probe started as root never runs the binary as root: it gets an empty network
 namespace, a fresh PID namespace with its own ``/proc`` and a private mount
-namespace with empty tmpfs mounts over ``/root`` and ``/home``, and drops to
+namespace with empty tmpfs mounts over ``/root``, ``/home`` and :data:`HIDE`, and drops to
 uid/gid 65534 with no supplementary groups and ``no_new_privs``, the identity
 the stage gives the tool. The root shell that drops privileges stays the PID
 namespace's init until the binary exits, and dies with ``unshare`` on a
@@ -56,6 +56,11 @@ def probe_env(home: Path, extra: Mapping[str, str] | None = None) -> dict[str, s
 PROBE_UID = PROBE_GID = 65534
 #: Where a dropped probe's home lives: ``/root`` and ``/home`` are hidden from it.
 PROBE_TMP = "/tmp"
+#: Absolute paths a root probe also hides: the runner sets what its stage hides from tools (the
+#: harness checkout, ``--out``, ``--corpus`` and a ShadowScan checkout's entries but its package),
+#: since a probe runs the same tool code outside the stage. A directory gets an empty tmpfs, a file
+#: ``/dev/null``; a missing path is skipped.
+HIDE: tuple[str, ...] = ()
 
 
 def isolation() -> list[str] | None:
@@ -68,7 +73,13 @@ def isolation() -> list[str] | None:
     sh = shutil.which("sh", path=PROBE_PATH)
     if not (unshare and setpriv and mount and sh):
         return None
-    hide = " && ".join(f"{shlex.quote(mount)} -t tmpfs -o mode=0755 tmpfs {d}" for d in ("/root", "/home"))
+    covers = [f"{shlex.quote(mount)} -t tmpfs -o mode=0755 tmpfs {d}" for d in ("/root", "/home")]
+    for path in HIDE:
+        if os.path.isdir(path):
+            covers.append(f"{shlex.quote(mount)} -t tmpfs -o mode=0755,size=64k tmpfs {shlex.quote(path)}")
+        elif os.path.isfile(path):
+            covers.append(f"{shlex.quote(mount)} --bind /dev/null {shlex.quote(path)}")
+    hide = " && ".join(covers)
     drop = f"{shlex.quote(setpriv)} --reuid={PROBE_UID} --regid={PROBE_GID} --clear-groups --no-new-privs --"
     # The probe's argv reaches the shell as positional parameters ("$@"), never as script text. The
     # shell stays the PID namespace's init as root instead of exec'ing the drop: --kill-child's

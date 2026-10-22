@@ -128,7 +128,7 @@ root.
    `skipped_adapters`), and for each chosen tool calls `unavailable_reason`.
    A tool with a reason is recorded as `{"skipped": reason}`.
 3. For each (tool, case) the runner creates
-   `<scratch>/<tool>-<case>-XXXX/` (mode 0711) with `work/` (handed to
+   `<scratch>/run-XXXX/` (mode 0711; the name says nothing of the case) with `work/` (handed to
    uid/gid 65534) and `control/` (root only), materializes the case into
    `work/case/`, asks the adapter for its `Invocation`s, and starts
    `stage.py` in fresh namespaces. A case on a surface and modality the
