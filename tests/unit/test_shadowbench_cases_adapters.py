@@ -590,9 +590,9 @@ def test_a_root_probe_drops_to_the_stage_identity_with_the_homes_hidden(
     assert (shell, flag, name) == ("/usr/bin/sh", "-c", "probe")
     assert "/usr/bin/mount -t tmpfs -o mode=0755 tmpfs /root" in script
     assert "/usr/bin/mount -t tmpfs -o mode=0755 tmpfs /home" in script
-    assert script.endswith(
-        f'/usr/bin/setpriv --reuid={TOOL_UID} --regid={TOOL_GID} --clear-groups --no-new-privs -- "$@"; exit $?'
-    )
+    drop = f"/usr/bin/setpriv --reuid={TOOL_UID} --regid={TOOL_GID} --clear-groups --no-new-privs --"
+    assert f'{{ {drop} "$@" >"$HOME/.probe-out"/stdout 2>"$HOME/.probe-out"/stderr; status=$?; ' in script
+    assert script.endswith('/usr/bin/head -c 65536 "$HOME/.probe-out"/stderr >&2; exit $status; }')
     assert "exec" not in script  # the root shell stays the namespace's init
     monkeypatch.setattr(_probe.os, "geteuid", lambda: 1000)
     assert _probe.isolation() == []

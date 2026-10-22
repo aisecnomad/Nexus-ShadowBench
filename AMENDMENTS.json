@@ -289,6 +289,56 @@
       "reason": "Regression tests for the review fixes: a second run of a tool on one repository and bad run timings are refused.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
       "sha256": "9294626b05f6448cb6a72d8b24a88196c60c9de69772e831b2ea55b273f3f60d"
+    },
+    {
+      "bytes": 27017,
+      "from_sha256": "25478ccb59b61509e47277d9f584945c52d8fa46439565d004d47e97bb35c7c6",
+      "git_blob": "ec1b171b13d7f083bac0608eb10356ca5e686ca9",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/stage.py",
+      "reason": "Cover the spec's hide paths (the checkout and --out under an empty tmpfs, --corpus under an empty read-only file, a ShadowScan checkout's entries but its package) before anything from the case runs, so a tool cannot read the answer key or the benchmark's fixtures; cap the private /var/tmp and /dev/shm at 256 MiB.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "6814b0dc9860b9e6f19dc39f28903f55ba03d1e61be722e78e4d512de959c012"
+    },
+    {
+      "bytes": 58830,
+      "from_sha256": "db46f48aec3f4901b1d8baf643df8c3514e47b251d960ebf79e76b6601c15e19",
+      "git_blob": "d4ad2aa67d34c3ddbdccaebf753719d4033bf8c1",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/runner.py",
+      "reason": "Run the stage from a root-only copy of the six modules it imports (STAGE_MODULES), under both backends and as the OCI bind; pass the checkout, --out, --corpus and a ShadowScan checkout's entries but its package for the namespaced stage and the version probes to hide, and bind only that package under OCI; refuse scratch or tool paths under them by configured spelling or resolved path; name run directories run-XXXX and drop the case id from case.json. Under OCI, refuse a tool bind whose host path is or holds the checkout, --out or --corpus. A tool path is checked with every prefix resolved, and the OCI check covers a ShadowScan checkout's entries too.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "a406fbfcd87e85c63087b0a5f40e828058dc247e35fe6c2d35e38b5f534748c3"
+    },
+    {
+      "bytes": 7556,
+      "from_sha256": "6006ddaee9cc8c0a4a9906d93e9243c5aba76a9cba88b6ce1963d30186db9e2d",
+      "git_blob": "e74cc42fe71a87ccd7397aaf69da9a23f2249cf6",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/_probe.py",
+      "reason": "Hide the paths the runner sets in HIDE in a root probe too (each tested inside the namespace, so one already gone is skipped), and hand the runner only the head of the probe's stdout and stderr through a 2 MiB tmpfs instead of all of it.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "97ecf168eec29583c6c80800dc7c30a7cffcbf77941733f2daea133aa6676cbd"
+    },
+    {
+      "bytes": 15073,
+      "from_sha256": "6c154be539ee45ca0864d03968f2be46daeaa8f453470a12809e4b5363a271ed",
+      "git_blob": "38b81c648abd0d1380e4fc6cb3ea48a62dde92fd",
+      "mode": "100644",
+      "path": "tests/unit/test_shadowbench_cases_residual.py",
+      "reason": "The as-if-root runner.main helper's isolation_problems stub accepts the hide paths it now takes, and the helper restores the probe hide list main sets.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "66fb2763234a46841409910c81bf1e04944f1aa3c0c3f6e3e9d2fb08914e60b2"
+    },
+    {
+      "bytes": 46747,
+      "from_sha256": "d24ca56397cf3d0563f535eb1b628cc1f70f43fddbb64972a93ebdeccda3ac3a",
+      "git_blob": "873dc15e584b31a146d3ec955d375ae188b32cab",
+      "mode": "100644",
+      "path": "tests/unit/test_shadowbench_cases_adapters.py",
+      "reason": "The root-probe test checks the new script: the binary's streams go to a root-only tmpfs and the shell prints the head of each.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "86e60c035520a0d38dc55f26928d1e3d6563b97bb6c1668a4d9c6e21305c7b8e"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

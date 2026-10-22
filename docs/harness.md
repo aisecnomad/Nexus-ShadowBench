@@ -128,7 +128,7 @@ root.
    `skipped_adapters`), and for each chosen tool calls `unavailable_reason`.
    A tool with a reason is recorded as `{"skipped": reason}`.
 3. For each (tool, case) the runner creates
-   `<scratch>/<tool>-<case>-XXXX/` (mode 0711) with `work/` (handed to
+   `<scratch>/run-XXXX/` (mode 0711; the name says nothing of the case) with `work/` (handed to
    uid/gid 65534) and `control/` (root only), materializes the case into
    `work/case/`, asks the adapter for its `Invocation`s, and starts
    `stage.py` in fresh namespaces. A case on a surface and modality the
@@ -159,8 +159,13 @@ those namespaces. Before anything from the case runs the stage:
 - sets `no_new_privs`, sets the host name to `shadowbench`, binds read-only
   files naming it over `/etc/hostname` and `/etc/hosts`, and brings loopback
   up;
-- mounts an empty tmpfs over `/root` and `/home`, and a fresh, empty,
-  world-writable tmpfs over `/var/tmp` and `/dev/shm`;
+- mounts an empty tmpfs over `/root`, `/home`, `/run` and `/tmp/.X11-unix`
+  and over the harness checkout and `--out`, binds an empty read-only file
+  over `--corpus`, and mounts a fresh, empty, world-writable 256 MiB tmpfs over
+  `/var/tmp` and `/dev/shm`. The stage itself runs from a root-only copy of
+  the six modules it imports, so neither backend shows a tool the corpus, the
+  generator or a recorded result, and run directories are named `run-XXXX`,
+  not after their case;
 - leaves its starting directory for `/`;
 - serves the case's mock services, bound to `127.0.0.1` whatever the case
   says ([`mockserv.py`](../tools/shadowbench/cases/mockserv.py));
@@ -201,7 +206,7 @@ backend and every limit. See [supply-chain.md](supply-chain.md#sandbox-backends)
 
 **Stated limits** ([`stage.py`](../tools/shadowbench/cases/stage.py)
 docstring): under the default backend this is not a filesystem sandbox. A
-tool can still read whatever is world-readable outside `/root` and `/home`,
+tool can still read whatever is world-readable outside the hidden paths,
 and the host's `/tmp`, which usually holds the scratch directory, stays
 shared with the host and with other cases. The OCI backend closes both. The 2026-10-11 rows were recorded under weaker isolation (tools
 and inert processes as root, host file system in view); see the cases

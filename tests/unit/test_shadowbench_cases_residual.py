@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from tools.shadowbench.cases import fetch_code, report, runner
+from tools.shadowbench.cases.adapters import _probe
 from tools.shadowbench.cases.adapters.registry import load_adapters
 from tools.shadowbench.cases.contract import ToolEnv
 from tools.shadowbench.cases.corpus import Corpus, dump_corpus
@@ -51,7 +52,8 @@ def _main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tools: dict[str, obje
     monkeypatch.setattr(runner.os, "geteuid", lambda: 0)
     monkeypatch.setattr(runner.shutil, "which", lambda name, path=None: f"/usr/bin/{name}")
     monkeypatch.setattr(runner, "namespace_problem", lambda: None)
-    monkeypatch.setattr(runner, "isolation_problems", lambda scratch, env: [])
+    monkeypatch.setattr(runner, "isolation_problems", lambda scratch, env, hide=(): [])
+    monkeypatch.setattr(_probe, "HIDE", ())  # main sets what probes hide; restore it after the test
     corpus = tmp_path / "corpus.json"
     dump_corpus(Corpus([], 1, "generator", "2026-10-11T00:00:00Z"), corpus)
     tools_json = tmp_path / "tools.json"
