@@ -13,12 +13,15 @@ host name set to ``stage.HOSTNAME`` and each tool run under resource limits
 normalizes the output into entities. One JSONL row per (tool, case) goes to
 ``<out>/<tool>.jsonl``; verbatim tool output goes to ``<out>/raw/<tool>/``.
 
-Each run gets ``<scratch>/<tool>-<case>-XXXX/`` (mode 0711) holding ``work/``,
-the tool's tree, which belongs to uid/gid 65534 for the run, and ``control/``
-(root only), where the stage spec and the stage's result stay out of the
-tool's reach. Tools run as 65534 with ``/root`` and ``/home`` hidden (see
-``stage.py``), so the scratch directory, ``tool_root`` (by default the
-directory holding ``tools.json``) and every path in ``tools.json`` must lie
+Each run gets ``<scratch>/run-XXXX/`` (mode 0711; the name says nothing of the
+case) holding ``work/``, the tool's tree, which belongs to uid/gid 65534 for
+the run, and ``control/`` (root only), where the stage spec and the stage's
+result stay out of the tool's reach. The stage runs from ``<scratch>/harness``,
+a root-only copy of the modules it imports (``STAGE_MODULES``), never from the
+checkout. Tools run as 65534 with ``/root`` and ``/home`` hidden (see
+``stage.py``), and under the namespaces backend the checkout, ``--out`` and
+``--corpus`` hidden too, so the scratch directory, ``tool_root`` (by default
+the directory holding ``tools.json``) and every path in ``tools.json`` must lie
 outside those, and outside ``/var/tmp`` and ``/dev/shm``, which the stage
 replaces with an empty tmpfs, and be reachable by that uid. Every run's ``work/`` belongs to
 the same uid, so the scratch directory must also belong to the runner and give
@@ -105,8 +108,9 @@ import sys
 import tempfile
 import threading
 import time
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -153,8 +157,41 @@ OCI_CAPABILITIES: tuple[str, ...] = ("SETUID", "SETGID", "KILL", "DAC_READ_SEARC
 owns, mode 0700, to start a tool there (``DAC_READ_SEARCH``). Tools lose all of them at the uid
 change, and ``no-new-privileges`` keeps them from coming back."""
 HARNESS_MOUNT = "/opt/shadowbench/harness"
-"""Where the contained stage finds the harness's ``tools`` package (read-only)."""
+"""Where the contained stage finds the stage tree's ``tools`` package (read-only)."""
 OCI_RUNTIMES: tuple[str, ...] = ("runc", "runsc")
+
+
+STAGE_MODULES: tuple[str, ...] = (
+    "tools/__init__.py",
+    "tools/shadowbench/__init__.py",
+    "tools/shadowbench/cases/__init__.py",
+    "tools/shadowbench/cases/contract.py",
+    "tools/shadowbench/cases/mockserv.py",
+    "tools/shadowbench/cases/stage.py",
+)
+"""Every harness module the stage imports, and so all of the harness it needs: no corpus, generator,
+family, scorer or adapter."""
+
+
+def build_stage_tree(scratch: Path, repo: Path = REPO) -> Path:
+    """A fresh, root-only copy of :data:`STAGE_MODULES` under ``scratch`` for the stage to run from.
+
+    Run from the checkout, the stage put the whole harness on its ``PYTHONPATH``, and the OCI backend
+    bound all of ``tools/``: the generator and families rebuild every label. Only root can read this
+    copy, and the tools run as uid 65534.
+    """
+    tree = scratch / "harness"
+    if tree.is_symlink():
+        raise RuntimeError(f"{tree} is a symlink")
+    shutil.rmtree(tree, ignore_errors=True)
+    tree.mkdir(mode=0o700)
+    tree.chmod(0o700)
+    for rel in STAGE_MODULES:
+        target = tree / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo / rel, target)
+        target.chmod(0o600)
+    return tree
 
 
 @dataclass(frozen=True)
@@ -171,11 +208,20 @@ class Sandbox:
     binds: tuple[tuple[str, str], ...] = ()
     """``(host path, container path)`` pairs bound read-only into the container (tool trees): each
     tools.json path where the configuration names it, backed by what it resolves to on the host."""
+    stage_tree: str | None = None
+    """The :func:`build_stage_tree` copy the stage runs from; None runs it from the checkout."""
+    hide: tuple[tuple[str, str], ...] = ()
+    """``(what, host path)`` pairs the namespaced stage covers before anything from the case runs:
+    the checkout, the results directory and the corpus. The manifest records only the names."""
 
     def describe(self) -> dict[str, Any]:
         out: dict[str, Any] = {"backend": self.backend, "hostname": HOSTNAME, "limits": dict(self.limits)}
+        if self.stage_tree is not None:
+            out["stage_modules"] = list(STAGE_MODULES)
         if self.backend == "namespaces":
             out["namespaces"] = list(NAMESPACES)
+            if self.hide:
+                out["hidden"] = [what for what, _ in self.hide]
         else:
             out.update(
                 {
@@ -255,8 +301,9 @@ def materialize(case: Case, root: Path, checkouts: Path | None = None) -> Materi
     home = inputs / "home" if case.surface == "endpoint" else None
     if home is not None:
         home.mkdir(exist_ok=True)
+    # No case id: with the corpus in reach, it named the case's label.
     (root / "case.json").write_text(
-        json.dumps({"id": case.case_id, "surface": case.surface, "modality": case.modality}), encoding="utf-8"
+        json.dumps({"surface": case.surface, "modality": case.modality}), encoding="utf-8"
     )
     return MaterializedCase(
         case.case_id,
@@ -369,12 +416,13 @@ def prepare_scratch(scratch: Path | None) -> Path:
     return path
 
 
-def isolation_problems(scratch: Path, env: ToolEnv) -> list[str]:
+def isolation_problems(scratch: Path, env: ToolEnv, hide: Iterable[str] = ()) -> list[str]:
     """Why tools running as uid 65534 with ``/root`` and ``/home`` hidden could not run from here.
 
-    The stage also replaces ``/var/tmp`` and ``/dev/shm`` with an empty tmpfs, which hides them alike.
+    The stage also replaces ``/var/tmp`` and ``/dev/shm`` with an empty tmpfs, and covers ``hide``
+    (the sandbox's checkout, results and corpus), which hides them alike.
     """
-    hidden = [Path(p).resolve() for p in (*HIDDEN, *PRIVATE_TMP)]
+    hidden = [Path(p).resolve() for p in (*HIDDEN, *PRIVATE_TMP, *hide)]
 
     def hidden_root(path: Path) -> Path | None:
         resolved = path.resolve()
@@ -569,6 +617,7 @@ def _stage(
         "limits": dict(sandbox.limits),
     }
     run_dir = control.parent
+    harness = Path(sandbox.stage_tree) if sandbox.stage_tree is not None else repo
     name: str | None = None
     if sandbox.backend == "oci":
         root = os.stat("/")
@@ -576,14 +625,15 @@ def _stage(
         procbin.mkdir(mode=0o755, exist_ok=True)
         full.update({"contained": True, "host_root": [root.st_dev, root.st_ino], "procbin": str(procbin)})
         name = container_name(run_dir)
-        command = oci_command(spec_path, out_path, run_dir, Path(spec["fakeproc"]), repo, sandbox)
+        command = oci_command(spec_path, out_path, run_dir, Path(spec["fakeproc"]), harness, sandbox)
     else:
         full["hostname"] = HOSTNAME
+        full["hide"] = [path for _, path in sandbox.hide]
         command = stage_command(spec_path, out_path)
     spec_path.write_text(json.dumps(full), encoding="utf-8")
     env = {
         "PATH": SYSTEM_PATH,
-        "PYTHONPATH": str(repo),
+        "PYTHONPATH": str(harness),
         "LANG": "C.UTF-8",
         "PYTHONDONTWRITEBYTECODE": "1",
     }
@@ -633,8 +683,9 @@ def run_one(
     checkouts: Path | None,
     sandbox: Sandbox = DEFAULT_SANDBOX,
 ) -> dict[str, Any]:
-    prefix = f"{adapter.name}-{safe_name(case.case_id, 'case id')}-"
-    run_dir = Path(tempfile.mkdtemp(prefix=prefix, dir=scratch))
+    # An opaque name: tools see it in their working directory, and a case id names its label.
+    safe_name(case.case_id, "case id")
+    run_dir = Path(tempfile.mkdtemp(prefix="run-", dir=scratch))
     work = run_dir / "work"
     control = run_dir / "control"
     row: dict[str, Any] = {
@@ -1142,6 +1193,16 @@ def main(argv: list[str] | None = None) -> int:
         cpus=args.oci_cpus,
         pids=args.oci_pids,
         binds=tool_binds(env) if args.sandbox == "oci" else (),
+        # The container sees none of these; the namespaced stage covers them.
+        hide=(
+            (
+                ("checkout", str(repo)),
+                ("results", str(args.out.resolve())),
+                ("corpus", str(args.corpus.resolve())),
+            )
+            if args.sandbox == "namespaces"
+            else ()
+        ),
     )
     isolation_facts: dict[str, Any] = {}
     if sandbox.backend == "oci":
@@ -1173,10 +1234,11 @@ def main(argv: list[str] | None = None) -> int:
         ids = {s for s in args.cases.split(",") if s}
         cases = [c for c in cases if c.case_id in ids]
     scratch = prepare_scratch(args.scratch)
-    isolation = isolation_problems(scratch, env)
+    isolation = isolation_problems(scratch, env, [path for _, path in sandbox.hide])
     if isolation:
         print("\n".join(isolation), file=sys.stderr)
         return 2
+    sandbox = replace(sandbox, stage_tree=str(build_stage_tree(scratch, repo)))
     try:
         fakeproc = build_fakeproc(scratch / "fakeproc")
     except (OSError, subprocess.CalledProcessError) as exc:

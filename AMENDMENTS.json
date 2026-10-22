@@ -289,6 +289,36 @@
       "reason": "Regression tests for the review fixes: a second run of a tool on one repository and bad run timings are refused.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
       "sha256": "9294626b05f6448cb6a72d8b24a88196c60c9de69772e831b2ea55b273f3f60d"
+    },
+    {
+      "bytes": 27017,
+      "from_sha256": "25478ccb59b61509e47277d9f584945c52d8fa46439565d004d47e97bb35c7c6",
+      "git_blob": "ec1b171b13d7f083bac0608eb10356ca5e686ca9",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/stage.py",
+      "reason": "Cover the spec's hide paths (the checkout and --out under an empty tmpfs, --corpus under an empty read-only file) before anything from the case runs, so a tool cannot read the answer key or the benchmark's fixtures; cap the private /var/tmp and /dev/shm at 256 MiB.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "6814b0dc9860b9e6f19dc39f28903f55ba03d1e61be722e78e4d512de959c012"
+    },
+    {
+      "bytes": 54940,
+      "from_sha256": "db46f48aec3f4901b1d8baf643df8c3514e47b251d960ebf79e76b6601c15e19",
+      "git_blob": "e7fada5c5851aceeb948280293a8bac1cfd8a962",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/runner.py",
+      "reason": "Run the stage from a root-only copy of the six modules it imports (STAGE_MODULES), under both backends and as the OCI bind, instead of the checkout; pass the checkout, --out and --corpus for the namespaced stage to hide and refuse scratch or tool paths under them; name run directories run-XXXX and drop the case id from case.json.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "54be565c699c335bf5ef0c610d7d84903860f626ed09e4a5f8970b97d0e70876"
+    },
+    {
+      "bytes": 14920,
+      "from_sha256": "6c154be539ee45ca0864d03968f2be46daeaa8f453470a12809e4b5363a271ed",
+      "git_blob": "f6a7c3bd26beeafaaa312b3de8fa58b4ad6429cd",
+      "mode": "100644",
+      "path": "tests/unit/test_shadowbench_cases_residual.py",
+      "reason": "The as-if-root runner.main helper's isolation_problems stub accepts the hide paths isolation_problems now takes.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/12",
+      "sha256": "1c6965294fcc5fe9c8911225f5e098b4b7c66d80249ff2655d0edd2f4cdcc08b"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

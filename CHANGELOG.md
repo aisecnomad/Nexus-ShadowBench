@@ -113,6 +113,33 @@ changed, no published number moved, and no published run was rerun.
   four cells because the current renderer no longer calls an incomplete
   negative clean ([docs/results.md](docs/results.md)).
 
+### The answer key out of the tools' reach
+
+A tool under test could read what it is scored against. Under
+`--sandbox namespaces` a checkout outside `/root` and `/home`, the results
+directory and a corpus kept elsewhere were world-readable; `--sandbox oci`
+bound the whole `tools/` package, whose generator rebuilds every label of the
+committed corpus; and every tool saw its case id, in its run directory's name
+and in `case.json`. A discovery tool scanning the file system could also pick
+up the benchmark's own fixtures. No committed metric changes.
+
+- The stage runs from `<scratch>/harness`, a root-only copy of the six
+  modules it imports (`runner.STAGE_MODULES`; a test holds the set to what the
+  stage actually loads), under both backends; the container binds that, not
+  `tools/`.
+- Under `--sandbox namespaces` the stage covers the checkout and `--out` with
+  an empty tmpfs and `--corpus` with an empty read-only file before anything
+  from the case runs; the runner refuses a scratch directory or tool path that
+  lies under one of them. The manifest's `isolation` names what was hidden,
+  not where.
+- Run directories are `run-XXXX`, and `case.json` keeps the surface and
+  modality but not the case id.
+- The stage's private `/var/tmp` and `/dev/shm` are capped at 256 MiB each (a
+  tmpfs defaults to half the host's memory), as the OCI backend caps its
+  `/var/tmp`.
+- The threat model keeps one residual: the corpus is public, so a tool could
+  ship answers keyed by its inputs' content.
+
 ### Sandbox and scorer review fixes
 
 No committed metric or report changes: the cases and estate 2026-10-11 runs
