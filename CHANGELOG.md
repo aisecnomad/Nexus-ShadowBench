@@ -200,6 +200,33 @@ and the code-surface 2026-10-09 metrics still re-score byte for byte, and
   0.9482 instead of 0.9476). The threat model now lists the answer key's
   reachability from inside the cases sandbox as a residual risk.
 
+### Secret checks beside `check_secrets.py`
+
+`tools/check_secrets.py` is bound in `MIGRATION.json` and not amendable, and
+it missed whole families and encodings, so `tools/check_secrets_extra.py`
+runs beside it in CI, `make secrets` and pre-commit:
+
+- families it does not know: Anthropic OAuth (`sk-ant-oat01-`), OpenRouter
+  (`sk-or-v1-`, which the OpenAI rule does not reach), Groq, xAI, Replicate
+  and Perplexity keys, PyPI, npm and Docker tokens, Slack app tokens and
+  webhook URLs, Google OAuth client secrets and access tokens, SendGrid keys;
+- every family in what it cannot read: it decodes all bytes as UTF-8 and drops
+  the rest, so a token in a gzip member, or in UTF-16 or UTF-32 text, with or
+  without a BOM, passed unseen. Each gzip layer is inflated and each tar
+  member read (at most 8 deep and 256 MiB in all; a corrupt, truncated, deeper
+  or larger one is reported, not skipped; zlib itself raises nothing for a
+  truncated member), and each is read as UTF-8 and, when it holds a NUL, as
+  UTF-16 and UTF-32 at every alignment (wide text beside non-ASCII characters
+  such as CJK punctuation) and with the NULs removed (archive padding, wide
+  text beside ASCII). One token matched in several views is reported once, a
+  match `check_secrets.py` already reports is not reported twice, and a
+  private-key approval must bind the whole file, as there.
+
+Reports, exit codes and approvals (`tools/secret_allowlist_extra.json`, by
+path, family and SHA-256, stale entries failing closed) follow
+`check_secrets.py`. Nothing tracked matched, including the two committed
+`.jsonl.gz` result files, so the allowlist starts empty.
+
 ### Harness amendments
 
 - Added `AMENDMENTS.json`, an append-only ledger for changes to migrated

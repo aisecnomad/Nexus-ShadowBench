@@ -69,6 +69,7 @@ typecheck: ## Type-check the harness against the pinned scanner checkout
 .PHONY: secrets
 secrets: ## Scan every tracked file for credential-shaped strings
 	git ls-files -z | xargs -0 $(PYTHON) tools/check_secrets.py
+	git ls-files -z | xargs -0 $(PYTHON) tools/check_secrets_extra.py
 
 # Committed results of the live tracks, checked for machine paths a scrub missed;
 # paths the corpora themselves contain (echoed by tools) are not findings.
