@@ -848,3 +848,64 @@ def test_a_container_bind_that_holds_the_answer_key_is_refused(tmp_path: Path) -
         f"/opt/tools would show tools {checkout / 'benchmarks'} in the container; keep tool paths outside it"
     ]
     assert runner.exposed_answer_keys(binds[1:], [str(checkout)]) == []
+
+
+@pytest.mark.skipif(os.geteuid() != 0 or shutil.which("unshare") is None, reason="needs root and unshare")
+def test_a_probe_skips_hidden_paths_already_gone(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A path nested in an earlier one, or under /home, had no mount point left: the mount failed and
+    every probed version read unknown."""
+    top = Path(tempfile.mkdtemp(prefix="shadowbench-probe-nested-"))
+    try:
+        top.chmod(0o755)
+        (top / "repo/results").mkdir(parents=True)
+        (top / "repo/corpus.json").write_text("{}\n", encoding="utf-8")
+        hide = (
+            str(top / "repo"),
+            str(top / "repo/results"),
+            str(top / "repo/corpus.json"),
+            str(ROOT),
+            "/home/x/y",
+        )
+        monkeypatch.setattr(_probe, "HIDE", hide)
+        done = _probe.run_probe(["sh", "-c", f"echo ok; ls -A {top / 'repo'} | wc -l"])
+        assert done is not None and done.returncode == 0 and done.stdout.split() == ["ok", "0"], done
+    finally:
+        shutil.rmtree(top, ignore_errors=True)
+
+
+@pytest.mark.skipif(os.geteuid() != 0 or shutil.which("unshare") is None, reason="needs root and unshare")
+def test_a_probe_hands_the_runner_only_the_head_of_what_it_prints(monkeypatch: pytest.MonkeyPatch) -> None:
+    """capture_output held all of a probing binary's output in the root runner."""
+    monkeypatch.setattr(_probe, "HIDE", ())
+    flood = "import sys\nfor _ in range(4096): sys.stdout.write('v1.2.3 ' * 2000)\nsys.stderr.write('warn')"
+    python = shutil.which("python3", path="/usr/bin:/bin")  # the venv's lies under the hidden /home
+    if python is None:
+        pytest.skip("no system python3")
+    done = _probe.run_probe([python, "-c", flood])
+    assert done is not None and done.returncode != 0  # the 2 MiB tmpfs filled
+    assert len(done.stdout) == _probe.PROBE_OUTPUT_KEEP and done.stdout.startswith("v1.2.3 ")
+    ok = _probe.run_probe(["sh", "-c", "echo v9.9.9; echo note >&2; exit 3"])
+    assert ok is not None and (ok.returncode, ok.stdout, ok.stderr) == (3, "v9.9.9\n", "note\n")
+
+
+def test_a_tool_path_through_a_symlinked_parent_into_a_hidden_tree_is_refused(tmp_path: Path) -> None:
+    hidden_tree = tmp_path / "checkout"
+    (hidden_tree / "venv/bin").mkdir(parents=True)
+    (hidden_tree / "venv/bin/tool").write_text("", encoding="utf-8")
+    (tmp_path / "opt").symlink_to(hidden_tree / "venv")
+    env = ToolEnv(tmp_path / "tools", {"tools": {"x": {"bin": str(tmp_path / "opt/bin/tool")}}})
+    scratch = tmp_path / "scratch"
+    scratch.mkdir(mode=0o711)
+    problems = runner.isolation_problems(scratch, env, [str(hidden_tree)])
+    assert any("tools.x.bin" in p and "which the stage hides" in p for p in problems)
+
+
+def test_a_shadowscan_checkout_inside_a_bound_tool_root_is_refused_for_the_container(tmp_path: Path) -> None:
+    """tool_binds bound the package alone, but tool_root, which holds the checkout, whole."""
+    root = tmp_path / "tools"
+    checkout = root / "Project-Nexus"
+    for entry in ("shadowscan", "benchmarks"):
+        (checkout / entry).mkdir(parents=True)
+    env = ToolEnv(root, {"tool_root": str(root), "tools": {"shadowscan": {"repo": str(checkout)}}})
+    problems = runner.exposed_answer_keys(runner.tool_binds(env), runner.checkout_answer_keys(env))
+    assert any(str(checkout / "benchmarks") in p for p in problems)

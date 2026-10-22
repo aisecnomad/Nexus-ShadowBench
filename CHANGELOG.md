@@ -137,7 +137,11 @@ up the benchmark's own fixtures. No committed metric changes.
   on ShadowScan's own `PYTHONPATH`): the namespaced stage hides every entry of
   it but its `shadowscan/` package and the paths `tools.json` names (a virtual
   environment, say), and `--sandbox oci` binds only the package.
-- Version probes, which run tool code outside the stage, hide the same paths.
+- Version probes, which run tool code outside the stage, hide the same paths
+  (each tested inside the probe's namespace, so one under `/home` or inside an
+  earlier one is skipped rather than failing the probe), and a root probe hands
+  the runner only the first 64 KiB of each stream, through a 2 MiB tmpfs, where
+  `capture_output` kept everything the binary printed.
 - The runner checks a tool path against what is hidden by its configured
   spelling as well as what it resolves to: a venv's `python` resolves out of a
   hidden checkout while the stage still runs it at its configured path.

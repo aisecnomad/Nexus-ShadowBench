@@ -431,7 +431,12 @@ def isolation_problems(scratch: Path, env: ToolEnv, hide: Iterable[str] = ()) ->
     def hidden_root(path: Path) -> Path | None:
         # Both spellings: a venv's python is a symlink that resolves out of a hidden checkout while
         # the stage still looks it up at its configured path, which the stage then hides.
-        spellings = (Path(os.path.abspath(path)), path.resolve())
+        # Every prefix resolved with the rest kept as written, so a symlinked parent counts too.
+        literal = Path(os.path.abspath(path))
+        spellings = [literal, path.resolve()] + [
+            Path(os.path.realpath(literal.parents[i])) / literal.relative_to(literal.parents[i])
+            for i in range(len(literal.parents))
+        ]
         return next((h for h in hidden for spelt in spellings if spelt.is_relative_to(h)), None)
 
     problems: list[str] = []
@@ -1275,7 +1280,8 @@ def main(argv: list[str] | None = None) -> int:
     isolation_facts: dict[str, Any] = {}
     if sandbox.backend == "oci":
         oci, isolation_facts = oci_problems(sandbox)
-        oci += exposed_answer_keys(sandbox.binds, (str(repo), str(args.out), str(args.corpus)))
+        keys = (str(repo), str(args.out), str(args.corpus), *checkout_answer_keys(env))
+        oci += exposed_answer_keys(sandbox.binds, keys)
         if oci:
             print("\n".join(oci), file=sys.stderr)
             return 2

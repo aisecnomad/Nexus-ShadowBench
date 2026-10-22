@@ -61,6 +61,8 @@ PROBE_TMP = "/tmp"
 #: since a probe runs the same tool code outside the stage. A directory gets an empty tmpfs, a file
 #: ``/dev/null``; a missing path is skipped.
 HIDE: tuple[str, ...] = ()
+#: Bytes of a root probe's stdout and of its stderr the runner receives.
+PROBE_OUTPUT_KEEP = 64 << 10
 
 
 def isolation() -> list[str] | None:
@@ -71,16 +73,31 @@ def isolation() -> list[str] | None:
     setpriv = shutil.which("setpriv", path=PROBE_PATH)
     mount = shutil.which("mount", path=PROBE_PATH)
     sh = shutil.which("sh", path=PROBE_PATH)
-    if not (unshare and setpriv and mount and sh):
+    head = shutil.which("head", path=PROBE_PATH)
+    if not (unshare and setpriv and mount and sh and head):
         return None
     covers = [f"{shlex.quote(mount)} -t tmpfs -o mode=0755 tmpfs {d}" for d in ("/root", "/home")]
     for path in HIDE:
-        if os.path.isdir(path):
-            covers.append(f"{shlex.quote(mount)} -t tmpfs -o mode=0755,size=64k tmpfs {shlex.quote(path)}")
-        elif os.path.isfile(path):
-            covers.append(f"{shlex.quote(mount)} --bind /dev/null {shlex.quote(path)}")
+        # Tested inside the namespace, after the mounts before it: a path under /home, /root or an
+        # earlier entry is already gone there, and a mount on it would fail and stop the probe.
+        q = shlex.quote(path)
+        covers.append(
+            f"if [ -d {q} ]; then {shlex.quote(mount)} -t tmpfs -o mode=0755,size=64k tmpfs {q}; "
+            f"elif [ -f {q} ]; then {shlex.quote(mount)} --bind /dev/null {q}; fi"
+        )
     hide = " && ".join(covers)
+    # The binary writes to a 2 MiB root-only tmpfs in the namespace and the shell prints the head of
+    # each stream: the root runner keeps all the probe prints, and a binary printing without end must
+    # not fill its memory.
     drop = f"{shlex.quote(setpriv)} --reuid={PROBE_UID} --regid={PROBE_GID} --clear-groups --no-new-privs --"
+    out = '"$HOME/.probe-out"'
+    keep = PROBE_OUTPUT_KEEP
+    capture = (
+        f"mkdir {out} && {shlex.quote(mount)} -t tmpfs -o mode=0700,size=2m tmpfs {out} && "
+        f'{{ {drop} "$@" >{out}/stdout 2>{out}/stderr; status=$?; '
+        f"{shlex.quote(head)} -c {keep} {out}/stdout; "
+        f"{shlex.quote(head)} -c {keep} {out}/stderr >&2; exit $status; }}"
+    )
     # The probe's argv reaches the shell as positional parameters ("$@"), never as script text. The
     # shell stays the PID namespace's init as root instead of exec'ing the drop: --kill-child's
     # parent-death signal would not survive setpriv's change of uid, so only a root init dies with
@@ -98,7 +115,7 @@ def isolation() -> list[str] | None:
         "--",
         sh,
         "-c",
-        f'{hide} && {drop} "$@"; exit $?',
+        f"{hide} && {capture}",
         "probe",
     ]
 
