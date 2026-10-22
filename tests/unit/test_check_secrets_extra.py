@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import codecs
 import gzip
+import hashlib
 import json
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -29,6 +31,9 @@ SAMPLES = {
     "Docker personal access token": "dckr" + "_pat_" + "g" * 27,
     "Slack app token": "xapp" + "-1-A0B1C2D3E4F-1234567890123-" + "ab" * 32,
     "Slack webhook URL": "https://hooks.slack.com/" + "services/T0AAAAAAA/B0BBBBBBB/" + "h" * 24,
+    "Slack webhook URL (trigger)": "https://hooks.slack.com/"
+    + "triggers/T0AAAAAAA/4567890123456/"
+    + "0f" * 16,
     "Google OAuth client secret": "GOCSPX" + "-" + "i" * 28,
     "Google OAuth access token": "ya29" + "." + "j" * 40,
     "SendGrid API key": "SG" + "." + "k" * 22 + "." + "m" * 43,
@@ -43,7 +48,7 @@ def _families(contents: bytes) -> list[str]:
 @pytest.mark.parametrize("family", sorted(SAMPLES))
 def test_each_extra_family_is_found_where_check_secrets_finds_nothing(family: str) -> None:
     text = f'config = {{"token": "{SAMPLES[family]}"}}\n'
-    assert _families(text.encode()) == [family]
+    assert _families(text.encode()) == [family.removesuffix(" (trigger)")]
     assert list(check_secrets.findings(text)) == []
 
 
@@ -87,7 +92,7 @@ def test_a_corrupt_or_oversized_gzip_member_is_reported_not_skipped(
     err = capsys.readouterr().err
     assert "corrupt.jsonl.gz: cannot scan: corrupt gzip member" in err
     assert "truncated.jsonl.gz: cannot scan: truncated gzip member" in err  # zlib itself raises nothing
-    assert "big.jsonl.gz: cannot scan: a gzip member inflates past 1024 bytes" in err
+    assert "big.jsonl.gz: cannot scan: gzip layers inflate past 1024 bytes" in err
 
 
 def test_a_finding_reports_the_family_and_length_never_the_value(
@@ -135,3 +140,84 @@ def test_the_allowlist_starts_empty() -> None:
         "version": 1,
         "entries": [],
     }
+
+
+def _tar(tmp_path: Path, text: str) -> bytes:
+    source = tmp_path / "a.txt"
+    source.write_text(text, encoding="utf-8")
+    archive = tmp_path / "a.tar"
+    with tarfile.open(archive, "w") as handle:
+        handle.add(source, arcname="a.txt")
+    return archive.read_bytes()
+
+
+def test_tar_archives_are_read_through_their_nul_padding(tmp_path: Path) -> None:
+    """A tar's NUL padding sent it down the UTF-16 path, where nothing matched; gzipped, neither
+    scanner saw anything in it."""
+    tar = _tar(tmp_path, f"token = {GITHUB}\nkey = {SAMPLES['Groq API key']}\n")
+    assert _families(tar) == ["Groq API key"]  # check_secrets.py reports the GitHub token itself
+    assert sorted(_families(gzip.compress(tar))) == ["GitHub token", "Groq API key"]
+
+
+@pytest.mark.parametrize("encoding", ["utf-32-le", "utf-32-be", "utf-16-le", "utf-16-be"])
+def test_wide_text_without_a_bom_or_with_a_non_latin_start_is_read(encoding: str) -> None:
+    text = "漢字" * 3000 + f"\nkey = {SAMPLES['Groq API key']}\n"
+    assert _families(text.encode(encoding)) == ["Groq API key"]
+
+
+def test_deep_or_large_gzip_nesting_is_reported_not_a_crash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Each layer recursed, so 2000 layers raised RecursionError; the size limit was per layer."""
+    nested = b"x\n"
+    for _ in range(check_secrets_extra.MAX_GZIP_DEPTH + 1):
+        nested = gzip.compress(nested, mtime=0)
+    with pytest.raises(check_secrets_extra.Unscannable, match="deeper than"):
+        list(check_secrets_extra.findings(nested))
+    monkeypatch.setattr(check_secrets_extra, "MAX_DECOMPRESSED", 3000)
+    two = gzip.compress(gzip.compress(b"y" * 2000, mtime=0) + b"z" * 2000, mtime=0)  # 2 layers, ~4 KB in all
+    with pytest.raises(check_secrets_extra.Unscannable, match="inflate past 3000"):
+        list(check_secrets_extra.findings(two))
+
+
+def _approved_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, data: bytes, **entry: str) -> Path:
+    fixture = tmp_path / "fixture.txt"
+    fixture.write_bytes(data)
+    monkeypatch.setattr(check_secrets, "REPOSITORY_ROOT", tmp_path)
+    _with_allowlist(monkeypatch, tmp_path, [{"path": "fixture.txt", "reason": "synthetic", **entry}])
+    return fixture
+
+
+def test_an_approval_suppresses_exactly_its_finding(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    value = SAMPLES["Groq API key"]
+    data = f"key = {value}\nother = {SAMPLES['xAI API key']}\n".encode()
+    fixture = _approved_repo(
+        tmp_path, monkeypatch, data, family="Groq API key", sha256=check_secrets.digest(value)
+    )
+    assert check_secrets_extra.main([str(fixture)]) == 1  # the xAI key is not approved
+    fixture.write_bytes(f"key = {value}\n".encode())
+    assert check_secrets_extra.main([str(fixture)]) == 0
+
+
+def test_a_private_key_approval_binds_the_whole_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A marker is the same for every key; approving it alone would pass any key body."""
+    marker = "-----BEGIN " + "PRIVATE KEY-----"
+    data = gzip.compress(f"{marker}\nAAAA\n".encode())
+    entry = {"family": "private key", "sha256": check_secrets.digest(marker)}
+    fixture = _approved_repo(tmp_path, monkeypatch, data, **entry)
+    assert check_secrets_extra.main([str(fixture)]) == 1  # no content_sha256: the approval is refused
+    _with_allowlist(
+        monkeypatch,
+        tmp_path,
+        [
+            {
+                "path": "fixture.txt",
+                "reason": "synthetic",
+                **entry,
+                "content_sha256": hashlib.sha256(data).hexdigest(),
+            }
+        ],
+    )
+    assert check_secrets_extra.main([str(fixture)]) == 0
+    fixture.write_bytes(gzip.compress(f"{marker}\nBBBB\n".encode()))
+    assert check_secrets_extra.main([str(fixture)]) == 1  # another key body behind the same marker

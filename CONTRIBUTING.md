@@ -139,8 +139,10 @@ could not run and why.
 
 The secret-pattern gate names the file, line and credential family of each
 match, never the value. Corpora deliberately contain synthetic credentials;
-each is approved in `tools/secret_allowlist.json` by exact repository path,
-credential family and the SHA-256 of the matched text, with a review reason.
+each is approved by exact repository path, credential family and the SHA-256
+of the matched text, with a review reason: in `tools/secret_allowlist.json`
+for `check_secrets.py`'s reports and in `tools/secret_allowlist_extra.json` for
+those only `check_secrets_extra.py` makes.
 There are no directory or placeholder-word exemptions. Private-key approvals
 also bind the SHA-256 of the whole file. Review every new credential-shaped
 value before adding its approval, never approve a real service credential, and
