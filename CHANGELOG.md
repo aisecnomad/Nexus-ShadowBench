@@ -142,6 +142,9 @@ changed, no published number moved, and no published run was rerun.
 - CI and `make audit` (now part of `make check`) run `pip-audit` on the
   installed environment and on each hash-locked set, so a new advisory
   fails the next run instead of going unnoticed.
+- Updated virtualenv from 21.14.8 to 21.14.9 in `requirements-ci.lock` for
+  GHSA-c978-59m8-c77v, which that audit caught on `main`. The two releases
+  declare the same dependencies, and both hashes were checked against PyPI.
 
 ### Errata
 

@@ -189,6 +189,16 @@
       "reason": "Review fix: skip the tool when its configured binary does not exist, as the PyPI adapters already did, so a subset install does not run absent binaries and score an error on every case.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/8",
       "sha256": "3494a2802c0781f341cb300bdf4907dfd720098ef7c8a6d06ee76026b4c9f93f"
+    },
+    {
+      "bytes": 118884,
+      "from_sha256": "549c21fae76939996e361bbc4ca51af7ddee21b41040db50cbc55bbbb56e170f",
+      "git_blob": "eb41a66165894e8efae04770e20be14dfc760749",
+      "mode": "100644",
+      "path": "requirements-ci.lock",
+      "reason": "Update virtualenv from 21.14.8 to 21.14.9 for GHSA-c978-59m8-c77v (CVE-2026-113722), which failed the strict pip-audit gate on main; dependency metadata is unchanged between the releases and both distribution hashes were checked against PyPI.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/9",
+      "sha256": "f67a67bf85d78fd186242eeaaed3c297073501938ac6c85620f75743992603eb"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",
