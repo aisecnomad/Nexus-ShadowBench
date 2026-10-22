@@ -79,6 +79,7 @@ import socket
 import struct
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -466,20 +467,63 @@ def _kill_strays(keep: set[int], unreaped: frozenset[int] = frozenset()) -> None
             _signal(pid, signal.SIGCONT)
 
 
-def _drain(proc: subprocess.Popen[bytes]) -> tuple[bytes, bytes]:
-    """Collect a killed invocation's output without waiting on whatever still holds its pipes."""
-    try:
-        return proc.communicate(timeout=KILL_GRACE)
-    except subprocess.TimeoutExpired as exc:
-        out, err = exc.stdout or b"", exc.stderr or b""
-    for stream in (proc.stdin, proc.stdout, proc.stderr):
-        if stream is not None:
+STDOUT_KEEP = 2_000_000
+STDERR_KEEP = 200_000
+"""Characters of an invocation's stdout and stderr its result keeps: the tail of each."""
+
+
+class _Capture:
+    """Feed an invocation's stdin and read its stdout and stderr on threads, keeping only the tail
+    of each (four bytes per character kept, the most UTF-8 uses).
+
+    ``communicate`` held everything a tool printed in the stage's memory before the tail was cut,
+    and the stage runs as root, with no memory cgroup under the namespaces backend: a tool could
+    print until the host ran out.
+    """
+
+    def __init__(self, proc: subprocess.Popen[bytes], stdin: bytes | None) -> None:
+        self._tails = {"out": bytearray(), "err": bytearray()}
+        self._threads = [
+            threading.Thread(target=self._pump, args=(proc.stdout, "out", 4 * STDOUT_KEEP), daemon=True),
+            threading.Thread(target=self._pump, args=(proc.stderr, "err", 4 * STDERR_KEEP), daemon=True),
+        ]
+        self._feeder = threading.Thread(target=self._feed, args=(proc.stdin, stdin), daemon=True)
+        for thread in [*self._threads, self._feeder]:
+            thread.start()
+
+    def _pump(self, stream: Any, name: str, keep: int) -> None:
+        tail = self._tails[name]
+        while True:
+            try:
+                chunk = os.read(stream.fileno(), 1 << 16)
+            except (OSError, ValueError):  # the stream was closed under a reader given up on
+                return
+            if not chunk:
+                return
+            tail += chunk
+            if len(tail) > 2 * keep:
+                del tail[:-keep]
+
+    @staticmethod
+    def _feed(stream: Any, data: bytes | None) -> None:
+        if stream is None:
+            return
+        try:
+            if data:
+                stream.write(data)
             stream.close()
-    try:
-        proc.wait(timeout=KILL_GRACE)
-    except subprocess.TimeoutExpired:
-        pass
-    return out, err
+        except (OSError, ValueError):  # the tool exited or closed its stdin without reading it all
+            pass
+
+    def ended(self, deadline: float) -> bool:
+        """Whether both pipes reached end of file by ``deadline``: nothing holds them any more."""
+        for thread in self._threads:
+            thread.join(max(0.0, deadline - time.monotonic()))
+        return not any(thread.is_alive() for thread in self._threads)
+
+    def output(self) -> tuple[str, str]:
+        out, err = (bytes(self._tails[name]).decode("utf-8", "replace") for name in ("out", "err"))
+        return out[-STDOUT_KEEP:], err[-STDERR_KEEP:]
 
 
 def _run(
@@ -517,27 +561,38 @@ def _run(
             "seconds": 0.0,
             "timed_out": False,
         }
+    capture = _Capture(proc, inv["stdin"].encode() if inv.get("stdin") is not None else None)
+    deadline = started + float(inv.get("timeout") or 300)
     try:
-        out, err = proc.communicate(
-            input=(inv["stdin"].encode() if inv.get("stdin") is not None else None),
-            timeout=float(inv.get("timeout") or 300),
-        )
+        # As communicate's timeout did: the tool must exit and its pipes close within it, so a child
+        # it left holding them makes the run a timeout.
+        proc.wait(timeout=max(0.0, deadline - time.monotonic()))
+        timed_out = not capture.ended(deadline)
     except subprocess.TimeoutExpired:
         timed_out = True
+    if timed_out:
         try:
             os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
         # A descendant that called setsid() left the group and may still hold the pipes.
         if sweep is not None:
-            _kill_strays(sweep, frozenset({proc.pid}))  # _drain reaps the tool itself
-        out, err = _drain(proc)
+            _kill_strays(sweep, frozenset({proc.pid}))  # reaped below
+        if not capture.ended(time.monotonic() + KILL_GRACE):
+            for stream in (proc.stdout, proc.stderr):  # held by what no sweep reaches: give up on them
+                if stream is not None:
+                    stream.close()
+        try:
+            proc.wait(timeout=KILL_GRACE)
+        except subprocess.TimeoutExpired:
+            pass
+    out, err = capture.output()
     if sweep is not None:
         _kill_strays(sweep)
     return {
         "code": 124 if timed_out else proc.returncode,
-        "stdout": out.decode("utf-8", "replace")[-2_000_000:],
-        "stderr": err.decode("utf-8", "replace")[-200_000:],
+        "stdout": out,
+        "stderr": err,
         "seconds": round(time.monotonic() - started, 3),
         "timed_out": timed_out,
     }

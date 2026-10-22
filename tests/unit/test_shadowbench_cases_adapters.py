@@ -12,7 +12,9 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import time
+import types
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -21,6 +23,9 @@ import pytest
 
 from tools.discovery_benchmark import taxonomy
 from tools.shadowbench.cases import fetch_code, generate
+from tools.shadowbench.cases.adapters import _report
+from tools.shadowbench.cases.adapters import agentdiscover as agentdiscover_adapter
+from tools.shadowbench.cases.adapters import shadowscan as shadowscan_adapter
 from tools.shadowbench.cases.adapters.registry import load_adapters
 from tools.shadowbench.cases.adapters.shadowscan import ADAPTER as SHADOWSCAN
 from tools.shadowbench.cases.adapters.shadowscan import convert_aws
@@ -1031,3 +1036,105 @@ def test_fetch_refetches_a_checkout_it_cannot_vouch_for(
     # A checkout from the fetcher before filter drivers were turned off has no override.
     assert not kept_after(lambda: (dest / ".git" / "info" / "attributes").unlink())
     assert (dest / ".git" / "info" / "attributes").read_text(encoding="utf-8") == "* !filter\n"
+
+
+# --- review regression: a tool controls the size of every file it writes --------------------------
+
+
+def test_report_reads_match_read_text_and_stop_at_the_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "report.txt"
+    path.write_bytes(b'{"a": 1}\r\nb\rc\n\xff')
+    assert _report.read_text(path, errors="replace") == path.read_text(encoding="utf-8", errors="replace")
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", path.stat().st_size)
+    assert _report.read_text(path, errors="replace").startswith('{"a": 1}\n')
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", path.stat().st_size - 1)
+    with pytest.raises(_report.ReportTooLarge, match="longer than the"):
+        _report.read_text(path)
+    assert issubclass(_report.ReportTooLarge, OSError)  # every adapter already turns OSError into an error
+
+
+def test_oversized_reports_are_errors_not_parsed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Adapters read whole tool-written files as root; a 4 GiB report could exhaust the runner."""
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
+    for sub in ("vet", "aig"):
+        (tmp_path / sub).mkdir()
+    big = "[" + ",".join(['{"name": "x"}'] * 20) + "]"
+    work = _work(tmp_path)
+    (work / "vet.json").write_text(big, encoding="utf-8")
+    vet_case = _case(tmp_path / "vet", "endpoint", "home")
+    vet = ADAPTERS["vet"].normalize(vet_case, work, [RunResult(0, "", "", 1.0)])
+    assert vet.status == "error" and "longer than the 64 bytes" in vet.note
+    (work / "aig.txt").write_text(AIG_LINE * 5, encoding="utf-8")
+    case = _case(tmp_path / "aig", "network", "active", services=SERVICES)
+    aig = ADAPTERS["ai-infra-guard"].normalize(case, work, [RunResult(0, AIG_BANNER, "", 1.0)])
+    assert aig.status == "error" and "longer than the 64 bytes" in aig.note
+    sarif = work / "layer1_code.sarif"
+    sarif.write_text(json.dumps({"runs": [{"results": [{"ruleId": "x" * 80}]}]}), encoding="utf-8")
+    assert agentdiscover_adapter._sarif_results(sarif) is None
+    config = work / "mcp.json"  # parses to a server map whenever it is read whole
+    config.write_text(json.dumps({"mcpServers": {"x": {"command": "y" * 80}}}), encoding="utf-8")
+    assert agentdiscover_adapter._server_map(config, "json", "mcpServers") is None
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 1 << 20)
+    assert agentdiscover_adapter._server_map(config, "json", "mcpServers")
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
+    with pytest.raises(_report.ReportTooLarge):
+        shadowscan_adapter._load(sarif)
+
+
+def test_a_small_report_is_read_without_reserving_the_cap(tmp_path: Path) -> None:
+    """read(cap + 1) allocated the whole cap for every report: under an address-space limit a
+    few-byte report raised MemoryError."""
+    small = tmp_path / "small.json"
+    small.write_text('{"ok": true}\n', encoding="utf-8")
+    probe = (
+        "import resource, sys\n"
+        "from pathlib import Path\n"
+        "from tools.shadowbench.cases.adapters import _report\n"
+        "vm = next(int(l.split()[1]) for l in open('/proc/self/status') if l.startswith('VmSize')) * 1024\n"
+        "resource.setrlimit(resource.RLIMIT_AS, (vm + (64 << 20), vm + (64 << 20)))\n"
+        "print(_report.read_text(Path(sys.argv[1]), limit=1 << 30).strip())\n"
+    )
+    done = subprocess.run([sys.executable, "-c", probe, str(small)], cwd=ROOT, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == '{"ok": true}'
+
+
+def test_the_shadowscan_code_surface_refuses_an_oversized_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The code surface hands report.json to the code-surface adapter, which reads it whole."""
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
+    work = _work(tmp_path)
+    (work / "report.json").write_text(json.dumps({"findings": [], "pad": "x" * 100}), encoding="utf-8")
+    case = types.SimpleNamespace(surface="code", home=None)
+    result = SHADOWSCAN.normalize(case, work, [RunResult(0, "", "", 1.0)])
+    assert result.status == "error" and "longer than 64 bytes" in result.note
+
+
+def test_agentdiscover_reads_each_config_once_however_many_servers_name_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Path] = []
+    real = agentdiscover_adapter._server_map
+
+    def counted(path: Path, fmt: str, key: str) -> Any:
+        calls.append(path)
+        return real(path, fmt, key)
+
+    monkeypatch.setattr(agentdiscover_adapter, "_server_map", counted)
+    agentdiscover_adapter._has_servers.cache_clear()
+    client, (candidates, fmt, key) = next(iter(agentdiscover_adapter.CLIENT_CONFIGS.items()))
+    first = candidates[0]
+    home, root = tmp_path / "home", tmp_path / "root"
+    path = home / first[2:] if first.startswith("~/") else root / first
+    path.parent.mkdir(parents=True)
+    body = {key: {"x": {"command": "y"}}}
+    path.write_text(json.dumps(body) if fmt == "json" else f'[{key}.x]\ncommand = "y"\n', encoding="utf-8")
+    for _ in range(500):
+        assert agentdiscover_adapter._client_config(client, home, root) == path
+    assert calls == [path]
+    path.write_text(json.dumps({key: {}}) if fmt == "json" else f"[{key}]\n", encoding="utf-8")
+    agentdiscover_adapter._client_config(client, home, root)  # a rewritten file is read again
+    assert calls == [path, path]

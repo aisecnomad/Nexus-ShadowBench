@@ -21,6 +21,7 @@ quoting the file, the line and the evidence.
 | [E6](#e6-the-cases-harness-readme-describes-unlocked-installs-and-the-older-stage) | `tools/shadowbench/cases/README.md` | superseded behaviour |
 | [E7](#e7-code-surface-repository-level-detection-counts-unverified-negatives-as-unflagged) | `benchmarks/shadow-ai-discovery/results/2026-10-09/metrics.json` and `REPORT.md` | scoring rule |
 | [E8](#e8-a-surplus-generic-fact-is-credited-as-a-true-positive) | `benchmarks/shadow-ai-discovery/results/2026-10-09/metrics.json` and `REPORT.md` | scoring rule |
+| [E9](#e9-the-cases-harness-readme-lists-the-adapter-rules-without-bounded-reads) | `tools/shadowbench/cases/README.md` | superseded behaviour |
 
 ## E1: code-surface 2026-10-09 REPORT.md wording
 
@@ -152,3 +153,16 @@ the 2026-10-09 run this happens only for ShadowScan, 11 times. Counted as
 neither (as the estate scorer treats a surplus report), its recall is 0.9476
 and F1 0.9719; precision is unchanged at 0.9975. The committed numbers stay as
 they are.
+
+## E9: the cases harness README lists the adapter rules without bounded reads
+
+**Says.** Under Adding a tool: "Follow the rules in `adapters/__init__.py`:
+fail closed ..., set `raw["incomplete"]` ..., emit only taxonomy facts on the
+code surface ..., and run the tool's binary in `version()` only through
+`_probe.run_probe`."
+
+**Read as.** The rules in `adapters/__init__.py` also require reading any file
+the tool wrote only through `_report.read_text`, which stops at
+`MAX_REPORT_BYTES` (8 MiB) and raises `ReportTooLarge`, an `OSError`: the tool
+controls the file's size, and the adapter parses it as root in the runner
+([adding-a-tool.md](adding-a-tool.md#rules-from-adapters__init__py)).

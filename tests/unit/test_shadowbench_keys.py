@@ -70,8 +70,9 @@ def test_equivalent_spellings_of_a_relative_path_match(segments: list[str], pref
     assert keys.canonical("artifact:" + spelled.replace("/", "\\")) == truth
 
 
-@given(st.lists(_SEGMENT, min_size=1, max_size=4))
+@given(st.lists(_SEGMENT, min_size=1, max_size=4).filter(lambda s: s[0] not in keys.HOME_TOKENS))
 def test_a_path_keeps_its_case(segments: list[str]) -> None:
+    # A leading directory named ``~`` or ``$HOME`` keeps a ``./`` (tested below).
     path = unicodedata.normalize("NFC", "/".join(segments))  # NFC may fold compatibility characters
     assert keys.canonical(f"artifact:{path}") == f"artifact:{path}"
 

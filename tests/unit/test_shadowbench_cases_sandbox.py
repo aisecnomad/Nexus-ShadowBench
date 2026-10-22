@@ -909,3 +909,48 @@ def test_a_shadowscan_checkout_inside_a_bound_tool_root_is_refused_for_the_conta
     env = ToolEnv(root, {"tool_root": str(root), "tools": {"shadowscan": {"repo": str(checkout)}}})
     problems = runner.exposed_answer_keys(runner.tool_binds(env), runner.checkout_answer_keys(env))
     assert any(str(checkout / "benchmarks") in p for p in problems)
+
+
+# --- the stage keeps only the tail of what a tool prints -------------------------------------------
+
+_FLOOD = """
+import json, sys
+from tools.shadowbench.cases import stage
+code = "import sys\\nline = b'x' * 1023 + b'\\\\n'\\nfor _ in range(300_000): sys.stdout.buffer.write(line)\\nprint('END')"
+inv = {"argv": [sys.executable, "-c", code], "cwd": "/", "env": {"PATH": "/usr/bin:/bin"}, "timeout": 120, "stdin": None}
+result = stage._run(inv)
+# VmHWM, not ru_maxrss: Linux carries ru_maxrss across execve, so it would report the test runner's peak
+hwm = next(int(line.split()[1]) for line in open("/proc/self/status") if line.startswith("VmHWM:"))
+print(json.dumps({"rss_mib": hwm // 1024,
+                  "len": len(result["stdout"]), "end": result["stdout"][-4:], "code": result["code"]}))
+"""
+
+
+def test_a_flood_of_output_is_kept_as_its_tail_in_bounded_memory() -> None:
+    """communicate() held all 300 MB a tool printed in the root stage's memory before cutting it."""
+    done = subprocess.run(
+        [sys.executable, "-c", _FLOOD], cwd=ROOT, capture_output=True, text=True, timeout=300
+    )
+    assert done.returncode == 0, done.stderr
+    result = json.loads(done.stdout)
+    assert result["code"] == 0 and result["end"] == "END\n" and result["len"] == stage.STDOUT_KEEP
+    assert result["rss_mib"] < 150, result  # the tail is at most 16 MB; 300 MB arrived
+
+
+def test_stdin_is_fed_and_both_streams_are_kept(tmp_path: Path) -> None:
+    inv = {"argv": ["sh", "-c", "cat; echo oops >&2"], "cwd": str(tmp_path), "env": {"PATH": TOOL_PATH}}
+    result = stage._run({**inv, "timeout": 30, "stdin": "hello\n"})
+    assert (result["code"], result["stdout"], result["stderr"], result["timed_out"]) == (
+        0,
+        "hello\n",
+        "oops\n",
+        False,
+    )
+
+
+def test_a_child_left_holding_the_pipes_still_makes_the_run_a_timeout(tmp_path: Path) -> None:
+    """As with communicate's timeout: the tool exited at once, but its child kept stdout open."""
+    inv = {"argv": ["sh", "-c", "sleep 30 & echo started"], "cwd": str(tmp_path), "env": {"PATH": TOOL_PATH}}
+    result = stage._run({**inv, "timeout": 1, "stdin": None})
+    assert (result["code"], result["timed_out"], result["stdout"]) == (124, True, "started\n")
+    assert result["seconds"] < 1 + 2 * stage.KILL_GRACE

@@ -76,6 +76,7 @@ from typing import Any
 
 from tools.discovery_benchmark import taxonomy
 from tools.shadowbench.cases.adapters._probe import run_probe
+from tools.shadowbench.cases.adapters._report import read_text
 from tools.shadowbench.cases.contract import (
     AdapterResult,
     Entity,
@@ -176,7 +177,7 @@ def _load_items(report: Path) -> tuple[list[dict[str, Any]], str]:
         # vet writes "null" when it finds nothing (see the module docstring): no report is a failed run.
         return [], f"vet exited 0 but wrote no {report.name}"
     try:
-        text = report.read_text(encoding="utf-8", errors="replace")
+        text = read_text(report, errors="replace")
     except OSError as exc:
         return [], f"cannot read {report.name}: {exc}"
     if not text.strip():
