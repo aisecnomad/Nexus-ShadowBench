@@ -28,7 +28,9 @@ from typing import Any
 import pytest
 
 from tools.shadowbench.cases import mockserv, runner, stage
+from tools.shadowbench.cases.adapters import _probe
 from tools.shadowbench.cases.contract import ToolEnv
+from tools.shadowbench.cases.corpus import load_corpus
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOL_PATH = "/usr/local/bin:/usr/bin:/bin"
@@ -571,6 +573,342 @@ def test_mock_services_refuse_bad_lengths_quietly(
         services.stop()
     assert reply.split(b" ", 2)[1] == status
     assert capfd.readouterr().err == ""
+
+
+# --- the answer key out of the tools' reach -------------------------------------------------------
+
+
+def test_the_stage_tree_holds_exactly_what_the_stage_imports_and_only_root_reads_it(tmp_path: Path) -> None:
+    """The stage ran with the whole checkout on PYTHONPATH (and the OCI backend bound all of tools/),
+    so the generator and families that rebuild every label were in a tool's reach."""
+    tree = runner.build_stage_tree(tmp_path)
+    assert stat.S_IMODE(tree.stat().st_mode) == 0o700
+    copied = sorted(p.relative_to(tree).as_posix() for p in tree.rglob("*") if p.is_file())
+    assert copied == sorted(runner.STAGE_MODULES)
+    probe = (
+        "import json, sys; sys.path.insert(0, sys.argv[1]); import tools.shadowbench.cases.stage;"
+        "print(json.dumps(sorted(m.__file__ for n, m in sys.modules.items() if n.split('.')[0] == 'tools')))"
+    )
+    done = subprocess.run(
+        [sys.executable, "-I", "-c", probe, str(tree)], capture_output=True, text=True, check=True
+    )
+    loaded = sorted(Path(f).relative_to(tree).as_posix() for f in json.loads(done.stdout))
+    assert loaded == sorted(runner.STAGE_MODULES)
+
+
+def test_the_stage_tree_is_rebuilt_afresh(tmp_path: Path) -> None:
+    tree = runner.build_stage_tree(tmp_path)
+    (tree / "tools" / "stale.py").write_text("x = 1\n", encoding="utf-8")
+    assert not (runner.build_stage_tree(tmp_path) / "tools" / "stale.py").exists()
+
+
+def test_the_manifest_names_what_is_hidden_but_not_where() -> None:
+    sandbox = runner.Sandbox(
+        stage_tree="/scratch/harness", hide=(("checkout", "/home/u/repo"), ("corpus", "/c.json"))
+    )
+    described = sandbox.describe()
+    assert described["hidden"] == ["checkout", "corpus"]
+    assert described["stage_modules"] == list(runner.STAGE_MODULES)
+    assert "/home/u/repo" not in json.dumps(described)
+
+
+def test_a_scratch_directory_under_a_hidden_path_is_refused(tmp_path: Path) -> None:
+    scratch = tmp_path / "out" / "scratch"
+    scratch.mkdir(parents=True)
+    problems = runner.isolation_problems(scratch, ToolEnv(Path("/opt/nsb"), {}), [str(tmp_path / "out")])
+    assert any("which the stage hides from tools" in p for p in problems)
+
+
+@pytest.mark.parametrize("hide", [["relative/path"], "/not/a/list", [7]])
+def test_the_stage_covers_only_absolute_paths(tmp_path: Path, hide: Any) -> None:
+    with pytest.raises(ValueError, match="absolute paths"):
+        stage._cover(hide, tmp_path)
+
+
+def test_case_json_and_the_run_directory_name_no_case(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case = next(
+        c for c in load_corpus(ROOT / "benchmarks/shadowbench/cases/corpus.json").cases if not c.checkout
+    )
+    mat = runner.materialize(case, tmp_path / "case")
+    assert "id" not in json.loads((mat.root / "case.json").read_text(encoding="utf-8"))
+    names: list[str] = []
+    real = runner.tempfile.mkdtemp
+
+    def spy(*args: Any, **kwargs: Any) -> str:
+        path = real(*args, **kwargs)
+        names.append(Path(path).name)
+        return path
+
+    def broken(*_: Any) -> Any:
+        raise RuntimeError("no invocations")
+
+    monkeypatch.setattr(runner.tempfile, "mkdtemp", spy)
+    adapter = types.SimpleNamespace(name="t", invocations=broken)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    row = runner.run_one(adapter, case, ToolEnv(tmp_path, {}), scratch, ROOT, tmp_path / "fakeproc", None)
+    assert row["status"] == "error" and len(names) == 1
+    assert names[0].startswith("run-") and case.case_id not in names[0] and "t-" not in names[0]
+
+
+@pytest.mark.skipif(not _namespaces_available(), reason="needs root and unshare with every stage namespace")
+def test_tools_see_neither_the_checkout_nor_the_results_nor_the_corpus(run_dirs: tuple[Path, Path]) -> None:
+    """A checkout under /home was hidden already; one under /opt or /srv showed tools the corpus,
+    and the results and a corpus kept elsewhere were readable wherever they were."""
+    work, control = run_dirs
+    scratch = work.parents[1]
+    tree = runner.build_stage_tree(scratch)
+    outside = Path(tempfile.mkdtemp(prefix="shadowbench-answers-"))
+    try:
+        outside.chmod(0o755)
+        checkout, results, corpus = outside / "checkout", outside / "results", outside / "corpus.json"
+        for directory in (checkout, results):
+            directory.mkdir(mode=0o755)
+        files = {
+            checkout / "corpus.json": '{"cases": []}\n',
+            results / "t.jsonl": '{"label": "agent"}\n',
+            corpus: '{"cases": []}\n',
+            outside / "visible.txt": "seen\n",
+        }
+        for path, text in files.items():
+            path.write_text(text, encoding="utf-8")
+            path.chmod(0o644)
+        hide = (("checkout", str(checkout)), ("results", str(results)), ("corpus", str(corpus)))
+        sandbox = runner.Sandbox(stage_tree=str(tree), hide=(("checkout", str(ROOT)), *hide))
+        script = (
+            f"cat {outside}/visible.txt; ls -A {checkout} | wc -l; ls -A {results} | wc -l; wc -c < {corpus};"
+            f" ls -A {ROOT} | wc -l;"
+            f" cat {tree}/tools/shadowbench/cases/stage.py >/dev/null 2>&1 && echo tree-readable || echo tree-private"
+        )
+        spec = {"services": [], "processes": [], "fakeproc": "/nonexistent", "work": str(work)}
+        staged = runner._stage({**spec, "invocations": [_inv(work, script)]}, control, ROOT, 60, sandbox)
+    finally:
+        shutil.rmtree(outside, ignore_errors=True)
+    assert staged["error"] is None, staged  # and it ran from the tree: PYTHONPATH named nothing else
+    assert staged["runs"][0]["stdout"].split() == ["seen", "0", "0", "0", "0", "tree-private"]
+
+
+def test_the_container_gets_the_stage_tree_not_the_harness(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[list[str]] = []
+
+    class Popen:
+        pid = 0
+        returncode = 1
+
+        def __init__(self, command: list[str], **_: Any) -> None:
+            seen.append(command)
+
+        def communicate(self, timeout: float | None = None) -> tuple[bytes, bytes]:
+            return b"", b""
+
+    monkeypatch.setattr(runner.subprocess, "Popen", Popen)
+    tree = runner.build_stage_tree(tmp_path)
+    run_dir = tmp_path / "run-x"
+    (run_dir / "control").mkdir(parents=True)
+    sandbox = runner.Sandbox(backend="oci", image=IMAGE, stage_tree=str(tree))
+    spec = {
+        "services": [],
+        "processes": [],
+        "fakeproc": str(tmp_path / "fakeproc"),
+        "work": str(run_dir / "work"),
+    }
+    runner._stage({**spec, "invocations": []}, run_dir / "control", ROOT, 5, sandbox)
+    mounts = [arg for arg in seen[0] if arg.startswith("type=bind")]
+    assert f"type=bind,src={tree / 'tools'},dst={runner.HARNESS_MOUNT}/tools,readonly" in mounts
+    assert not any(f"src={ROOT}" in arg for arg in mounts)
+
+
+# --- review fixes: a ShadowScan checkout, probes, symlinked tool paths, main's wiring ---------------
+
+
+def _shadowscan_checkout(tmp_path: Path) -> tuple[Path, Path]:
+    checkout = tmp_path / "Project-Nexus"
+    for entry in ("shadowscan", "benchmarks/shadowbench/cases", "tools", ".git", ".venv/bin"):
+        (checkout / entry).mkdir(parents=True)
+    (checkout / "benchmarks/shadowbench/cases/corpus.json").write_text("{}\n", encoding="utf-8")
+    (checkout / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+    python = checkout / ".venv/bin/python"
+    python.write_text("", encoding="utf-8")
+    return checkout, python
+
+
+def test_a_shadowscan_checkout_shows_tools_only_its_package_and_the_paths_tools_json_names(
+    tmp_path: Path,
+) -> None:
+    """The checkout ShadowScan runs from is the repository this benchmark came from: its benchmarks/
+    and tools/ hold the corpus and generator, on ShadowScan's PYTHONPATH and in every tool's reach."""
+    checkout, python = _shadowscan_checkout(tmp_path)
+    env = ToolEnv(tmp_path / "tools", {"tools": {"shadowscan": {"bin": str(python), "repo": str(checkout)}}})
+    hidden = runner.checkout_answer_keys(env)
+    assert sorted(Path(p).name for p in hidden) == [".git", "benchmarks", "pyproject.toml", "tools"]
+    binds = {dst: src for src, dst in runner.tool_binds(env)}
+    assert str(checkout / "shadowscan") in binds and str(checkout) not in binds  # OCI: the package only
+    assert (
+        runner.checkout_answer_keys(ToolEnv(tmp_path, {"tools": {"shadowscan": {"repo": "relative"}}})) == ()
+    )
+
+
+def test_a_tool_path_that_only_resolves_out_of_a_hidden_tree_is_refused(tmp_path: Path) -> None:
+    """A venv's python is a symlink out of the checkout; the stage still runs it at its configured path."""
+    hidden_tree = tmp_path / "checkout"
+    (hidden_tree / ".venv/bin").mkdir(parents=True)
+    python = hidden_tree / ".venv/bin/python"
+    python.symlink_to(sys.executable)
+    env = ToolEnv(tmp_path / "tools", {"tools": {"x": {"bin": str(python)}}})
+    scratch = tmp_path / "scratch"
+    scratch.mkdir(mode=0o711)
+    problems = runner.isolation_problems(scratch, env, [str(hidden_tree)])
+    assert any(f"tools.x.bin = {python}" in p and "which the stage hides" in p for p in problems)
+
+
+@pytest.mark.skipif(os.geteuid() != 0 or shutil.which("unshare") is None, reason="needs root and unshare")
+def test_probes_hide_what_the_stage_hides(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A version probe runs the tool's code outside the stage: it read the corpus the stage now hides."""
+    top = Path(tempfile.mkdtemp(prefix="shadowbench-probe-hide-"))  # uid 65534 cannot reach tmp_path
+    try:
+        top.chmod(0o755)
+        secret_dir, secret_file = top / "checkout", top / "corpus.json"
+        secret_dir.mkdir(mode=0o755)
+        (secret_dir / "labels.json").write_text("{}\n", encoding="utf-8")
+        secret_file.write_text('{"cases": []}\n', encoding="utf-8")
+        for path in (secret_dir / "labels.json", secret_file):
+            path.chmod(0o644)
+        script = f"ls -A {secret_dir} | wc -l; wc -c < {secret_file}"
+        monkeypatch.setattr(_probe, "HIDE", ())
+        seen = _probe.run_probe(["sh", "-c", script])
+        assert seen is not None and seen.stdout.split() == ["1", "14"], seen
+        monkeypatch.setattr(_probe, "HIDE", (str(secret_dir), str(secret_file), str(top / "missing")))
+        hidden = _probe.run_probe(["sh", "-c", script])
+        assert hidden is not None and hidden.stdout.split() == ["0", "0"], hidden
+    finally:
+        shutil.rmtree(top, ignore_errors=True)
+
+
+def test_main_hides_the_checkout_results_corpus_and_shadowscan_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real-stage tests built their own Sandbox, so main() could drop the hide list unnoticed."""
+    checkout, python = _shadowscan_checkout(tmp_path)
+    seen: dict[str, Any] = {}
+
+    def isolation(scratch: Path, env: ToolEnv, hide: Any = ()) -> list[str]:
+        seen["hide"] = list(hide)
+        return []
+
+    def run_tool(*args: Any) -> dict[str, Any]:
+        seen["sandbox"] = args[-1]
+        return {"statuses": {}}
+
+    monkeypatch.setattr(runner.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(runner.shutil, "which", lambda name, path=None: f"/usr/bin/{name}")
+    monkeypatch.setattr(runner, "namespace_problem", lambda: None)
+    monkeypatch.setattr(runner, "new_session_keyring", lambda: None)
+    monkeypatch.setattr(runner, "build_fakeproc", lambda path: path)
+    monkeypatch.setattr(runner, "isolation_problems", isolation)
+    monkeypatch.setattr(runner, "run_tool", run_tool)
+    monkeypatch.setattr(runner, "tool_version", lambda adapter, env: "test")
+    monkeypatch.setattr(_probe, "HIDE", ())
+    corpus = tmp_path / "corpus.json"
+    corpus.write_text(
+        (ROOT / "benchmarks/shadowbench/cases/corpus.json").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    tools_json = tmp_path / "tools.json"
+    config = {
+        "tool_root": str(tmp_path / "tools"),
+        "tools": {"shadowscan": {"bin": str(python), "repo": str(checkout)}},
+    }
+    tools_json.write_text(json.dumps(config), encoding="utf-8")
+    out = tmp_path / "out"
+    argv = ["--corpus", str(corpus), "--tools", str(tools_json), "--out", str(out), "--only", "shadowscan"]
+    assert runner.main([*argv, "--cases", "none", "--scratch", str(tmp_path / "scratch")]) == 0
+    isolation_record = json.loads((out / "manifest.json").read_text(encoding="utf-8"))["isolation"]
+    assert isolation_record["hidden"] == ["checkout", "results", "corpus", "ShadowScan checkout"]
+    assert isolation_record["stage_modules"] == list(runner.STAGE_MODULES)
+    expected = [
+        str(ROOT),
+        str(out.resolve()),
+        str(corpus.resolve()),
+        *runner.checkout_answer_keys(runner.ToolEnv.load(tools_json)),
+    ]
+    assert seen["hide"] == expected and list(_probe.HIDE) == expected
+    assert str(checkout / "benchmarks") in expected and str(checkout / ".venv") not in expected
+    assert seen["sandbox"].stage_tree is not None
+
+
+def test_a_container_bind_that_holds_the_answer_key_is_refused(tmp_path: Path) -> None:
+    checkout = tmp_path / "checkout"
+    (checkout / "benchmarks").mkdir(parents=True)
+    binds = ((str(tmp_path), "/opt/tools"), (str(tmp_path / "elsewhere"), "/opt/x"))
+    problems = runner.exposed_answer_keys(binds, [str(checkout / "benchmarks")])
+    assert problems == [
+        f"/opt/tools would show tools {checkout / 'benchmarks'} in the container; keep tool paths outside it"
+    ]
+    assert runner.exposed_answer_keys(binds[1:], [str(checkout)]) == []
+
+
+@pytest.mark.skipif(os.geteuid() != 0 or shutil.which("unshare") is None, reason="needs root and unshare")
+def test_a_probe_skips_hidden_paths_already_gone(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A path nested in an earlier one, or under /home, had no mount point left: the mount failed and
+    every probed version read unknown."""
+    top = Path(tempfile.mkdtemp(prefix="shadowbench-probe-nested-"))
+    try:
+        top.chmod(0o755)
+        (top / "repo/results").mkdir(parents=True)
+        (top / "repo/corpus.json").write_text("{}\n", encoding="utf-8")
+        hide = (
+            str(top / "repo"),
+            str(top / "repo/results"),
+            str(top / "repo/corpus.json"),
+            str(ROOT),
+            "/home/x/y",
+        )
+        monkeypatch.setattr(_probe, "HIDE", hide)
+        done = _probe.run_probe(["sh", "-c", f"echo ok; ls -A {top / 'repo'} | wc -l"])
+        assert done is not None and done.returncode == 0 and done.stdout.split() == ["ok", "0"], done
+    finally:
+        shutil.rmtree(top, ignore_errors=True)
+
+
+@pytest.mark.skipif(os.geteuid() != 0 or shutil.which("unshare") is None, reason="needs root and unshare")
+def test_a_probe_hands_the_runner_only_the_head_of_what_it_prints(monkeypatch: pytest.MonkeyPatch) -> None:
+    """capture_output held all of a probing binary's output in the root runner."""
+    monkeypatch.setattr(_probe, "HIDE", ())
+    flood = "import sys\nfor _ in range(4096): sys.stdout.write('v1.2.3 ' * 2000)\nsys.stderr.write('warn')"
+    python = shutil.which("python3", path="/usr/bin:/bin")  # the venv's lies under the hidden /home
+    if python is None:
+        pytest.skip("no system python3")
+    done = _probe.run_probe([python, "-c", flood])
+    assert done is not None and done.returncode != 0  # the 2 MiB tmpfs filled
+    assert len(done.stdout) == _probe.PROBE_OUTPUT_KEEP and done.stdout.startswith("v1.2.3 ")
+    ok = _probe.run_probe(["sh", "-c", "echo v9.9.9; echo note >&2; exit 3"])
+    assert ok is not None and (ok.returncode, ok.stdout, ok.stderr) == (3, "v9.9.9\n", "note\n")
+
+
+def test_a_tool_path_through_a_symlinked_parent_into_a_hidden_tree_is_refused(tmp_path: Path) -> None:
+    hidden_tree = tmp_path / "checkout"
+    (hidden_tree / "venv/bin").mkdir(parents=True)
+    (hidden_tree / "venv/bin/tool").write_text("", encoding="utf-8")
+    (tmp_path / "opt").symlink_to(hidden_tree / "venv")
+    env = ToolEnv(tmp_path / "tools", {"tools": {"x": {"bin": str(tmp_path / "opt/bin/tool")}}})
+    scratch = tmp_path / "scratch"
+    scratch.mkdir(mode=0o711)
+    problems = runner.isolation_problems(scratch, env, [str(hidden_tree)])
+    assert any("tools.x.bin" in p and "which the stage hides" in p for p in problems)
+
+
+def test_a_shadowscan_checkout_inside_a_bound_tool_root_is_refused_for_the_container(tmp_path: Path) -> None:
+    """tool_binds bound the package alone, but tool_root, which holds the checkout, whole."""
+    root = tmp_path / "tools"
+    checkout = root / "Project-Nexus"
+    for entry in ("shadowscan", "benchmarks"):
+        (checkout / entry).mkdir(parents=True)
+    env = ToolEnv(root, {"tool_root": str(root), "tools": {"shadowscan": {"repo": str(checkout)}}})
+    problems = runner.exposed_answer_keys(runner.tool_binds(env), runner.checkout_answer_keys(env))
+    assert any(str(checkout / "benchmarks") in p for p in problems)
 
 
 # --- the stage keeps only the tail of what a tool prints -------------------------------------------

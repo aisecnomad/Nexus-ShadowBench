@@ -16,7 +16,10 @@ runner's keys, mounts an empty tmpfs over ``/root`` and ``/home`` so the
 operator's homes and credentials are out of sight and over ``/run`` and
 ``/tmp/.X11-unix`` so no host service's UNIX socket (the D-Bus system bus,
 systemd-resolved, nscd, an X server) offers a way around the empty network
-namespace, mounts a
+namespace, covers what the spec's ``hide`` names (the harness checkout, the
+results directory and the corpus: the answer key, and benchmark fixtures a
+discovery tool scanning the file system would otherwise report) with an empty
+tmpfs, or an empty read-only file for a file, mounts a
 fresh, empty, world-writable tmpfs over ``/var/tmp`` and ``/dev/shm`` so
 nothing a tool leaves there outlives the case, and leaves the directory it was
 started in for ``/``, so no process it starts inherits a working directory
@@ -95,6 +98,9 @@ HIDDEN: tuple[str, ...] = ("/root", "/home", "/run", "/tmp/.X11-unix")
 a path is reachable from any network namespace), that the stage covers with an empty tmpfs."""
 PRIVATE_TMP: tuple[str, ...] = ("/var/tmp", "/dev/shm")
 """Shared temporary directories the stage replaces with a fresh, world-writable tmpfs for each case."""
+PRIVATE_TMP_SIZE = "256m"
+"""The size of each private temporary tmpfs (a tmpfs defaults to half the host's memory), as the OCI
+backend caps its ``/var/tmp``."""
 INERT_ENV: dict[str, str] = {"PATH": SYSTEM_PATH, "LANG": "C.UTF-8"}
 """The whole environment of an inert process; nothing is inherited from the stage."""
 KILL_GRACE = 3.0
@@ -310,8 +316,33 @@ def _private_tmp(paths: tuple[str, ...]) -> None:
     for path in paths:
         if not os.path.isdir(path):
             continue
-        rc = _libc().mount(b"tmpfs", os.fsencode(path), b"tmpfs", _MS_NOSUID | _MS_NODEV, b"mode=1777")
+        options = f"mode=1777,size={PRIVATE_TMP_SIZE}".encode()
+        rc = _libc().mount(b"tmpfs", os.fsencode(path), b"tmpfs", _MS_NOSUID | _MS_NODEV, options)
         _check_call(rc, f"mount tmpfs on {path}")
+
+
+def _cover(paths: object, scratch: Path) -> None:
+    """Hide each absolute path the spec names: a directory under an empty tmpfs, a file under an empty
+    read-only file from the root-only ``scratch``; a path already gone (under one hidden before) is
+    skipped. Only call this in a private mount namespace, once every module the stage needs is loaded.
+    """
+    if not isinstance(paths, list) or not all(isinstance(p, str) and os.path.isabs(p) for p in paths):
+        raise ValueError(f"hide must be a list of absolute paths, not {paths!r}")
+    empty = scratch / "masked-empty"
+    for path in paths:
+        if os.path.isdir(path):
+            _hide((path,))
+        elif os.path.isfile(path):
+            empty.write_bytes(b"")
+            empty.chmod(0o444)
+            _check_call(
+                _libc().mount(os.fsencode(empty), os.fsencode(path), None, _MS_BIND, None),
+                f"bind over {path}",
+            )
+            flags = _MS_REMOUNT | _MS_BIND | _MS_RDONLY
+            _check_call(
+                _libc().mount(None, os.fsencode(path), None, flags, None), f"remount {path} read-only"
+            )
 
 
 def _loopback_up() -> None:
@@ -589,6 +620,7 @@ def main(argv: list[str]) -> int:
         _loopback_up()
         if not contained:
             _hide(HIDDEN)
+            _cover(spec.get("hide", []), out_path.parent)
             _private_tmp(PRIVATE_TMP)
         # The stage may have been started inside a now-hidden directory; children inherit the cwd.
         os.chdir("/")

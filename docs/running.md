@@ -146,7 +146,14 @@ re-normalized the rows with the fixed adapters.
    namespaces), install `gcc` (the runner builds the inert process binary),
    and place the repository copy, the scratch directory and every tool path
    outside `/root`, `/home`, `/var/tmp` and `/dev/shm`, where uid 65534 can
-   reach them. The runner refuses to start otherwise.
+   reach them. The scratch directory and every tool path must also lie
+   outside the repository copy, `--out` and `--corpus`, which the stage hides
+   from tools as the answer key: a ShadowScan checkout and its virtual
+   environment belong elsewhere (for example under `/opt`), not in
+   `scanner-source/` inside the repository. Of that ShadowScan checkout tools
+   see only its `shadowscan/` package and the paths `tools.json` names; the
+   rest (the corpus, generator and results it still holds) is hidden too. The
+   runner refuses to start otherwise.
 4. For the estate and code-surface tracks: create an unprivileged account
    for `--as-user` and give it traverse access to the checkouts and tool
    installations. Make the code-surface checkouts read-only.

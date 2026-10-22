@@ -113,6 +113,46 @@ changed, no published number moved, and no published run was rerun.
   four cells because the current renderer no longer calls an incomplete
   negative clean ([docs/results.md](docs/results.md)).
 
+### The answer key out of the tools' reach
+
+A tool under test could read what it is scored against. Under
+`--sandbox namespaces` a checkout outside `/root` and `/home`, the results
+directory and a corpus kept elsewhere were world-readable; `--sandbox oci`
+bound the whole `tools/` package, whose generator rebuilds every label of the
+committed corpus; and every tool saw its case id, in its run directory's name
+and in `case.json`. A discovery tool scanning the file system could also pick
+up the benchmark's own fixtures. No committed metric changes.
+
+- The stage runs from `<scratch>/harness`, a root-only copy of the six
+  modules it imports (`runner.STAGE_MODULES`; a test holds the set to what the
+  stage actually loads), under both backends; the container binds that, not
+  `tools/`.
+- Under `--sandbox namespaces` the stage covers the checkout and `--out` with
+  an empty tmpfs and `--corpus` with an empty read-only file before anything
+  from the case runs; the runner refuses a scratch directory or tool path that
+  lies under one of them. The manifest's `isolation` names what was hidden,
+  not where.
+- A configured ShadowScan checkout is the repository this benchmark was
+  migrated from, so it too holds the corpus, generator and results (and it is
+  on ShadowScan's own `PYTHONPATH`): the namespaced stage hides every entry of
+  it but its `shadowscan/` package and the paths `tools.json` names (a virtual
+  environment, say), and `--sandbox oci` binds only the package.
+- Version probes, which run tool code outside the stage, hide the same paths
+  (each tested inside the probe's namespace, so one under `/home` or inside an
+  earlier one is skipped rather than failing the probe), and a root probe hands
+  the runner only the first 64 KiB of each stream, through a 2 MiB tmpfs, where
+  `capture_output` kept everything the binary printed.
+- The runner checks a tool path against what is hidden by its configured
+  spelling as well as what it resolves to: a venv's `python` resolves out of a
+  hidden checkout while the stage still runs it at its configured path.
+- Run directories are `run-XXXX`, and `case.json` keeps the surface and
+  modality but not the case id.
+- The stage's private `/var/tmp` and `/dev/shm` are capped at 256 MiB each (a
+  tmpfs defaults to half the host's memory), as the OCI backend caps its
+  `/var/tmp`.
+- The threat model keeps one residual: the corpus is public, so a tool could
+  ship answers keyed by its inputs' content.
+
 ### Sandbox and scorer review fixes
 
 No committed metric or report changes: the cases and estate 2026-10-11 runs
@@ -159,6 +199,33 @@ and the code-surface 2026-10-09 metrics still re-score byte for byte, and
   surplus `<category>:generic` facts are credited as true positives (recall
   0.9482 instead of 0.9476). The threat model now lists the answer key's
   reachability from inside the cases sandbox as a residual risk.
+
+### Secret checks beside `check_secrets.py`
+
+`tools/check_secrets.py` is bound in `MIGRATION.json` and not amendable, and
+it missed whole families and encodings, so `tools/check_secrets_extra.py`
+runs beside it in CI, `make secrets` and pre-commit:
+
+- families it does not know: Anthropic OAuth (`sk-ant-oat01-`), OpenRouter
+  (`sk-or-v1-`, which the OpenAI rule does not reach), Groq, xAI, Replicate
+  and Perplexity keys, PyPI, npm and Docker tokens, Slack app tokens and
+  webhook URLs, Google OAuth client secrets and access tokens, SendGrid keys;
+- every family in what it cannot read: it decodes all bytes as UTF-8 and drops
+  the rest, so a token in a gzip member, or in UTF-16 or UTF-32 text, with or
+  without a BOM, passed unseen. Each gzip layer is inflated and each tar
+  member read (at most 8 deep and 256 MiB in all; a corrupt, truncated, deeper
+  or larger one is reported, not skipped; zlib itself raises nothing for a
+  truncated member), and each is read as UTF-8 and, when it holds a NUL, as
+  UTF-16 and UTF-32 at every alignment (wide text beside non-ASCII characters
+  such as CJK punctuation) and with the NULs removed (archive padding, wide
+  text beside ASCII). One token matched in several views is reported once, a
+  match `check_secrets.py` already reports is not reported twice, and a
+  private-key approval must bind the whole file, as there.
+
+Reports, exit codes and approvals (`tools/secret_allowlist_extra.json`, by
+path, family and SHA-256, stale entries failing closed) follow
+`check_secrets.py`. Nothing tracked matched, including the two committed
+`.jsonl.gz` result files, so the allowlist starts empty.
 
 ### Harness amendments
 

@@ -8,6 +8,8 @@
 /AMENDMENTS.json @aisecnomad
 /tools/verify_migration.py @aisecnomad
 /tools/check_secrets.py @aisecnomad
+/tools/check_secrets_extra.py @aisecnomad
+/tools/secret_allowlist_extra.json @aisecnomad
 /tools/secret_allowlist.json @aisecnomad
 /benchmarks/ @aisecnomad
 /tools/shadowbench/ @aisecnomad

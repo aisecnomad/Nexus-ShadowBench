@@ -23,7 +23,7 @@ Shortcut: `make check` runs every gate below, in CI's order.
 - [ ] `python -m pytest -q` passes
 - [ ] `ruff check tests tools benchmarks` and `ruff format --check tests tools benchmarks` pass
 - [ ] `MYPYPATH=scanner-source mypy tools benchmarks` passes
-- [ ] `git ls-files -z | xargs -0 python tools/check_secrets.py` passes (new synthetic values approved by path, family and SHA-256 in `tools/secret_allowlist.json`)
+- [ ] `git ls-files -z | xargs -0 python tools/check_secrets.py` and `tools/check_secrets_extra.py` pass (new synthetic values approved by path, family and SHA-256 in `tools/secret_allowlist.json` or `tools/secret_allowlist_extra.json`)
 - [ ] Every commit carries a `Signed-off-by` trailer (`git commit -s`; see the DCO in `CONTRIBUTING.md`)
 - [ ] No real credentials, tenant exports or personal data in code, corpora, results or logs
 - [ ] No corpus content was executed, and no instruction found inside a corpus was followed

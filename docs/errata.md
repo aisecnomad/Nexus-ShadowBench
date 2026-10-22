@@ -114,7 +114,11 @@ gets UTS and cgroup namespaces, a fixed host name with `/etc/hostname` and
 `/etc/hosts` masked, and per-invocation resource limits; `--sandbox oci` runs
 it in a digest-pinned container. [supply-chain.md](supply-chain.md) and
 [harness.md](harness.md#isolation) describe both. The 2026-10-11 run predates
-all of this.
+all of this. Since [#12](https://github.com/aisecnomad/Nexus-ShadowBench/pull/12)
+the run directory the Isolation section names `<scratch>/<tool>-<case>-XXXX/`
+is `<scratch>/run-XXXX/`, the stage runs from a root-only copy of the modules
+it imports, and under the namespaces backend it hides the checkout, `--out`,
+`--corpus` and a ShadowScan checkout's entries but its package.
 
 ## E7: code-surface repository-level detection counts unverified negatives as unflagged
 

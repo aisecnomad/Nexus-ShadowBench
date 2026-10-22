@@ -28,7 +28,7 @@ states it.
 | Kernel boundary | the host kernel | the host kernel; `--oci-runtime runsc` puts gVisor's user-space kernel in between |
 | Tool identity | uid/gid 65534, no supplementary groups, `no_new_privs` | the same, inside the container |
 | Capabilities | none for tools (dropped at the uid change) | container keeps only `SETUID`, `SETGID`, `KILL`, `DAC_READ_SEARCH` for the stage; tools get none; `no-new-privileges` |
-| File system | host's, with `/root` and `/home` hidden and fresh `/var/tmp` and `/dev/shm` | the image's, read-only; fresh `/tmp`, `/var/tmp`, `/run`; only the run directory writable; tool trees and harness bound read-only |
+| File system | host's, with `/root`, `/home`, `/run`, the checkout, `--out` and `--corpus` hidden and fresh 256 MiB `/var/tmp` and `/dev/shm` | the image's, read-only; fresh `/tmp`, `/var/tmp`, `/run`; only the run directory writable; tool trees (of a ShadowScan checkout, its package) and the stage's six modules bound read-only |
 | Host name | `shadowbench`, with read-only `/etc/hostname` and `/etc/hosts` naming it | `shadowbench` (Docker writes both files) |
 | Resource limits | set by `prlimit` in each tool's own process, soft and hard alike: `RLIMIT_CORE` 0, `FSIZE` 4 GiB, `NOFILE` 4096, `NPROC` 4096 (`--rlimit` changes them; `as` and `cpu` available); the stage reports what held, recorded per tool as `limits_applied` | the same, plus `--oci-memory` (4g, no swap), `--oci-cpus` (2) and `--oci-pids` (1024) for the whole container |
 | Network | empty namespace, loopback mock services | `--network none`, loopback mock services |
