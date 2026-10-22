@@ -12,9 +12,9 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-MAX_REPORT_BYTES = 32 << 20
-"""The longest report an adapter reads. ``json.loads`` peaks at several times its input (about 180 MiB
-for 32 MiB of report rows), and the reports of the committed runs are a few MiB at most."""
+MAX_REPORT_BYTES = 8 << 20
+"""The longest report an adapter reads. ``json.loads`` can peak at about 27 times its input (8 MiB of
+empty objects or lists reaches 220 MiB), and the reports of the committed runs are a few MiB at most."""
 _CHUNK = 1 << 20
 
 

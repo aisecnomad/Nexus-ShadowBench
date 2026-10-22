@@ -112,7 +112,7 @@ Entity keys must use the contract's tool-neutral forms: `app:<id>`,
 - **Bounded reads.** Read a file the tool wrote only through
   `_report.read_text`. The tool controls its size up to the stage's file-size
   limit (4 GiB), and the adapter parses it as root in the runner; a report
-  over `MAX_REPORT_BYTES` (32 MiB) raises `ReportTooLarge`, an `OSError`, which
+  over `MAX_REPORT_BYTES` (8 MiB) raises `ReportTooLarge`, an `OSError`, which
   the usual `except OSError` turns into an `error` result.
 - **Withheld decoys.** When your conversion drops records a decoy comes from,
   declare the prefixes in `withheld_decoys` (the ShadowScan adapter does so

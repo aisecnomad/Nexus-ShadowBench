@@ -211,8 +211,9 @@ stage's 4 GiB file-size limit, whole with `read_text` and `json.loads` in the
 runner; and the stage held everything a tool printed (`communicate`) before
 keeping the last 2,000,000 characters. No committed metric changes.
 
-- `adapters/_report.read_text` reads at most `MAX_REPORT_BYTES` (32 MiB;
-  `json.loads` peaks near 180 MiB on that much report) in 1 MiB chunks, not
+- `adapters/_report.read_text` reads at most `MAX_REPORT_BYTES` (8 MiB;
+  `json.loads` of 8 MiB of empty objects or lists peaks near 220 MiB, the worst
+  shape) in 1 MiB chunks, not
   one allocation of the whole cap, and raises `ReportTooLarge`, an `OSError`
   every adapter already turns into an `error` result. Under the limit it
   returns exactly what `read_text` did. AgentDiscover, AI-Infra-Guard,

@@ -159,6 +159,6 @@ code surface ..., and run the tool's binary in `version()` only through
 
 **Read as.** The rules in `adapters/__init__.py` also require reading any file
 the tool wrote only through `_report.read_text`, which stops at
-`MAX_REPORT_BYTES` (32 MiB) and raises `ReportTooLarge`, an `OSError`: the tool
+`MAX_REPORT_BYTES` (8 MiB) and raises `ReportTooLarge`, an `OSError`: the tool
 controls the file's size, and the adapter parses it as root in the runner
 ([adding-a-tool.md](adding-a-tool.md#rules-from-adapters__init__py)).
