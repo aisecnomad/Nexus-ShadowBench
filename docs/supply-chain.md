@@ -126,7 +126,9 @@ Sigstore.
    not verify for the `attest.yml` workflow on `main` of this repository
    issued by GitHub Actions' OIDC issuer, or when cosign is missing for a
    bundle that is present. `--require-signatures` also fails an unsigned
-   attestation.
+   attestation. In CI, `--since` the commit a change builds on also fails
+   when a committed manifest or bundle was removed or changed, so a signed
+   directory cannot be downgraded to unsigned by deleting its bundle.
 
 Anyone can check a signed run without trusting this repository's CI:
 

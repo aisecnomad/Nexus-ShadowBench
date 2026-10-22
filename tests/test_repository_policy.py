@@ -72,6 +72,37 @@ def test_workflow_actions_are_pinned_and_least_privileged(path: Path):
             assert step.get("with", {}).get("persist-credentials") is False, uses
 
 
+# GitHub's YAML loader reads the bare key `on` as True; PyYAML does the same.
+def _triggers(workflow: dict[Any, Any]) -> set[str]:
+    on = workflow.get("on", workflow.get(True))
+    return {on} if isinstance(on, str) else set(on or ())
+
+
+_INJECTABLE = re.compile(r"\$\{\{\s*(?:github\.event\.|github\.head_ref|inputs\.)")
+_OIDC_JOBS = {("attest.yml", "attest"), ("scorecard.yml", "analysis")}
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda path: path.name)
+def test_workflows_avoid_privileged_triggers_blanket_tokens_and_script_injection(path: Path):
+    """Privileged triggers run with secrets on a fork's code; an expression GitHub expands into a
+    script runs whatever an issue title, branch name or input says. Values reach scripts through env.
+    """
+    workflow = _yaml(path)
+    assert not _triggers(workflow) & {"pull_request_target", "workflow_run"}
+    jobs = workflow["jobs"]
+    for scope in [workflow, *jobs.values()]:
+        permissions = scope.get("permissions", {})
+        assert isinstance(permissions, dict), f"{path.name}: permissions must name each scope"
+    assert workflow["permissions"].get("id-token") is None, "grant id-token to a job, not the workflow"
+    for name, job in jobs.items():
+        if job.get("uses") is not None:
+            assert _PINNED.match(job["uses"]), f"{job['uses']} is not pinned to a full commit SHA"
+        if job.get("permissions", {}).get("id-token") == "write":
+            assert (path.name, name) in _OIDC_JOBS, f"{path.name}:{name} may not mint OIDC tokens"
+    for step in _steps(workflow):
+        assert not _INJECTABLE.search(step.get("run", "")), f"{path.name}: {step.get('name')}"
+
+
 def test_unpinned_actions_are_detected():
     assert _PINNED.match("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
     assert _PINNED.match("github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee")
@@ -100,3 +131,11 @@ def test_ci_audits_every_lock_it_installs():
     assert installed and installed == audited
     assert "--require-hashes --strict" in audit
     assert "migration/requirements.source.lock" not in audited
+
+
+def test_script_injection_and_privileged_triggers_are_detected():
+    assert _INJECTABLE.search('echo "${{ github.event.pull_request.title }}"')
+    assert _INJECTABLE.search("python -m tools.attest digest ${{inputs.results}}")
+    assert not _INJECTABLE.search('python -m tools.attest digest "$RESULTS"')
+    assert _triggers(yaml.safe_load("on: pull_request_target")) == {"pull_request_target"}
+    assert _triggers(yaml.safe_load("on: {push: {}, workflow_run: {}}")) == {"push", "workflow_run"}

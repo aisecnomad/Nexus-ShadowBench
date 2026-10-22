@@ -171,6 +171,33 @@ changed, no published number moved, and no published run was rerun.
 - `tests/test_repository_policy.py` checks that every workflow checkout of
   ShadowScan uses the Makefile's `SCANNER_COMMIT`.
 
+### Anchoring the provenance records
+
+The default checks took `MIGRATION.json`, the ledger and the attestation
+files as given, so an edit to evidence that also rewrote its record, a
+rewritten ledger entry or a deleted Sigstore bundle all verified.
+
+- `python -m tools.verify_migration --source DIR` checks every record's Git
+  blob and mode against the pinned source commit in the ShadowScan checkout
+  at DIR (all 555 match); `--since REF` requires `MIGRATION.json` to be
+  byte-identical to REF's and REF's ledger to be a prefix of today's. A
+  migrated file that went missing is now reported as such, and leaves the
+  ledger untouched when `--amend` fails.
+- `python -m tools.attest verify --since REF` fails when a manifest or bundle
+  committed at REF is gone or changed. Subjects must be spelled canonically
+  (`benchmarks/x/./r` and `benchmarks//x/r` named one directory under three
+  slugs).
+- CI passes `--source scanner-source` and, on pull requests and pushes to
+  `main`, `--since` the commit the change builds on; `make verify` does the
+  same with a scanner checkout present and `SINCE=<commit>`.
+- `scrub` finds and replaces paths inside `file://` URIs (SARIF writes every
+  location so) and reads `.sarif` and upper-case suffixes in a directory.
+- `tests/test_repository_policy.py` also refuses `pull_request_target` and
+  `workflow_run` triggers, blanket `permissions` strings, a workflow-level or
+  unexpected `id-token: write`, unpinned reusable workflows, and
+  `${{ github.event.* }}`, `${{ github.head_ref }}` or `${{ inputs.* }}`
+  expanded inside a `run:` script.
+
 ### README
 
 - Retitled the README "ShadowBench", replaced the SVG banner with a photo

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 
 import pytest
 
-from tools.verify_migration import ROOT, SOURCE_COMMIT, amend, amendable, verify
+from tools.verify_migration import ROOT, SOURCE_COMMIT, amend, amendable, check_source, verify
 
 
 def _tree(tmp_path):
@@ -308,3 +309,137 @@ def test_copied_ci_and_build_locks_are_amendable_but_the_original_lock_is_not():
     assert not amendable("migration/requirements.source.lock")
     assert not amendable("requirements-docs.lock")
     assert not amendable("tools/requirements-ci.lock")
+
+
+# --- Anchors: the source commit and the previous commit -------------------------------------------
+
+
+def _manifest_of(tmp_path):
+    return json.loads((tmp_path / "MIGRATION.json").read_text())
+
+
+def test_records_must_name_the_blob_and_mode_of_the_source_commit(tmp_path):
+    _tree(tmp_path)
+    manifest = _manifest_of(tmp_path)
+    entry = manifest["files"][0]
+    check_source(manifest, {"fixture.txt": ("100644", entry["git_blob"])})
+    for tree in (
+        {},
+        {"fixture.txt": ("100755", entry["git_blob"])},
+        {"fixture.txt": ("100644", "0" * 40)},
+        {"elsewhere.txt": ("100644", entry["git_blob"])},
+    ):
+        with pytest.raises(ValueError, match="does not match the source commit"):
+            check_source(manifest, tree)
+
+
+@pytest.mark.skipif(not (ROOT / "scanner-source" / ".git").exists(), reason="no pinned scanner checkout")
+def test_the_real_records_match_the_pinned_scanner_checkout():
+    assert verify(source=ROOT / "scanner-source")["source_tree_checked"] is True
+
+
+def _git(tmp_path, *args):
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+
+
+def _committed_harness_tree(tmp_path):
+    _harness_tree(tmp_path)
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 2\n")
+    amend(HARNESS, "first", "https://example.invalid/pr/1", root=tmp_path)
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "base")
+
+
+def test_a_ledger_that_only_grows_verifies_since_its_base(tmp_path):
+    _committed_harness_tree(tmp_path)
+    assert verify(tmp_path, since="HEAD")["since"] == "HEAD"
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 3\n")
+    amend(HARNESS, "second", "https://example.invalid/pr/2", root=tmp_path)
+    assert verify(tmp_path, since="HEAD")["amended"] == 1
+
+
+@pytest.mark.parametrize(
+    "rewrite",
+    [
+        lambda ledger: ledger["amendments"][0].update(reason="a better story"),
+        lambda ledger: ledger["amendments"][0].update(reference="https://example.invalid/pr/9"),
+        lambda ledger: ledger.update(note="Edited."),
+    ],
+)
+def test_rewriting_a_recorded_amendment_is_rejected(tmp_path, rewrite):
+    _committed_harness_tree(tmp_path)
+    ledger = _ledger(tmp_path)
+    rewrite(ledger)
+    (tmp_path / "AMENDMENTS.json").write_text(json.dumps(ledger))
+    verify(tmp_path)
+    with pytest.raises(ValueError, match="rewrote, reordered or dropped"):
+        verify(tmp_path, since="HEAD")
+
+
+def test_collapsing_a_chain_is_rejected(tmp_path):
+    _committed_harness_tree(tmp_path)
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 3\n")
+    amend(HARNESS, "second", "https://example.invalid/pr/2", root=tmp_path)
+    _git(tmp_path, "commit", "-q", "-am", "second")
+    ledger = _ledger(tmp_path)
+    first, second = ledger["amendments"]
+    ledger["amendments"] = [{**second, "from_sha256": first["from_sha256"]}]
+    (tmp_path / "AMENDMENTS.json").write_text(json.dumps(ledger))
+    verify(tmp_path)
+    with pytest.raises(ValueError, match="rewrote, reordered or dropped"):
+        verify(tmp_path, since="HEAD")
+
+
+def test_unbinding_a_file_from_the_migration_record_is_rejected(tmp_path):
+    _committed_harness_tree(tmp_path)
+    manifest = _manifest_of(tmp_path)
+    manifest["files"] = [entry for entry in manifest["files"] if entry["path"] != EVIDENCE]
+    (tmp_path / "MIGRATION.json").write_text(json.dumps(manifest))
+    (tmp_path / EVIDENCE).write_bytes(b'{"f1": 0.9}\n')
+    verify(tmp_path)
+    with pytest.raises(ValueError, match="MIGRATION.json changed since HEAD"):
+        verify(tmp_path, since="HEAD")
+
+
+def test_removing_a_committed_ledger_is_rejected(tmp_path):
+    _committed_harness_tree(tmp_path)
+    (tmp_path / "AMENDMENTS.json").unlink()
+    with pytest.raises(ValueError):
+        verify(tmp_path, since="HEAD")
+    with pytest.raises(ValueError, match="removed since HEAD"):
+        from tools.verify_migration import check_since
+
+        check_since(tmp_path, "HEAD")
+
+
+@pytest.mark.parametrize("ref", ["-c", "--upload-pack=x", "HEAD:MIGRATION.json", "no-such-commit"])
+def test_since_takes_only_a_commit_that_exists(tmp_path, ref):
+    _committed_harness_tree(tmp_path)
+    with pytest.raises(ValueError, match="revision|not a commit"):
+        verify(tmp_path, since=ref)
+
+
+def test_a_missing_migrated_file_fails_closed_and_amend_leaves_the_ledger(tmp_path):
+    _harness_tree(tmp_path)
+    (tmp_path / EVIDENCE).unlink()
+    with pytest.raises(ValueError, match="missing"):
+        verify(tmp_path)
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 2\n")
+    with pytest.raises(ValueError, match="missing"):
+        amend(HARNESS, "r", "x", root=tmp_path)
+    assert not (tmp_path / "AMENDMENTS.json").exists()

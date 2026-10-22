@@ -19,7 +19,10 @@ artifact.
 
 ``--require-signatures`` also fails an attestation without a bundle. Without it an unsigned
 manifest still binds the files it lists, as ``MIGRATION.json`` binds the migrated ones, and the
-output says it is unsigned. Paths come from the repository: the subject must be a directory under
+output says it is unsigned. ``--since REF`` also fails when a file that ``attestations/`` held at
+commit REF is gone or changed, so a signed directory cannot be downgraded to unsigned by deleting
+its bundle, or unbound by deleting its manifest; CI passes the commit a change builds on. Paths
+come from the repository: the subject must be a canonical relative directory under
 ``benchmarks/`` and no symlink is followed.
 """
 
@@ -33,8 +36,10 @@ import re
 import shutil
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
+
+from tools.verify_migration import committed, committed_names
 
 ROOT = Path(__file__).resolve().parents[1]
 ATTESTATIONS = "attestations"
@@ -59,12 +64,14 @@ def slug(subject: str) -> str:
 
 
 def _subject_dir(root: Path, subject: str) -> Path:
-    parts = Path(subject).parts
+    parts = PurePosixPath(subject).parts
     if (
-        not parts
+        len(parts) < 2
         or parts[0] != "benchmarks"
-        or any(p in ("..", ".") for p in parts)
-        or Path(subject).is_absolute()
+        or ".." in parts
+        or "\\" in subject
+        # Path() drops "." and repeated "/": one directory would get several slugs and manifests.
+        or PurePosixPath(subject).as_posix() != subject
     ):
         raise AttestationError(f"subject {subject!r} must be a relative directory under benchmarks/")
     path = root / subject
@@ -168,17 +175,35 @@ def cosign_verify(blob: Path, bundle: Path, identity: str, issuer: str) -> str |
     return None
 
 
+def removed_since(root: Path, ref: str) -> list[str]:
+    """Every file ``attestations/`` held at ``ref`` that is now missing or different."""
+    problems = []
+    for name in committed_names(root, ref, ATTESTATIONS):
+        path = root / name
+        if path.is_symlink() or not path.is_file():
+            problems.append(f"{name}: committed at {ref} and now removed")
+        elif path.read_bytes() != committed(root, ref, name):
+            problems.append(f"{name}: committed at {ref} and now changed")
+    return problems
+
+
 def verify(
     root: Path = ROOT,
     *,
     require_signatures: bool = False,
     identity: str = DEFAULT_IDENTITY,
     issuer: str = DEFAULT_ISSUER,
+    since: str | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     """A summary of every attestation under ``root/attestations`` and every problem found."""
     directory = root / ATTESTATIONS
     summary: dict[str, Any] = {"attestations": 0, "signed": 0, "unsigned": []}
     problems: list[str] = []
+    if since is not None:
+        try:
+            problems += removed_since(root, since)
+        except ValueError as exc:
+            problems.append(str(exc))
     if not directory.is_dir():
         return summary, problems
     for path in sorted(directory.glob("*.json")):
@@ -217,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--require-signatures", action="store_true")
     p.add_argument("--identity", default=DEFAULT_IDENTITY, help="certificate identity regular expression")
     p.add_argument("--issuer", default=DEFAULT_ISSUER, help="certificate OIDC issuer")
+    p.add_argument("--since", metavar="REF", help="also fail when a file attestations/ held at REF changed")
     args = ap.parse_args(argv)
     try:
         if args.command == "digest":
@@ -227,7 +253,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"refusing: {exc}", file=sys.stderr)
         return 2
     summary, problems = verify(
-        ROOT, require_signatures=args.require_signatures, identity=args.identity, issuer=args.issuer
+        ROOT,
+        require_signatures=args.require_signatures,
+        identity=args.identity,
+        issuer=args.issuer,
+        since=args.since,
     )
     for problem in problems:
         print(problem, file=sys.stderr)

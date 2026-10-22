@@ -50,10 +50,23 @@ jobs:
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v3.1.4"
+      # A pull request, or a push to main, is compared with the commit it builds on: MIGRATION.json
+      # must be unchanged, the amendment ledger only appended to, and no committed attestation file
+      # changed or removed (tools.verify_migration --since, tools.attest verify --since).
+      - name: Fetch the commit this change builds on
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ && "$BASE_SHA" != 0000000000000000000000000000000000000000 ]]; then
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+            echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          fi
+      # --source anchors every MIGRATION.json record to the pinned ShadowScan tree checked out above.
       - name: Verify preserved evidence, result attestations and published paths, and run the harness tests
         run: |
-          python -m tools.verify_migration
-          python -m tools.attest verify
+          python -m tools.verify_migration --source scanner-source ${BASE_SHA:+--since "$BASE_SHA"}
+          python -m tools.attest verify ${BASE_SHA:+--since "$BASE_SHA"}
           make paths PYTHON=python
           python -m pytest -q
       - name: Check harness source and synthetic-secret approvals
