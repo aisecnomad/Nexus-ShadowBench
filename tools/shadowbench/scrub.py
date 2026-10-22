@@ -46,9 +46,10 @@ _AFTER_ESCAPE = r"(?<=\\[ntr])|(?<=\[[0-9]m)|(?<=\[[0-9][0-9]m)|(?<=;[0-9]m)|(?<
 """A path may follow a JSON escape (``\\n``, ``\\t``, ``\\r``) or an ANSI colour code (``...[0m``),
 whose last character is a letter."""
 
-_START = rf"(?:(?<![>\w.~$/-])|{_AFTER_ESCAPE})"
+_START = rf"(?:(?<![>\w.~$/-])|(?<=file://)|(?<=file://localhost)|{_AFTER_ESCAPE})"
 """Where an absolute path can start. One right after a placeholder (``<estate>/home/x``), a name or
-another path is relative to it, as the estate's own ``home/<device>`` trees are."""
+another path is relative to it, as the estate's own ``home/<device>`` trees are; one after
+``file://`` is a URI's path (SARIF writes every location so)."""
 
 PATTERNS: dict[str, re.Pattern[str]] = {
     "home directory": re.compile(
@@ -63,7 +64,10 @@ PATTERNS: dict[str, re.Pattern[str]] = {
 }
 """Patterns that mark a machine path a published record should not keep."""
 
-TEXT_SUFFIXES: frozenset[str] = frozenset({".json", ".jsonl", ".md", ".txt", ".csv", ".log", ".yml", ".yaml"})
+TEXT_SUFFIXES: frozenset[str] = frozenset(
+    {".json", ".jsonl", ".md", ".txt", ".csv", ".log", ".yml", ".yaml", ".sarif"}
+)
+"""Suffixes, compared in lower case, of the text records a directory walk reads."""
 _BOUNDARY = r"(?=[/\\\"'\s:;,)\]}]|$)"
 _DELIMITERS = frozenset(" \t\r\n\"'\\,;:)]}<>|`")
 """Characters that end a path token in a record: quotes, JSON escapes, list and shell separators."""
@@ -167,7 +171,7 @@ def files(paths: Iterable[Path]) -> tuple[list[Path], list[str]]:
         if path.is_dir():
             for child in sorted(path.iterdir()):
                 walk(child, False)
-        elif path.is_file() and path.suffix in TEXT_SUFFIXES:
+        elif path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
             found.append(path)
         elif named:
             problems.append(f"{path}: " + ("not a text record" if path.exists() else "does not exist"))

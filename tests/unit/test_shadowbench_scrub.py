@@ -247,3 +247,25 @@ def test_apply_replaces_the_host_name(tmp_path: Path, monkeypatch: pytest.Monkey
     assert path.read_text(encoding="utf-8") == '{"node": "ci@<host>", "other": "build-host-77"}'
     monkeypatch.setattr(scrub.socket, "gethostname", lambda: "vm")
     assert scrub.main(["apply", "--host", str(path)]) == 2
+
+
+@pytest.mark.parametrize(
+    "uri", ["file:///home/alice/proj/a.py", "file://localhost/home/alice/a.py", "file:///tmp/build-1/x.py"]
+)
+def test_a_path_in_a_file_uri_is_found_and_scrubbed(uri: str) -> None:
+    """SARIF writes locations as file:// URIs, and the path after the third slash was never seen."""
+    text = json.dumps({"artifactLocation": {"uri": uri}})
+    assert list(scrub.findings(text))
+    scrubbed, count = scrub.scrub_text(text, {"/home/alice": "<home>", "/tmp": "<tmp>"})
+    assert count == 1 and not list(scrub.findings(scrubbed))
+
+
+def test_urls_and_placeholder_relative_paths_are_still_not_machine_paths() -> None:
+    assert not list(scrub.findings('{"a": "https://example.com/home/x", "b": "<estate>/home/dana/x"}'))
+
+
+def test_a_directory_walk_reads_sarif_and_upper_case_suffixes(tmp_path: Path) -> None:
+    for name in ("scan.sarif", "REPORT.JSON"):
+        (tmp_path / name).write_text('{"uri": "file:///home/alice/x"}\n', encoding="utf-8")
+    found, problems = scrub.files([tmp_path])
+    assert sorted(p.name for p in found) == ["REPORT.JSON", "scan.sarif"] and problems == []

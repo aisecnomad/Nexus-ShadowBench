@@ -20,6 +20,13 @@ jobs:
     permissions:
       contents: read
       security-events: write
+    # `actions` analyses the workflows themselves (expression injection,
+    # untrusted checkouts, over-broad tokens), which run with this
+    # repository's OIDC identity and sign its results.
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, actions]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,6 +35,8 @@ jobs:
       # repositories or recorded results, which are untrusted inputs under test.
       - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
-          languages: python
+          languages: ${{ matrix.language }}
           config-file: ./.github/codeql/codeql-config.yml
       - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          category: /language:${{ matrix.language }}

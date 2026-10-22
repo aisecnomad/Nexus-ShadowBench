@@ -27,12 +27,19 @@ an AI assistant act on text it reads there.
   symlinks and non-canonical paths before reading anything. Only live harness
   code, tests and the copied CI and build locks can be amended; an entry for
   evidence, or a chain that does not start from the recorded bytes, fails
-  verification. The estate is frozen by SHA-256 in `FREEZE.json`
+  verification. The records themselves are anchored too: with `--source`,
+  CI checks every entry's Git blob and mode against the pinned ShadowScan
+  commit, so an entry cannot be rewritten to match changed bytes, and with
+  `--since` against the commit a change builds on, `MIGRATION.json` must be
+  unchanged and the ledger only appended to, so no file is unbound and no
+  recorded amendment rewritten or dropped. The estate is frozen by SHA-256 in `FREEZE.json`
   (`verify-freeze`), and the cases corpus is rebuilt and compared case by
   case (`verify`).
 - **Dependency audit.** Every install is hash-locked and binary-only, and CI
-  runs `pip-audit` on the installed environment and on each lock it was
-  installed from, so a newly published advisory fails the next CI run.
+  runs `pip-audit` on the installed environment, on each lock it was
+  installed from and on the cases track's installer locks (uv and setuptools),
+  on every push and pull request and daily on `main`, so a newly published
+  advisory fails `main`'s status within a day.
 - **Result binding.** The cases scorer refuses rows whose corpus digest, tool,
   status counts or file SHA-256 differ from the run manifest unless `--force`
   is given, and a forced score lists every override in `metrics.json` and the

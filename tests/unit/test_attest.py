@@ -172,3 +172,46 @@ def test_cosign_rejects_a_signature_from_another_identity(repo: Path, tmp_path: 
 def test_the_repository_attestations_verify() -> None:
     _, problems = attest.verify(ROOT)
     assert problems == []
+
+
+@pytest.mark.parametrize(
+    "subject",
+    [f"{SUBJECT[:10]}./{SUBJECT[10:]}", SUBJECT.replace("/", "//", 1), "benchmarks", "benchmarks\\x/results"],
+)
+def test_one_directory_has_one_spelling(repo: Path, subject: str) -> None:
+    """Path() dropped "." and "//", so one directory could be attested under several slugs."""
+    with pytest.raises(attest.AttestationError, match="relative directory under benchmarks|cannot name"):
+        attest.write_digest(repo, subject)
+
+
+def _commit(repo: Path) -> None:
+    git = ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
+    for args in (["init", "-q"], ["add", "-A"], ["commit", "-q", "-m", "base"]):
+        subprocess.run([*git, *args], cwd=repo, check=True, capture_output=True)
+
+
+def test_committed_attestation_files_cannot_be_removed_or_changed_since_a_commit(repo: Path) -> None:
+    """Deleting a bundle turned a signed directory into an unsigned one that still verified."""
+    manifest = _attest(repo)
+    bundle = manifest.with_name(f"{manifest.stem}.sigstore.json")
+    bundle.write_text("{}\n", encoding="utf-8")
+    _commit(repo)
+    assert attest.removed_since(repo, "HEAD") == []
+    bundle.unlink()
+    _, problems = attest.verify(repo, since="HEAD")
+    assert problems == [f"attestations/{bundle.name}: committed at HEAD and now removed"]
+    bundle.write_text('{"forged": true}\n', encoding="utf-8")
+    assert attest.removed_since(repo, "HEAD") == [
+        f"attestations/{bundle.name}: committed at HEAD and now changed"
+    ]
+    manifest.unlink()
+    bundle.unlink()
+    assert len(attest.removed_since(repo, "HEAD")) == 2
+
+
+def test_a_new_attestation_is_not_a_change_since_a_commit(repo: Path) -> None:
+    _commit(repo)
+    _attest(repo)
+    assert attest.removed_since(repo, "HEAD") == []
+    _, problems = attest.verify(repo, since="no-such-ref")
+    assert problems and "not a commit" in problems[0]

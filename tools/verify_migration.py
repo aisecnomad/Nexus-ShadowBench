@@ -12,6 +12,14 @@ not amendable.
 
 ``python -m tools.verify_migration`` verifies; ``python -m tools.verify_migration
 --amend PATH --reason TEXT --reference URL`` appends an entry for a changed file.
+
+Two checks anchor the records themselves, which the default check takes as
+given. ``--source DIR`` requires every manifest entry to name the Git blob and
+mode its source path has in the source commit of the ShadowScan checkout at
+DIR, so an entry cannot be rewritten to match changed bytes. ``--since REF``
+requires MIGRATION.json to be byte-identical to its copy at REF and the ledger
+at REF to be a prefix of the current one, so no file is unbound and no
+recorded amendment is rewritten, reordered or dropped. CI passes both.
 """
 
 from __future__ import annotations
@@ -21,6 +29,7 @@ import hashlib
 import json
 import re
 import stat
+import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -208,16 +217,107 @@ def _regular(root: Path, name: str) -> Path:
         path /= part
         if path.is_symlink():
             raise ValueError(f"migration path is a symlink: {name}")
-    if not stat.S_ISREG(path.stat().st_mode):
+    try:
+        mode = path.stat().st_mode
+    except FileNotFoundError:
+        raise ValueError(f"migrated file is missing: {name}") from None
+    if not stat.S_ISREG(mode):
         raise ValueError(f"migration path is not a regular file: {name}")
     return path
 
 
-def verify(root: Path = ROOT) -> dict[str, Any]:
+_REF = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~-]*")
+
+
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", "--no-optional-locks", "-C", str(repo), *args],
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        timeout=120,
+        check=False,
+    )
+
+
+def _revision(repo: Path, ref: str) -> None:
+    if not _REF.fullmatch(ref):
+        raise ValueError(f"not a plain Git revision: {ref!r}")
+    if _git(repo, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").returncode != 0:
+        raise ValueError(f"{ref} is not a commit in {repo}; fetch it first")
+
+
+def committed(repo: Path, ref: str, name: str) -> bytes | None:
+    """The bytes of ``name`` at ``ref`` in the Git repository at ``repo``; None when it has no such file."""
+    _revision(repo, ref)
+    done = _git(repo, "cat-file", "blob", f"{ref}:{_path(name).as_posix()}")
+    return done.stdout if done.returncode == 0 else None
+
+
+def committed_names(repo: Path, ref: str, directory: str) -> list[str]:
+    """Every file path under ``directory`` at ``ref``, repository-relative."""
+    _revision(repo, ref)
+    where = _path(directory).as_posix()
+    done = _git(repo, "ls-tree", "-r", "-z", "--name-only", "--full-tree", ref, "--", where)
+    if done.returncode != 0:
+        raise ValueError(f"cannot list {directory} at {ref}: {done.stderr.decode(errors='replace').strip()}")
+    return sorted(name for name in done.stdout.decode().split("\0") if name)
+
+
+def _source_tree(source: Path, commit: str) -> dict[str, tuple[str, str]]:
+    """Mode and Git blob of every file in ``commit`` of the checkout at ``source``."""
+    done = _git(source, "ls-tree", "-r", "-z", "--full-tree", commit)
+    if done.returncode != 0:
+        raise ValueError(f"the source checkout at {source} does not hold commit {commit}")
+    tree: dict[str, tuple[str, str]] = {}
+    for record in done.stdout.decode().split("\0"):
+        if record:
+            meta, name = record.split("\t", 1)
+            mode, kind, blob = meta.split()
+            if kind == "blob":
+                tree[name] = (mode, blob)
+    return tree
+
+
+def check_source(manifest: dict[str, Any], tree: dict[str, tuple[str, str]]) -> None:
+    """Every manifest entry must name the mode and Git blob its source path has in the source tree."""
+    for entry in manifest["files"]:
+        source_path = entry.get("source_path", entry["path"])
+        if tree.get(source_path) != (entry["mode"], entry["git_blob"]):
+            raise ValueError(f"migration record does not match the source commit: {entry['path']}")
+
+
+def check_since(root: Path, ref: str) -> None:
+    """MIGRATION.json must be unchanged since ``ref`` and the ledger at ``ref`` a prefix of today's."""
+    if committed(root, ref, "MIGRATION.json") != (root / "MIGRATION.json").read_bytes():
+        raise ValueError(f"MIGRATION.json changed since {ref}; the migration record never changes")
+    before = committed(root, ref, "AMENDMENTS.json")
+    if before is None:
+        return
+    path = root / "AMENDMENTS.json"
+    if not path.is_file():
+        raise ValueError(f"AMENDMENTS.json was removed since {ref}")
+    # Today's ledger has passed _ledger; the one at ref is only compared with it.
+    base = json.loads(before)
+    now = _load_json(path, "amendment")
+    if (
+        not isinstance(base, dict)
+        or not isinstance(base.get("amendments"), list)
+        or {key: value for key, value in now.items() if key != "amendments"}
+        != {key: value for key, value in base.items() if key != "amendments"}
+        or now["amendments"][: len(base["amendments"])] != base["amendments"]
+    ):
+        raise ValueError(f"AMENDMENTS.json rewrote, reordered or dropped entries recorded at {ref}")
+
+
+def verify(root: Path = ROOT, *, source: Path | None = None, since: str | None = None) -> dict[str, Any]:
     if root.is_symlink() or not root.is_dir():
         raise ValueError("migration root must be a real directory")
     manifest = _manifest(root)
+    if source is not None:
+        check_source(manifest, _source_tree(source, manifest["source_commit"]))
     amended = _ledger(root, manifest)
+    if since is not None:
+        check_since(root, since)
     total = 0
     for migrated in manifest["files"]:
         name = migrated["path"]
@@ -241,6 +341,8 @@ def verify(root: Path = ROOT) -> dict[str, Any]:
         "files": len(manifest["files"]),
         "bytes": total,
         "source_commit": manifest["source_commit"],
+        "source_tree_checked": source is not None,
+        "since": since,
         "verification": "file identity only; no benchmark executed",
     }
 
@@ -306,6 +408,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--amend", metavar="PATH", help="record the current bytes of a changed harness file")
     parser.add_argument("--reason", default="", help="why the file changed (with --amend)")
     parser.add_argument("--reference", default="", help="pull request or issue URL (with --amend)")
+    parser.add_argument(
+        "--source",
+        metavar="DIR",
+        type=Path,
+        help="also check every record against the source commit in the ShadowScan checkout at DIR",
+    )
+    parser.add_argument(
+        "--since",
+        metavar="REF",
+        help="also require MIGRATION.json unchanged and the ledger only appended to since REF",
+    )
     args = parser.parse_args(argv)
     if args.amend:
         try:
@@ -314,7 +427,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 1
         return 0
-    print(json.dumps(verify(), sort_keys=True))
+    try:
+        print(json.dumps(verify(source=args.source, since=args.since), sort_keys=True))
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

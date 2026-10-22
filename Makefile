@@ -42,9 +42,13 @@ audit: ## Audit the installed environment and every hash-locked dependency set, 
 	done
 
 .PHONY: verify
+# With the pinned scanner checkout present, every MIGRATION.json record is also checked against its
+# source tree; SINCE=<commit> also requires MIGRATION.json unchanged, the ledger only appended to and
+# every committed attestation file kept since that commit (CI passes the commit a change builds on).
 verify: ## Check migrated files against MIGRATION.json and attested results against their Sigstore bundles
-	$(PYTHON) -m tools.verify_migration
-	$(PYTHON) -m tools.attest verify
+	$(PYTHON) -m tools.verify_migration $(if $(wildcard $(SCANNER_DIR)/.git),--source $(SCANNER_DIR)) \
+		$(if $(SINCE),--since $(SINCE))
+	$(PYTHON) -m tools.attest verify $(if $(SINCE),--since $(SINCE))
 
 .PHONY: test
 test: ## Run the harness test suite
