@@ -1055,3 +1055,31 @@ def test_package_json_npm_alias_names_the_real_package() -> None:
     assert "a2a:sdk" in taxonomy.facts_for("npm", "@a2a-js/sdk")
     assert "framework:portkey" in taxonomy.facts_for("pypi", "portkey-ai")
     assert "provider:replicate" in taxonomy.facts_for("host", "api.replicate.com")
+
+
+# --- review regressions: duplicate runs and timings -----------------------------------------------
+
+_RUNS = Path(__file__).resolve().parents[2] / "benchmarks/shadow-ai-discovery/results/2026-10-09"
+
+
+def _committed() -> tuple[Corpus, list[dict[str, Any]]]:
+    corpus = load_corpus(_RUNS.parents[1] / "corpus.json")
+    return corpus, json.loads((_RUNS / "runs.json").read_text(encoding="utf-8"))["results"]
+
+
+def test_a_second_run_of_a_tool_on_one_repository_is_refused() -> None:
+    """The last row won, so an appended ok row replaced cdxgen's timed-out scan."""
+    corpus, runs = _committed()
+    failed = next(r for r in runs if r["tool"] == "cdxgen" and r["status"] == "timeout")
+    with pytest.raises(score.RunsError, match="more than one run"):
+        score.score_tool(
+            corpus, "cdxgen", frozenset(taxonomy.CATEGORIES), [*runs, {**failed, "status": "ok"}]
+        )
+
+
+@pytest.mark.parametrize("seconds", ["1.5", float("nan"), -1.0, True])
+def test_a_run_with_a_bad_timing_is_refused(seconds: Any) -> None:
+    corpus, runs = _committed()
+    edited = [{**r, "seconds": seconds} if r["tool"] == "cdxgen" else r for r in runs]
+    with pytest.raises(score.RunsError, match="seconds"):
+        score.score_tool(corpus, "cdxgen", frozenset(taxonomy.CATEGORIES), edited)

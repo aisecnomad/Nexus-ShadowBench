@@ -221,6 +221,9 @@ def main(argv: list[str] | None = None) -> int:
     except CorpusError as exc:
         print(f"corpus error: {exc}", file=sys.stderr)
         return 2
+    except score.RunsError as exc:
+        print(f"runs error: {exc}", file=sys.stderr)
+        return 2
     return result
 
 

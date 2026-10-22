@@ -199,6 +199,96 @@
       "reason": "Update virtualenv from 21.14.8 to 21.14.9 for GHSA-c978-59m8-c77v (CVE-2026-113722), which failed the strict pip-audit gate on main; dependency metadata is unchanged between the releases and both distribution hashes were checked against PyPI.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/9",
       "sha256": "f67a67bf85d78fd186242eeaaed3c297073501938ac6c85620f75743992603eb"
+    },
+    {
+      "bytes": 25338,
+      "from_sha256": "54bbccef0bba0a6abd3fcd7101e9b9df6f8025e449418b8e1f0755502d07ed70",
+      "git_blob": "f69fe9fc61af0bfd9f3fc9a47ccdf587c0dc23ca",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/stage.py",
+      "reason": "Review fixes: join a new, empty session keyring before anything from the case starts (a uid change keeps the session keyring, so tools could read the runner's keys), and cover /run and /tmp/.X11-unix, whose UNIX sockets (D-Bus, systemd-resolved, nscd, X) bridged the empty network namespace.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "25478ccb59b61509e47277d9f584945c52d8fa46439565d004d47e97bb35c7c6"
+    },
+    {
+      "bytes": 52040,
+      "from_sha256": "3b09e1bc422c8b2ecd753997ab0b01d3d36e7826514e136a4dc7808c546a00bd",
+      "git_blob": "b0a568ab6c79b9826e8da92d96a00d6a3b4bad1b",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/runner.py",
+      "reason": "Review fixes: join a new session keyring before any version probe or stage starts, and strip group and other write from reclaimed regular files, as the estate runner does, so a 0666 report is no longer writable to the tools' uid.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "db46f48aec3f4901b1d8baf643df8c3514e47b251d960ebf79e76b6601c15e19"
+    },
+    {
+      "bytes": 19649,
+      "from_sha256": "e19d0baca2205b919fbd18049fd2a85795cc075d0fc356581162e25c47debfe8",
+      "git_blob": "efd12c27e45705e0f44370a061fa70d1bcd4d4d1",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/mockserv.py",
+      "reason": "Review fix: answer a malformed, negative or over-1 MiB Content-Length with 400 or 413 instead of raising, blocking a thread or allocating it, and drop socketserver's per-request tracebacks, which grew the root stage's stderr without bound.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "1c19e33dc0e199e2e7789eb2fb7790fa5f675efc598629b474e1e7a3e5d393f2"
+    },
+    {
+      "bytes": 12499,
+      "from_sha256": "b4041863fef5cd44248ed6bfd6c7735193ac18ce08744e4e13165dc607120581",
+      "git_blob": "3ea24c4717b6a57789b8eda83cb6c3391363adc3",
+      "mode": "100755",
+      "path": "tools/shadowbench/cases/install_tools.sh",
+      "reason": "Review fixes: umask 022; clear GOFLAGS, GOSUMDB, GONOSUMDB, GONOSUMCHECK, GOPRIVATE, GONOPROXY and GOINSECURE and ignore the go env file so the operator's settings cannot turn off -mod=readonly or the checksum database; reset and clean reused checkouts to exactly their pin; copy AI-Infra-Guard data afresh.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "2d385aa86c24c749deab3cfa4fd77882ea132f47ddfa7232020ad435f9a4484e"
+    },
+    {
+      "bytes": 38920,
+      "from_sha256": "8884a50762970c45b945bd8ef2e39d32981d4bc2897567cdcdd26e0df84779e2",
+      "git_blob": "6803ded0ee0e8ff11e5ebc02364be02c23c90e98",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/score.py",
+      "reason": "Review fixes: refuse a case listing a decoy, tolerated or expected key twice (a reported repeated decoy earned a true negative); require a row's seconds to be a finite, non-negative number; divide the McNemar tail by an integer (2.0**n overflowed from 1024 discordant cases); share the mixed-support check as mixed_support. Committed runs re-score byte for byte.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "23867f9f0db4bbcdfda68c9166f19edac62cbc41754d4540b72775d88ba28f44"
+    },
+    {
+      "bytes": 12410,
+      "from_sha256": "376dbfc86f4a755be8d782104a87405f2dbc96c8209b48ab75e13535aab97ca0",
+      "git_blob": "7fa06c8ee5aa0cdd61c5a3fb7548731e090bc2bb",
+      "mode": "100644",
+      "path": "tools/discovery_benchmark/score.py",
+      "reason": "Review fixes: refuse a second run of a tool on one repository (the last row won, so an appended row could replace a failed scan) and require seconds to be a finite, non-negative number, raising RunsError. The committed 2026-10-09 metrics re-score byte for byte.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "486b9c9dec59d2df71a612c4f74aa2ee0eea545deaddaa02050e6481c70ce264"
+    },
+    {
+      "bytes": 9695,
+      "from_sha256": "259759bd15d639386548a8e764d421650885d12ad4267191b3f4e7cecdabff45",
+      "git_blob": "23c3b2a0f55d582e5811ad50b841ebd7e4c70eda",
+      "mode": "100644",
+      "path": "tools/discovery_benchmark/__main__.py",
+      "reason": "Review fix: report the scorer's RunsError as 'runs error:' with exit 2 instead of a traceback.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "8149e921e01d6be0aca914b6f15d76d3ceff29bbd50680d11b3d605dde20fb61"
+    },
+    {
+      "bytes": 39292,
+      "from_sha256": "c49d5930e28dff3749db8001b3f28c307435242af679a9e626d91d72165a5994",
+      "git_blob": "4c4bcc33645edf96190dbc5d38fbde9ee3a92b77",
+      "mode": "100644",
+      "path": "tests/unit/test_shadowbench_cases_score.py",
+      "reason": "Regression tests for the review fixes: repeated decoy and tolerated keys are refused, bad row timings are refused, and the McNemar test holds past 1024 discordant cases and matches the previous formula below it.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "e4bdaf7b75bf390181d3155e5968739966caff3adad3f05653a0b4372742adb8"
+    },
+    {
+      "bytes": 51422,
+      "from_sha256": "d17e86a94f0c87f4bec03f706ffad1287ba88c60192f0383f5a4ed1e3cf54af4",
+      "git_blob": "65dfd145bac383980ead236e816f5a026a05b96b",
+      "mode": "100644",
+      "path": "tests/unit/test_discovery_benchmark.py",
+      "reason": "Regression tests for the review fixes: a second run of a tool on one repository and bad run timings are refused.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
+      "sha256": "9294626b05f6448cb6a72d8b24a88196c60c9de69772e831b2ea55b273f3f60d"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

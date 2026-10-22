@@ -248,8 +248,8 @@ _RULES: dict[str, Callable[[str], str]] = {
 
 
 MAX_PASSES = 16
-"""One pass is idempotent by construction (each rule normalizes its own output to a fixed point);
-:func:`canonical` still re-applies it until nothing changes, as a backstop the tests never reach."""
+"""Each rule normalizes its own output, but one pass can leave a form that a further pass still
+changes, so :func:`canonical` re-applies it until nothing changes; no key needs more than a few."""
 
 
 def canonical(key: str) -> str:
@@ -272,7 +272,8 @@ def _pass(key: str) -> str:
     if not sep or not namespace:
         return text
     value = value.strip()
-    guid = _guid(value)
+    # A path that happens to be a GUID is still a path, and paths keep their case.
+    guid = _guid(value) if namespace != "artifact" else None
     if guid is not None:
         return f"{namespace}:{guid}"
     rule = _RULES.get(namespace)

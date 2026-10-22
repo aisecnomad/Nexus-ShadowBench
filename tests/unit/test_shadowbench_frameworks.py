@@ -224,3 +224,43 @@ def test_the_serial_number_changes_with_the_mapping_version(monkeypatch: pytest.
     after = aibom.truth_bom(corpus, corpus_digest(CORPUS))
     assert before["serialNumber"] != after["serialNumber"]
     _valid(after)
+
+
+def test_a_tool_export_refuses_unsupported_rows_mixed_with_scored_ones(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The scorer refused the mix and the export took it, though it claims to take the scorer's rows."""
+    results = _copy_run(tmp_path)
+    rows = [json.loads(line) for line in (results / "numbat.jsonl").read_text(encoding="utf-8").splitlines()]
+    scored = next(i for i, r in enumerate(rows) if r["status"] == "ok")
+    rows[scored] = {**rows[scored], "status": "unsupported", "entities": []}
+    (results / "numbat.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
+    run = manifest["tools"]["numbat"]
+    run.pop("rows_sha256", None)
+    run["statuses"] = {k: sum(r["status"] == k for r in rows) for k in {r["status"] for r in rows}}
+    (results / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert _export(tmp_path, results) == 2
+    assert "has unsupported rows alongside ok or error rows" in capsys.readouterr().err
+
+
+def test_a_key_that_is_not_unicode_is_refused_and_leaves_the_output_alone(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A lone surrogate raised a traceback after --out had been truncated."""
+    results = _copy_run(tmp_path)
+    lines = (results / "numbat.jsonl").read_text(encoding="utf-8").splitlines()
+    index = next(i for i, line in enumerate(lines) if json.loads(line)["entities"])
+    row = json.loads(lines[index])
+    row["entities"][0]["key"] = "artifact:\ud800"
+    lines[index] = json.dumps(row)  # ensure_ascii writes the surrogate as \ud800, which loads back
+    (results / "numbat.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    manifest = json.loads((results / "manifest.json").read_text(encoding="utf-8"))
+    manifest["tools"]["numbat"].pop("rows_sha256", None)
+    (results / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    out = tmp_path / "t.cdx.json"
+    out.write_text("previous export\n", encoding="utf-8")
+    assert _export(tmp_path, results) == 2
+    assert "not valid Unicode" in capsys.readouterr().err
+    assert out.read_text(encoding="utf-8") == "previous export\n"
+    assert [p.name for p in tmp_path.iterdir() if p.name.startswith(".t.cdx.json")] == []

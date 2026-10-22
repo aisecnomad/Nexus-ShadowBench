@@ -113,6 +113,53 @@ changed, no published number moved, and no published run was rerun.
   four cells because the current renderer no longer calls an incomplete
   negative clean ([docs/results.md](docs/results.md)).
 
+### Sandbox and scorer review fixes
+
+No committed metric or report changes: the cases and estate 2026-10-11 runs
+and the code-surface 2026-10-09 metrics still re-score byte for byte, and
+`canonical-v1` still scores the cases run identically.
+
+- **Session keyring.** A uid change keeps the session keyring, and a process
+  possessing it can read its keys, so tools dropped to 65534 could read the
+  keys of the session the runner was started in. The runner (before any
+  probe) and the stage (before anything from the case) join a new, empty
+  anonymous session keyring.
+- **Host sockets.** The stage also covers `/run` and `/tmp/.X11-unix`: a
+  UNIX socket on a path is reachable from any network namespace, so the
+  D-Bus system bus (systemd-resolved resolves names over it), nscd or an X
+  server bridged the empty network namespace.
+- **Reclaimed files** lose group and other write, as the estate runner's do,
+  so a 0666 report stays no longer writable to the tools' uid.
+- **Mock services** answer a malformed, negative or over-1 MiB
+  `Content-Length` with 400 or 413 instead of raising (a traceback on the
+  root stage's stderr per request, which the runner holds in memory),
+  blocking a thread or allocating the declared size.
+- **`install_tools.sh`** sets `umask 022`, clears the operator's `GOFLAGS`,
+  `GOSUMDB`, `GONOSUMDB`, `GONOSUMCHECK`, `GOPRIVATE`, `GONOPROXY` and
+  `GOINSECURE` and ignores the go env file, resets and cleans a reused
+  checkout to exactly its pin (checkout kept local edits and untracked
+  files), and copies AI-Infra-Guard's data afresh.
+- **Cases scorer.** A case listing a decoy, tolerated or expected key twice
+  is refused (a reported repeated decoy still earned a true negative); a
+  row's `seconds` must be a finite, non-negative number; the McNemar test
+  divides by an integer, since `2.0**n` overflowed from 1024 discordant
+  cases on.
+- **Code-surface scorer.** A second run of a tool on one repository is
+  refused (the last row won, so an appended row could replace a failed
+  scan), and `seconds` is validated; both exit 2 with `runs error:`.
+- **AIBOM export** refuses unsupported rows mixed with scored ones on a
+  surface and modality, as the scorer does (the check is now shared,
+  `score.mixed_support`), refuses a key that is not valid Unicode, and
+  writes `--out` atomically, so a refused export leaves it as it was.
+- **`canonical-v1`** no longer folds an `artifact:` path that happens to be
+  a GUID: paths keep their case.
+- **Errata** [E7 and E8](docs/errata.md) record two code-surface scoring
+  rules that flatter the committed 2026-10-09 numbers: repository-level
+  detection counts ShadowScan's 4 incomplete negatives as unflagged, and 11
+  surplus `<category>:generic` facts are credited as true positives (recall
+  0.9482 instead of 0.9476). The threat model now lists the answer key's
+  reachability from inside the cases sandbox as a residual risk.
+
 ### Harness amendments
 
 - Added `AMENDMENTS.json`, an append-only ledger for changes to migrated

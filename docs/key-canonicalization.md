@@ -39,7 +39,7 @@ platform treats as the same; everything else keeps its case and spelling.
 | Applies to | Rule | Example |
 |---|---|---|
 | every key | Unicode NFC; surrounding whitespace dropped; namespace lower-cased; a key with a control character or no namespace is left alone | `App :x` is `app:x` |
-| any value that is one GUID | lower case, no braces, no `urn:uuid:` | `bot:{0672D27A-...}` is `bot:0672d27a-...` |
+| any value that is one GUID, except an `artifact:` path | lower case, no braces, no `urn:uuid:` | `bot:{0672D27A-...}` is `bot:0672d27a-...` |
 | `resource:`, `caller:` ARNs | partition, service and region lower-cased; account and resource unchanged | `arn:AWS:Bedrock:US-EAST-1:1:agent/AbC` is `arn:aws:bedrock:us-east-1:1:agent/AbC` |
 | `resource:` Azure ids | the whole `/subscriptions/...` id lower-cased (Azure treats it as case-insensitive) | |
 | `k8s:<ns>/<Kind>/<name>` | namespace and name lower-cased (Kubernetes requires it); built-in kinds spelled as the API spells them | `k8s:AI/deployment/Flowise` is `k8s:ai/Deployment/flowise` |

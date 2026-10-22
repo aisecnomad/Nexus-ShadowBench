@@ -60,9 +60,13 @@ an AI assistant act on text it reads there.
   accepts only exact reviewed approvals (path, credential family and SHA-256).
   A clean result does not prove that no secret is present.
 - **Supply chain.** Python dependencies install from hash locks with
-  `--require-hashes --only-binary=:all:`. Third-party tool installs are
-  version-pinned but not hash-locked, so their transitive dependencies resolve
-  at install time. GitHub Actions are pinned by full commit SHA.
+  `--require-hashes --only-binary=:all:`. Cases-track PyPI tools install from
+  committed universal hash locks (`--require-hashes --no-deps`); Go tools build
+  from pinned commits against their `go.sum` and the Go checksum database,
+  with the operator's `GOFLAGS`, `GOSUMDB`, `GONOSUMDB`, `GOPRIVATE` and
+  `GOINSECURE` cleared so none can turn those checks off, and a reused
+  checkout is reset to exactly its pin. GitHub Actions are pinned by full
+  commit SHA.
 
 ## Supported versions
 

@@ -33,6 +33,15 @@
 # (GOTOOLCHAIN=auto fetches newer toolchains for numbat and vet), uv, Python 3.13.
 set -euo pipefail
 shopt -s inherit_errexit  # a failing command inside $(checkout ...) stops the script too
+# Installed trees must not be writable by the tools' uid, which could otherwise change its own code
+# between cases.
+umask 022
+# The Go guarantees above (go.mod and go.sum never rewritten, every module checked against the
+# checksum database) must not depend on the operator's environment or go env file: a GOFLAGS that
+# lets go rewrite go.mod, GOSUMDB=off or a GONOSUMDB, GOPRIVATE or GOINSECURE pattern would each
+# turn one off unseen.
+export GOENV=off
+unset GOFLAGS GOSUMDB GONOSUMDB GONOSUMCHECK GOPRIVATE GONOPROXY GOINSECURE
 
 root="${1:?usage: install_tools.sh TOOL_ROOT [TOOL...]}"
 shift
@@ -69,6 +78,13 @@ venv() {  # venv-name: exactly the distributions of locks/<venv-name>.txt, hashe
   cp "$lock" "$locks/build.txt" "$root/resolved/locks/"
 }
 
+pristine() {  # dir sha: the work tree of a checkout reused from an earlier install holds exactly sha
+  # checkout keeps local edits to tracked files and every untracked file, which the HEAD check
+  # below cannot see and SHA256SUMS would then record as built from the pin.
+  git -C "$1" -c core.hooksPath=/dev/null reset --quiet --hard "$2"
+  git -C "$1" -c core.hooksPath=/dev/null clean --quiet -ffdx
+}
+
 checkout() {  # owner/repo sha -> prints the checkout directory, detached at sha
   local dir="$root/third_party/${1/\//_}"
   if [[ ! -d "$dir/.git" ]]; then
@@ -79,6 +95,7 @@ checkout() {  # owner/repo sha -> prints the checkout directory, detached at sha
   fi
   git -C "$dir" -c core.hooksPath=/dev/null -c advice.detachedHead=false \
     checkout --quiet --detach --no-recurse-submodules "$2"
+  pristine "$dir" "$2"
   local head
   head="$(git -C "$dir" rev-parse HEAD)"
   if [[ "$head" != "$2" ]]; then
@@ -110,6 +127,7 @@ if want ai-infra-guard; then
   aig=$(checkout Tencent/AI-Infra-Guard d9f3aa481ba10c5c00f37f24d361f4ddb944b065)
   (cd "$aig" && CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -buildvcs=false \
     -o "$root/bin/ai-infra-guard" ./cmd/cli/main.go)
+  rm -rf "$root/share/ai-infra-guard"  # copied afresh: never merged with an earlier install's data
   mkdir -p "$root/share/ai-infra-guard"
   cp -r "$aig/data/fingerprints" "$aig/data/vuln" "$aig/data/vuln_en" "$root/share/ai-infra-guard/"
 fi
@@ -128,6 +146,7 @@ if want fleet-ai-tools; then
   fi
   git -C "$fleet" -c core.hooksPath=/dev/null -c advice.detachedHead=false \
     checkout --quiet --detach --no-recurse-submodules "$fleet_commit"
+  pristine "$fleet" "$fleet_commit"
   if [[ "$(git -C "$fleet" rev-parse HEAD)" != "$fleet_commit" ]]; then
     echo "fleetdm/fleet: HEAD is not the pinned commit $fleet_commit" >&2
     exit 1
