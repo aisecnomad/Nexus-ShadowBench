@@ -221,3 +221,20 @@ def test_a_private_key_approval_binds_the_whole_file(tmp_path: Path, monkeypatch
     assert check_secrets_extra.main([str(fixture)]) == 0
     fixture.write_bytes(gzip.compress(f"{marker}\nBBBB\n".encode()))
     assert check_secrets_extra.main([str(fixture)]) == 1  # another key body behind the same marker
+
+
+@pytest.mark.parametrize("encoding", ["utf-16", "utf-16-le", "utf-16-be", "utf-32", "utf-32-le", "utf-32-be"])
+def test_a_token_beside_cjk_punctuation_in_wide_text_is_found(encoding: str) -> None:
+    """With only the NULs dropped, the bytes of 「 and 」 ran into the token and broke its boundaries."""
+    text = f"鍵「{SAMPLES['Groq API key']}」。\n"
+    assert _families(text.encode(encoding)) == ["Groq API key"]
+
+
+def test_a_gzip_member_inside_a_tar_is_inflated(tmp_path: Path) -> None:
+    inner = tmp_path / "secrets.json.gz"
+    inner.write_bytes(gzip.compress(f"key = {GITHUB}\nother = {SAMPLES['xAI API key']}\n".encode()))
+    archive = tmp_path / "bundle.tar"
+    with tarfile.open(archive, "w") as handle:
+        handle.add(inner, arcname="secrets.json.gz")
+    assert sorted(_families(archive.read_bytes())) == ["GitHub token", "xAI API key"]
+    assert sorted(_families(gzip.compress(archive.read_bytes()))) == ["GitHub token", "xAI API key"]

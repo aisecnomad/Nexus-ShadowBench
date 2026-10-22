@@ -172,13 +172,14 @@ runs beside it in CI, `make secrets` and pre-commit:
   webhook URLs, Google OAuth client secrets and access tokens, SendGrid keys;
 - every family in what it cannot read: it decodes all bytes as UTF-8 and drops
   the rest, so a token in a gzip member, or in UTF-16 or UTF-32 text, with or
-  without a BOM, passed unseen. Each gzip layer is inflated (at most 8 layers
-  and 256 MiB in all; a corrupt, truncated, deeper or larger one is reported,
-  not skipped; zlib itself raises nothing for a truncated member), and each
-  layer is read as UTF-8 and, when it holds a NUL, again with the NULs
-  removed: credential shapes are ASCII, which wide encodings and archive
-  padding (a `.tar` or `.tar.gz`) write as the bytes themselves beside NULs.
-  A match `check_secrets.py` already reports is not reported twice, and a
+  without a BOM, passed unseen. Each gzip layer is inflated and each tar
+  member read (at most 8 deep and 256 MiB in all; a corrupt, truncated, deeper
+  or larger one is reported, not skipped; zlib itself raises nothing for a
+  truncated member), and each is read as UTF-8 and, when it holds a NUL, as
+  UTF-16 and UTF-32 at every alignment (wide text beside non-ASCII characters
+  such as CJK punctuation) and with the NULs removed (archive padding, wide
+  text beside ASCII). One token matched in several views is reported once, a
+  match `check_secrets.py` already reports is not reported twice, and a
   private-key approval must bind the whole file, as there.
 
 Reports, exit codes and approvals (`tools/secret_allowlist_extra.json`, by

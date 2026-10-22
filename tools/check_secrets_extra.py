@@ -12,12 +12,13 @@ amendable, so what it misses is checked here instead:
 * every family, its own and these, in what it cannot read. It decodes all
   bytes as UTF-8 and drops the rest, so a gzip member stays compressed, and in
   UTF-16 or UTF-32 text (with or without a BOM) a NUL sits beside every ASCII
-  character, so neither can match. Here every gzip layer is inflated (at most
-  :data:`MAX_GZIP_DEPTH` layers and :data:`MAX_DECOMPRESSED` bytes in all; a
-  corrupt, truncated, deeper or larger one is reported, not skipped), and each
-  layer is scanned as UTF-8 and, when it holds a NUL, once more with the NULs
-  removed: credential shapes are ASCII, which those encodings and archive
-  padding write as the bytes themselves beside NULs. A match check_secrets.py
+  character, so neither can match. Here every gzip layer is inflated and every
+  tar member read (at most :data:`MAX_GZIP_DEPTH` deep and
+  :data:`MAX_DECOMPRESSED` bytes in all; a corrupt, truncated, deeper or larger
+  one is reported, not skipped), and each is scanned as UTF-8 and, when it
+  holds a NUL, with the NULs removed (archive padding and wide text beside
+  ASCII) and as UTF-16 and UTF-32 at every alignment (wide text beside other
+  characters). A match check_secrets.py
   already reports in the file as committed is not reported twice.
 
 Reports and exit codes follow ``check_secrets.py``: each finding names the file,
@@ -33,10 +34,12 @@ nothing fails closed.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import re
 import sys
+import tarfile
 import zlib
 from collections.abc import Iterator, Sequence
 from pathlib import Path, PurePosixPath
@@ -50,7 +53,7 @@ ALLOWLIST_PATH = Path(__file__).with_name("secret_allowlist_extra.json")
 MAX_DECOMPRESSED = 256 << 20
 """The most a file's gzip layers are inflated to, all together; the repository's largest is under 5 MiB."""
 MAX_GZIP_DEPTH = 8
-"""The most gzip layers a file is unwrapped through."""
+"""The most gzip layers and tar archives a file is unwrapped through."""
 
 _END = r"(?![A-Za-z0-9_])"
 EXTRA_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
@@ -105,42 +108,92 @@ def _inflate(contents: bytes, budget: int) -> bytes:
 
 
 def layers(contents: bytes) -> list[bytes]:
-    """``contents`` and each gzip layer inside it, unwrapped without recursion."""
-    found = [contents]
+    """``contents`` and everything inside it: each gzip layer inflated and each tar member read,
+    without recursion, at most :data:`MAX_GZIP_DEPTH` deep and :data:`MAX_DECOMPRESSED` bytes in all."""
+    found: list[bytes] = []
+    queue = [(contents, 0)]
     budget = MAX_DECOMPRESSED
-    while found[-1][:2] == b"\x1f\x8b":
-        if len(found) > MAX_GZIP_DEPTH:
-            raise Unscannable(f"gzip nested deeper than {MAX_GZIP_DEPTH} layers")
-        inner = _inflate(found[-1], budget)
-        budget -= len(inner)
-        found.append(inner)
+    while queue:
+        blob, depth = queue.pop(0)
+        found.append(blob)
+        inner: list[bytes] = []
+        if blob[:2] == b"\x1f\x8b":
+            inner = [_inflate(blob, budget)]
+        elif _is_tar(blob):
+            inner = _members(blob, budget)
+        if inner and depth >= MAX_GZIP_DEPTH:
+            raise Unscannable(f"gzip or tar nested deeper than {MAX_GZIP_DEPTH} layers")
+        for item in inner:
+            budget -= len(item)
+            if budget < 0:
+                raise Unscannable(f"gzip layers inflate past {MAX_DECOMPRESSED} bytes")
+            queue.append((item, depth + 1))
     return found
+
+
+def _is_tar(blob: bytes) -> bool:
+    return len(blob) >= 512 and blob[257:262] == b"ustar"
+
+
+def _members(blob: bytes, budget: int) -> list[bytes]:
+    """The contents of every regular file in the tar archive ``blob``, at most ``budget`` bytes in all."""
+    out: list[bytes] = []
+    try:
+        with tarfile.open(fileobj=io.BytesIO(blob), mode="r:") as archive:
+            for member in archive:
+                if not member.isfile():
+                    continue
+                budget -= member.size
+                if budget < 0:
+                    raise Unscannable(f"gzip layers inflate past {MAX_DECOMPRESSED} bytes")
+                handle = archive.extractfile(member)
+                out.append(handle.read() if handle is not None else b"")
+    except (tarfile.TarError, OSError, EOFError) as exc:
+        raise Unscannable(f"corrupt tar archive: {exc}") from None
+    return out
+
+
+_WIDE = [(codec, offset) for codec in ("utf-16-le", "utf-16-be") for offset in (0, 1)] + [
+    (codec, offset) for codec in ("utf-32-le", "utf-32-be") for offset in range(4)
+]
 
 
 def views(contents: bytes) -> list[tuple[str, bool]]:
     """``(text, every family)`` for each way ``contents`` is read; False only for the file as
     check_secrets.py reads it, whose own families it reports itself."""
     out: list[tuple[str, bool]] = []
-    for depth, layer in enumerate(layers(contents)):
-        out.append((layer.decode("utf-8", errors="ignore"), depth > 0))
+    for index, layer in enumerate(layers(contents)):
+        out.append((layer.decode("utf-8", errors="ignore"), index > 0))
         if b"\x00" in layer:
+            # Archive padding and wide text beside ASCII: the bytes themselves once the NULs go. Wide
+            # text beside other characters (CJK punctuation, say) needs its own decoding, at every
+            # alignment, or their bytes run into the token.
+            out += [(layer[offset:].decode(codec, errors="ignore"), True) for codec, offset in _WIDE]
             out.append((layer.replace(b"\x00", b"").decode("utf-8", errors="ignore"), True))
     return out
 
 
 def findings(contents: bytes) -> Iterator[tuple[int, str, str]]:
-    """``(line, family, match)`` for what check_secrets.py does not report on ``contents``, each once."""
+    """``(line, family, match)`` for what check_secrets.py does not report on ``contents``, each once.
+
+    The views overlap: one token can match in several, and with a neighbour's byte run into it in
+    the NUL-free one. A match that holds, or lies within, one already reported in its family is the
+    same token; the decodings come first, so the clean spelling is the one reported.
+    """
     read = views(contents)
-    reported: set[tuple[str, str]] = set()
+    reported: dict[str, list[str]] = {}
     if len(read) > 1:  # matches in other views that check_secrets.py reports on the file itself
-        reported = {(family, value) for _, family, value in check_secrets.findings(read[0][0])}
+        for _, family, value in check_secrets.findings(read[0][0]):
+            reported.setdefault(family, []).append(value)
     for text, every in read:
         for family, pattern in ALL_PATTERNS if every else EXTRA_PATTERNS:
             for match in pattern.finditer(text):
-                key = (family, match.group())
-                if key not in reported:
-                    reported.add(key)
-                    yield text.count("\n", 0, match.start()) + 1, family, match.group()
+                value = match.group()
+                seen = reported.setdefault(family, [])
+                if any(value in known or known in value for known in seen):
+                    continue
+                seen.append(value)
+                yield text.count("\n", 0, match.start()) + 1, family, value
 
 
 def _load_approvals() -> dict[tuple[str, str, str], str | None]:
