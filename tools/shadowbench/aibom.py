@@ -25,14 +25,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any
 
 from tools.shadowbench import frameworks
 from tools.shadowbench.cases.corpus import Case, Corpus, corpus_digest, load_corpus
-from tools.shadowbench.cases.score import ResultsError, _check_row, _provenance
+from tools.shadowbench.cases.score import ResultsError, _check_row, _provenance, mixed_support
 from tools.shadowbench.keys import canonical
 
 SPEC_VERSION = "1.6"
@@ -160,6 +162,9 @@ def _tool_rows(results: Path, corpus: Corpus, tool: str) -> list[dict[str, Any]]
             if row["case"] in rows:
                 raise ExportError(f"{where}: second row for case {row['case']}")
             rows[row["case"]] = row
+    mixed = mixed_support(rows.values())
+    if mixed:
+        raise ExportError(f"{path.name}: {mixed[0]} has unsupported rows alongside ok or error rows")
     return list(rows.values())
 
 
@@ -223,7 +228,21 @@ def main(argv: list[str] | None = None) -> int:
     except ExportError as exc:
         print(f"refusing to export: {exc}", file=sys.stderr)
         return 2
-    args.out.write_text(json.dumps(bom, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    try:
+        data = (json.dumps(bom, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
+    except UnicodeEncodeError as exc:  # a key or label holding a lone surrogate (\ud800 in JSON)
+        print(f"refusing to export: a reported string is not valid Unicode: {exc}", file=sys.stderr)
+        return 2
+    # Written beside --out and renamed over it, so a failed export never leaves a truncated BOM.
+    fd, tmp = tempfile.mkstemp(dir=args.out.parent, prefix=f".{args.out.name}.")
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, args.out)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
     print(f"{args.out}: {len(bom['components'])} components, {len(bom.get('services', []))} services")
     return 0
 

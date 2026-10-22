@@ -371,3 +371,10 @@ def test_the_report_names_a_non_default_scheme(tmp_path: Path) -> None:
     metrics = _metrics(tmp_path, corpus_path, results, "--keys", "canonical-v1")
     assert "`canonical-v1` scheme" in report.render(metrics, corpus_path)
     assert "scheme" not in report.render(_metrics(tmp_path, corpus_path, results), corpus_path)
+
+
+@given(st.uuids(), st.sampled_from(["{%s}", "urn:uuid:%s", "%s"]))
+def test_an_artifact_path_that_is_a_guid_keeps_its_case_and_spelling(guid: Any, wrap: str) -> None:
+    path = f"artifact:{wrap % str(guid).upper()}"
+    assert keys.canonical(path) == path
+    assert keys.canonical(path) != keys.canonical(f"artifact:{guid}")

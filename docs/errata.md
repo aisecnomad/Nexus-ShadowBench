@@ -19,6 +19,8 @@ quoting the file, the line and the evidence.
 | [E4](#e4-the-cases-reproduce-block-assumes-one-repository) | `tools/shadowbench/cases/README.md` | layout after migration |
 | [E5](#e5-links-to-files-that-stayed-in-shadowscan) | several track and harness READMEs | broken relative links |
 | [E6](#e6-the-cases-harness-readme-describes-unlocked-installs-and-the-older-stage) | `tools/shadowbench/cases/README.md` | superseded behaviour |
+| [E7](#e7-code-surface-repository-level-detection-counts-unverified-negatives-as-unflagged) | `benchmarks/shadow-ai-discovery/results/2026-10-09/metrics.json` and `REPORT.md` | scoring rule |
+| [E8](#e8-a-surplus-generic-fact-is-credited-as-a-true-positive) | `benchmarks/shadow-ai-discovery/results/2026-10-09/metrics.json` and `REPORT.md` | scoring rule |
 
 ## E1: code-surface 2026-10-09 REPORT.md wording
 
@@ -112,3 +114,37 @@ gets UTS and cgroup namespaces, a fixed host name with `/etc/hostname` and
 it in a digest-pinned container. [supply-chain.md](supply-chain.md) and
 [harness.md](harness.md#isolation) describe both. The 2026-10-11 run predates
 all of this.
+
+## E7: code-surface repository-level detection counts unverified negatives as unflagged
+
+**Says.** The headline row gives ShadowScan `0/10` controls and `0/12`
+near-misses flagged (line 15), and `metrics.json` gives its repository-level
+detection `fp` 0 and precision 1.0.
+
+**Read as.** Four of those 22 negatives were incomplete scans (exit 3: the
+four `no facts (incomplete)` cells of [E1](#e1-code-surface-2026-10-09-reportmd-wording)),
+and `tools/discovery_benchmark/score.py` counts a control or near-miss as
+unflagged whatever the run's status or incomplete flag. So the cells say
+"not flagged on 22", but only 18 were scanned completely: `0/10` and `0/12`
+establish no more than 0 false alarms on 18 verified negatives. Cisco AIBOM's
+22 negatives all failed and are likewise counted unflagged; its
+repository-level precision is undefined either way. This contradicts the rule
+in [metrics.md](metrics.md#fail-closed-rules) that a run that did not
+demonstrably read its input never earns credit for finding nothing. The
+committed numbers re-score byte for byte and stay as they are. A corrected
+scorer would report unverified negatives separately, as the cases track
+does, and would publish under a new scorer version in a new results
+directory.
+
+## E8: a surplus generic fact is credited as a true positive
+
+**Says.** ShadowScan's value-level recall is 0.9482 and F1 0.9723
+(`metrics.json`, `value_level.all`; 806 TP, 2 FP, 44 FN).
+
+**Read as.** `match_values` credits a reported `<category>:generic` as a true
+positive when the category's expected facts were already matched, without
+consuming an expected fact, so TP plus FN can exceed the expected facts. In
+the 2026-10-09 run this happens only for ShadowScan, 11 times. Counted as
+neither (as the estate scorer treats a surplus report), its recall is 0.9476
+and F1 0.9719; precision is unchanged at 0.9975. The committed numbers stay as
+they are.

@@ -11,6 +11,7 @@ case says, so a mistaken or altered corpus cannot expose one beyond loopback.
 from __future__ import annotations
 
 import json
+import re
 import socket
 import threading
 import time
@@ -417,6 +418,10 @@ PRODUCTS: dict[str, Router] = {
 }
 
 
+MAX_BODY = 1 << 20
+"""The largest request body a mock service reads; no router looks at more than a few hundred bytes."""
+
+
 def _handler(router: Router, server_header: str) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         server_version = server_header
@@ -424,7 +429,17 @@ def _handler(router: Router, server_header: str) -> type[BaseHTTPRequestHandler]
         protocol_version = "HTTP/1.1"
 
         def _serve(self) -> None:
-            length = int(self.headers.get("Content-Length") or 0)
+            # The services run as root in the stage, and the tool under test is their client: a
+            # malformed length must not raise, a negative one block a thread until the client
+            # closes, nor a huge one make the stage allocate it.
+            declared = (self.headers.get("Content-Length") or "0").strip()
+            if not re.fullmatch(r"[0-9]{1,10}", declared):
+                self.send_error(400, "invalid Content-Length")
+                return
+            length = int(declared)
+            if length > MAX_BODY:
+                self.send_error(413)
+                return
             body = self.rfile.read(length) if length else b""
             status, headers, payload = router(self.command, self.path, body)
             self.send_response(status)
@@ -471,12 +486,21 @@ def checked_service(spec: dict[str, Any]) -> tuple[str, int, str]:
     return ip, port, product
 
 
+class _Server(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request: Any, client_address: Any) -> None:
+        # socketserver prints a traceback per failed request to the stage's stderr, which the
+        # runner holds in memory: a tool could grow it without bound with broken requests.
+        return
+
+
 class Services:
     """Start and stop the mock services of one case."""
 
     def __init__(self, services: list[dict[str, Any]]) -> None:
         self.specs = services
-        self.servers: list[ThreadingHTTPServer] = []
+        self.servers: list[_Server] = []
         self.threads: list[threading.Thread] = []
 
     def start(self, timeout: float = 10.0) -> None:
@@ -484,8 +508,7 @@ class Services:
         checked = [checked_service(spec) for spec in self.specs]
         for ip, port, product in checked:
             handler = _handler(PRODUCTS[product], SERVER_HEADERS.get(product, "Werkzeug/3.0.3 Python/3.12"))
-            server = ThreadingHTTPServer((ip, port), handler)
-            server.daemon_threads = True
+            server = _Server((ip, port), handler)
             thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.2}, daemon=True)
             thread.start()
             self.servers.append(server)

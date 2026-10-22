@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
@@ -769,3 +770,38 @@ def test_committed_metrics_and_report_are_what_the_scorer_produces() -> None:
     committed = json.loads((RUN / "metrics.json").read_text(encoding="utf-8"))
     assert json.loads(json.dumps(metrics)) == committed
     assert report.render(committed, corpus_path) == (RUN / "REPORT.md").read_text(encoding="utf-8")
+
+
+# --- review regressions: repeated truth keys, row timings, large paired tests ---------------------
+
+
+def test_mcnemar_holds_past_a_thousand_discordant_cases_and_matches_small_ones() -> None:
+    """2.0**n overflowed a float from 1024 discordant cases on."""
+    assert score.mcnemar_exact(600, 500) < 0.01
+    assert score.mcnemar_exact(5000, 5000) == 1.0
+    for b, c in [(0, 3), (2, 7), (10, 4), (30, 30), (511, 512)]:
+        n = b + c
+        legacy = min(1.0, 2 * (sum(math.comb(n, i) for i in range(min(b, c) + 1)) / 2.0**n))
+        assert score.mcnemar_exact(b, c) == legacy
+
+
+@pytest.mark.parametrize("field", ["decoys", "tolerated"])
+def test_a_case_that_repeats_a_decoy_or_tolerated_key_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], field: str
+) -> None:
+    """Hits are a set and the decoy universe a count: a reported repeated decoy still earned a TN."""
+    keys = {"decoys": ["app:d"], "tolerated": ["app:t"]}
+    keys[field] = keys[field] * 2
+    case = _case("i1", expected=[("app:e", "agent")], **keys)
+    corpus_path, results = _write(tmp_path, [case], {"t": [_row(case, keys=["app:d"])]})
+    assert "listed more than once" in _refused(tmp_path, corpus_path, results, capsys)
+
+
+@pytest.mark.parametrize("seconds", ["1.5", float("nan"), float("inf"), -1.0, True])
+def test_a_row_with_a_bad_timing_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], seconds: Any
+) -> None:
+    """A string raised a traceback and NaN put NaN medians into metrics.json."""
+    rows = [{**_row(OKTA, keys=["app:i"]), "seconds": seconds}]
+    corpus_path, results = _write(tmp_path, [OKTA], {"t": rows})
+    assert "seconds must be a finite, non-negative number" in _refused(tmp_path, corpus_path, results, capsys)

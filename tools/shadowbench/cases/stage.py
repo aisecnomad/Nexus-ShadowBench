@@ -11,8 +11,12 @@ fresh PID namespace and in neither the runner's mount nor (when the spec names
 it) the runner's UTS namespace, sets ``no_new_privs``, sets the host name to
 the spec's ``hostname`` and binds read-only files naming it over
 ``/etc/hostname`` and ``/etc/hosts`` so no tool records the operator's, brings
-loopback up, mounts an empty tmpfs over ``/root`` and
-``/home`` so the operator's homes and credentials are out of sight, mounts a
+loopback up, joins a new, empty session keyring so no tool reaches the
+runner's keys, mounts an empty tmpfs over ``/root`` and ``/home`` so the
+operator's homes and credentials are out of sight and over ``/run`` and
+``/tmp/.X11-unix`` so no host service's UNIX socket (the D-Bus system bus,
+systemd-resolved, nscd, an X server) offers a way around the empty network
+namespace, mounts a
 fresh, empty, world-writable tmpfs over ``/var/tmp`` and ``/dev/shm`` so
 nothing a tool leaves there outlives the case, and leaves the directory it was
 started in for ``/``, so no process it starts inherits a working directory
@@ -49,16 +53,18 @@ and reaped, including descendants that left the tool's process group with
 after that is an error for the case, never a silent leftover.
 
 Under ``unshare`` this is not a filesystem sandbox: a tool can still read
-whatever is world-readable outside ``/root`` and ``/home``, and the host's
-``/tmp``, which usually holds the scratch directory, stays shared with the host
-and with other cases. The OCI backend closes that: the container sees only its
-image, its own tmpfs mounts and the run directory, harness and tool trees the
-runner binds into it, the tool trees read-only.
+whatever is world-readable outside the hidden paths, and the host's ``/tmp``,
+which usually holds the scratch directory, stays shared with the host and with
+other cases, including any UNIX socket another host process left there. The
+OCI backend closes that: the container sees only its image, its own tmpfs
+mounts and the run directory, harness and tool trees the runner binds into it,
+the tool trees read-only.
 """
 
 from __future__ import annotations
 
 import ctypes
+import errno
 import fcntl
 import functools
 import json
@@ -83,8 +89,9 @@ FAKEPROC_C = r"""
 int main(void) { for (;;) pause(); return 0; }
 """
 
-HIDDEN: tuple[str, ...] = ("/root", "/home")
-"""Operator home directories the stage covers with an empty tmpfs."""
+HIDDEN: tuple[str, ...] = ("/root", "/home", "/run", "/tmp/.X11-unix")
+"""Operator home directories, and the directories holding host services' UNIX sockets (a socket on
+a path is reachable from any network namespace), that the stage covers with an empty tmpfs."""
 PRIVATE_TMP: tuple[str, ...] = ("/var/tmp", "/dev/shm")
 """Shared temporary directories the stage replaces with a fresh, world-writable tmpfs for each case."""
 INERT_ENV: dict[str, str] = {"PATH": SYSTEM_PATH, "LANG": "C.UTF-8"}
@@ -118,6 +125,8 @@ files and 4096 processes of the tools' uid. A tool that exceeds one fails, which
 
 _MS_NOSUID, _MS_NODEV, _MS_NOEXEC = 0x2, 0x4, 0x8
 _PR_SET_NO_NEW_PRIVS = 38
+_SYS_KEYCTL = {"x86_64": 250, "aarch64": 219}
+_KEYCTL_JOIN_SESSION_KEYRING = 1
 
 
 def build_fakeproc(path: Path) -> Path:
@@ -257,6 +266,25 @@ def _set_hostname(name: object) -> None:
     if not isinstance(name, str) or not name or len(name) > 64:
         raise ValueError(f"invalid host name {name!r}")
     socket.sethostname(name)
+
+
+def new_session_keyring() -> None:
+    """Join a new, empty, anonymous session keyring, which every process started from here on inherits.
+
+    A uid change keeps the session keyring, and a process possessing it keeps the possessor's rights
+    to its keys, so a tool dropped to 65534 could otherwise read the keys of the session the runner
+    was started in (Kerberos caches, fscrypt or network file system credentials). Without key
+    support in the kernel (ENOSYS), or under a seccomp filter that refuses keyctl (EPERM, as Docker's
+    default does) and binds every child too, there is no keyring for a tool to reach.
+    """
+    number = _SYS_KEYCTL.get(os.uname().machine)
+    if number is None:
+        raise RuntimeError(f"no keyctl system call number is known for {os.uname().machine}")
+    join = ctypes.c_long(_KEYCTL_JOIN_SESSION_KEYRING)
+    if _libc().syscall(ctypes.c_long(number), join, ctypes.c_void_p()) == -1:
+        err = ctypes.get_errno()
+        if err not in (errno.ENOSYS, errno.EPERM):
+            raise OSError(err, f"keyctl(KEYCTL_JOIN_SESSION_KEYRING): {os.strerror(err)}")
 
 
 def _no_new_privs() -> None:
@@ -494,6 +522,7 @@ def main(argv: list[str]) -> int:
         run_as = _tool_identity(spec)
         contained = spec.get("contained") is True
         _check_namespaces(spec.get("host_mnt_ns"), spec.get("host_uts_ns"))
+        new_session_keyring()
         _no_new_privs()
         result["limits"] = pairs = limit_pairs(spec.get("limits", DEFAULT_LIMITS))
         prefix = limit_prefix(pairs)

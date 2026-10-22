@@ -233,7 +233,8 @@ def mcnemar_exact(b: int, c: int) -> float:
     if n == 0:
         return 1.0
     k = min(b, c)
-    tail = sum(math.comb(n, i) for i in range(k + 1)) / 2.0**n
+    # Integer true division: 2.0**n overflows a float from 1024 discordant cases on.
+    tail = sum(math.comb(n, i) for i in range(k + 1)) / (1 << n)
     return min(1.0, 2 * tail)
 
 
@@ -512,6 +513,14 @@ def _check_row(row: Any, where: str, cases: dict[str, Case], tool: str) -> dict[
             )
     if not isinstance(row.get("incomplete", False), bool):
         raise ResultsError(f"{where}: {cid}: incomplete must be true or false")
+    seconds = row.get("seconds")
+    if seconds is not None and (
+        isinstance(seconds, bool)
+        or not isinstance(seconds, int | float)
+        or not math.isfinite(seconds)
+        or seconds < 0
+    ):
+        raise ResultsError(f"{where}: {cid}: seconds must be a finite, non-negative number, not {seconds!r}")
     if "out_of_taxonomy" in row:
         dropped = row["out_of_taxonomy"]
         if not isinstance(dropped, int) or isinstance(dropped, bool) or dropped < 0:
@@ -550,16 +559,22 @@ def load_rows(results: Path, corpus: Corpus) -> dict[str, dict[str, dict[str, An
                 if row["case"] in rows[tool]:
                     raise ResultsError(f"{where}: second row for case {row['case']}")
                 rows[tool][row["case"]] = row
-        # the runner decides support per (surface, modality); a mix means an edited or corrupt file
-        support: dict[tuple[str, str], set[bool]] = {}
-        for row in rows[tool].values():
-            support.setdefault((row["surface"], row["modality"]), set()).add(row["status"] == "unsupported")
-        for (surface, modality), kinds in sorted(support.items()):
-            if len(kinds) > 1:
-                raise ResultsError(
-                    f"{path.name}: {surface}/{modality} has unsupported rows alongside ok or error rows"
-                )
+        mixed = mixed_support(rows[tool].values())
+        if mixed:
+            raise ResultsError(f"{path.name}: {mixed[0]} has unsupported rows alongside ok or error rows")
     return rows
+
+
+def mixed_support(rows: Iterable[dict[str, Any]]) -> list[str]:
+    """Every surface/modality with unsupported rows beside ok or error rows, sorted.
+
+    The runner decides support per (surface, modality), so a mix means an edited or corrupt file.
+    """
+    support: dict[tuple[str, str], set[bool]] = {}
+    for row in rows:
+        support.setdefault((row["surface"], row["modality"]), set()).add(row["status"] == "unsupported")
+    mixed = sorted(pair for pair, kinds in support.items() if len(kinds) > 1)
+    return [f"{surface}/{modality}" for surface, modality in mixed]
 
 
 def _provenance(
@@ -640,6 +655,15 @@ def score(
             f"not this corpus ({corpus_sha256}); case ids are positional, so refusing to score"
         )
     for case in corpus.cases:
+        # Hits are a set and the decoy universe a count: a repeated decoy would earn a true negative
+        # however often the tool reported it, and a repeated expected key a second miss or match.
+        for name, keys in (
+            ("expected", [e.key for e in case.expected]),
+            ("tolerated", case.tolerated),
+            ("decoy", case.decoys),
+        ):
+            if len(set(keys)) != len(keys):
+                raise ResultsError(f"{case.case_id}: a {name} key is listed more than once")
         if case.surface == "code":
             for key in [e.key for e in case.expected] + case.tolerated + case.decoys:
                 if not is_fact(key):

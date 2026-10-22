@@ -23,6 +23,7 @@ scores and the ``incomplete`` flag, determines whether collection succeeded.
 
 from __future__ import annotations
 
+import math
 import statistics
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field
@@ -161,6 +162,19 @@ def score_repo(
     return score
 
 
+class RunsError(ValueError):
+    """A runs.json that cannot be scored: a second run of a tool on one repository, or bad timings."""
+
+
+def _seconds(run: dict[str, Any]) -> float:
+    value = run.get("seconds")
+    if value is None:
+        return 0.0
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value) or value < 0:
+        raise RunsError(f"{run['tool']} on {run['repo']}: seconds must be a finite, non-negative number")
+    return float(value)
+
+
 def _quantile(values: list[float], q: float) -> float | None:
     if not values:
         return None
@@ -181,7 +195,13 @@ def score_tool(
     runs: list[dict[str, Any]],
     repos: AbstractSet[str] | None = None,
 ) -> dict[str, Any]:
-    by_repo = {r["repo"]: r for r in runs if r["tool"] == tool_id}
+    by_repo: dict[str, dict[str, Any]] = {}
+    for row in runs:
+        if row["tool"] == tool_id:
+            # Keeping the last of two runs would let an appended row replace a failed scan.
+            if row["repo"] in by_repo:
+                raise RunsError(f"{tool_id} has more than one run on {row['repo']}")
+            by_repo[row["repo"]] = row
     per_repo: dict[str, RepoScore] = {}
     value_all = Counts()
     value_scope = Counts()
@@ -205,11 +225,11 @@ def score_tool(
                 list(run.get("facts") or []),
                 scope,
                 status=status,
-                seconds=float(run.get("seconds") or 0.0),
+                seconds=_seconds(run),
                 incomplete=bool((run.get("detail") or {}).get("incomplete")),
             )
             if run.get("status") in {"ok", "failed"}:
-                seconds.append(float(run.get("seconds") or 0.0))
+                seconds.append(_seconds(run))
         per_repo[repo.id] = score
         if score.incomplete:
             incomplete.append(repo.id)

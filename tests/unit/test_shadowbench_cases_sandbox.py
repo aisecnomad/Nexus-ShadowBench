@@ -8,21 +8,26 @@ image by digest).
 
 from __future__ import annotations
 
+import ctypes
+import errno
 import functools
 import json
 import os
 import resource
 import shutil
 import socket
+import stat
 import subprocess
+import sys
 import tempfile
+import types
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from tools.shadowbench.cases import runner, stage
+from tools.shadowbench.cases import mockserv, runner, stage
 from tools.shadowbench.cases.contract import ToolEnv
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -449,3 +454,120 @@ def test_limits_no_tool_could_run_under_are_refused_up_front(item: str, message:
     """An impossible --rlimit passed the preflight and then failed every case."""
     with pytest.raises(ValueError, match=message):
         runner.parse_limits([item])
+
+
+# --- session keyring, host sockets, reclaimed files, mock services ---------------------------------
+
+
+class _Libc:
+    def __init__(self, rc: int, err: int = 0) -> None:
+        self.rc, self.err, self.calls = rc, err, []
+
+    def syscall(self, *args: Any) -> int:
+        self.calls.append(tuple(getattr(a, "value", a) for a in args))
+        ctypes.set_errno(self.err)
+        return self.rc
+
+
+@pytest.mark.parametrize(("rc", "err"), [(7, 0), (-1, errno.ENOSYS), (-1, errno.EPERM)])
+def test_the_stage_leaves_the_session_keyring_or_finds_none_to_leave(
+    monkeypatch: pytest.MonkeyPatch, rc: int, err: int
+) -> None:
+    fake = _Libc(rc, err)
+    monkeypatch.setattr(stage, "_libc", lambda: fake)
+    monkeypatch.setattr(stage.os, "uname", lambda: types.SimpleNamespace(machine="x86_64"))
+    stage.new_session_keyring()
+    assert fake.calls == [(250, 1, None)]
+
+
+def test_a_keyring_the_stage_cannot_leave_is_an_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(stage, "_libc", lambda: _Libc(-1, errno.EDQUOT))
+    with pytest.raises(OSError, match="KEYCTL_JOIN_SESSION_KEYRING"):
+        stage.new_session_keyring()
+    monkeypatch.setattr(stage.os, "uname", lambda: types.SimpleNamespace(machine="mips"))
+    with pytest.raises(RuntimeError, match="no keyctl system call number"):
+        stage.new_session_keyring()
+
+
+_KEYRING_PROBE = """
+import ctypes, os, sys
+from tools.shadowbench.cases import stage
+libc = ctypes.CDLL(None, use_errno=True)
+nr = ctypes.c_long(stage._SYS_KEYCTL[os.uname().machine])
+def keyctl(*args):
+    return libc.syscall(nr, *(ctypes.c_long(a) for a in args))
+before = keyctl(0, -3, 1)  # KEYCTL_GET_KEYRING_ID of the session keyring, created if absent
+if before == -1:
+    sys.exit(77)
+stage.new_session_keyring()
+after = keyctl(0, -3, 0)
+print(before, after, keyctl(11, after, 0, 0))  # KEYCTL_READ with no buffer: the payload size
+"""
+
+
+def test_a_new_session_keyring_is_another_and_empty() -> None:
+    done = subprocess.run(
+        [sys.executable, "-c", _KEYRING_PROBE], cwd=ROOT, capture_output=True, text=True, check=False
+    )
+    if done.returncode == 77:
+        pytest.skip("keyctl is not available here")
+    assert done.returncode == 0, done.stderr
+    before, after, size = (int(x) for x in done.stdout.split())
+    assert after != before and size == 0
+
+
+def test_the_stage_hides_host_service_sockets() -> None:
+    """A UNIX socket on a path is reachable from any network namespace; these hold the host's."""
+    assert {"/root", "/home", "/run", "/tmp/.X11-unix"} <= set(stage.HIDDEN)
+
+
+@pytest.mark.skipif(not _namespaces_available(), reason="needs root and unshare with every stage namespace")
+def test_the_stage_shows_tools_an_empty_run_directory(run_dirs: tuple[Path, Path]) -> None:
+    work, control = run_dirs
+    script = "ls -A /run /var/run | wc -w; cat /proc/self/stat > /dev/null && echo ok"
+    spec = {"services": [], "processes": [], "fakeproc": "/nonexistent", "work": str(work)}
+    staged = runner._stage({**spec, "invocations": [_inv(work, script)]}, control, ROOT, 60)
+    assert staged["error"] is None, staged
+    assert staged["runs"][0]["stdout"].split() == ["2", "ok"]  # the two "dir:" headers, no entries
+
+
+def test_reclaimed_files_lose_group_and_other_write(tmp_path: Path) -> None:
+    (tmp_path / "sub").mkdir()
+    for path, mode in ((tmp_path / "report.json", 0o666), (tmp_path / "sub" / "tool", 0o4777)):
+        path.write_text("{}")
+        path.chmod(mode)
+    assert runner._reclaim_tree(tmp_path) == 0
+    assert stat.S_IMODE((tmp_path / "report.json").stat().st_mode) == 0o644
+    assert stat.S_IMODE((tmp_path / "sub" / "tool").stat().st_mode) == 0o755
+
+
+def _raw_request(port: int, head: bytes) -> bytes:
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as conn:
+        conn.sendall(head)
+        conn.shutdown(socket.SHUT_WR)
+        return conn.recv(4096)
+
+
+@pytest.mark.parametrize(
+    ("length", "status"),
+    [
+        (b"zz", b"400"),
+        (b"-5", b"400"),
+        (b"99999999999", b"400"),
+        (str(mockserv.MAX_BODY + 1).encode(), b"413"),
+    ],
+)
+def test_mock_services_refuse_bad_lengths_quietly(
+    capfd: pytest.CaptureFixture[str], length: bytes, status: bytes
+) -> None:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    services = mockserv.Services([{"ip": "127.0.0.1", "port": port, "product": "ollama"}])
+    try:
+        services.start(timeout=5)
+        reply = _raw_request(port, b"POST /api/generate HTTP/1.1\r\nContent-Length: " + length + b"\r\n\r\n")
+    finally:
+        services.stop()
+    assert reply.split(b" ", 2)[1] == status
+    assert capfd.readouterr().err == ""

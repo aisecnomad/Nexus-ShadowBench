@@ -130,6 +130,7 @@ from tools.shadowbench.cases.stage import (
     PRIVATE_TMP,
     build_fakeproc,
     check_limits,
+    new_session_keyring,
 )
 from tools.shadowbench.scrub import parse_map, scrub_text
 
@@ -287,7 +288,9 @@ def _reclaim_tree(work: Path) -> int:
     and loses group and other write before it is listed, so once listed only the runner can add,
     rename or remove an entry in it; no symlink is followed, and an open fd grants no write.
 
-    Regular files and symlinks with a single link are handed to the runner too. Anything else is
+    Regular files and symlinks with a single link are handed to the runner too, and regular files
+    lose group and other write, so no process of the tool's uid opens one for writing after it was
+    reclaimed (a file of mode 0666 would otherwise stay writable to it). Anything else is
     removed rather than handed over: a hard link may name a file outside ``work`` (one the tool's
     uid could link but does not own), which a change of owner would give to root, and a FIFO,
     socket or device node is no output. Returns how many entries were removed.
@@ -314,6 +317,8 @@ def _reclaim_tree(work: Path) -> int:
                 seal(path)
             elif (stat.S_ISREG(entry.st_mode) or stat.S_ISLNK(entry.st_mode)) and entry.st_nlink == 1:
                 os.lchown(path, uid, gid)
+                if stat.S_ISREG(entry.st_mode):
+                    os.chmod(path, stat.S_IMODE(entry.st_mode) & 0o755)
             else:
                 os.unlink(path)
                 removed += 1
@@ -1149,6 +1154,12 @@ def main(argv: list[str] | None = None) -> int:
         if problem:
             print(f"the stage's namespaces are not available: {problem}", file=sys.stderr)
             return 2
+    # Before any child (a version probe, a stage) starts, so none inherits the operator's session keyring.
+    try:
+        new_session_keyring()
+    except (OSError, RuntimeError) as exc:
+        print(f"cannot leave the operator's session keyring: {exc}", file=sys.stderr)
+        return 2
     adapters, problems = load_adapters()
     for name, problem in problems.items():
         print(f"adapter module {name} skipped: {problem}", file=sys.stderr)
