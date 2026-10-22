@@ -85,6 +85,14 @@ dependencies at install time and nothing recorded them. To refresh a lock,
 change the `.in` file, recompile with the command in the lock's header, and
 say in the pull request what moved.
 
+CI audits `locks/uv.txt` and `locks/build.txt` with `pip-audit`, as it does
+the repository's own locks: uv and the setuptools it builds sdists with are
+the installer, which runs as root and writes every tool tree. The tools' own
+locks are not audited. They pin what is measured, and a tool under test is
+treated as hostile whatever its dependencies, so it only ever runs in the
+sandbox (at this change, snyk-agent-scan's lock holds `mcp` 1.28.1, which
+GHSA-84m7-p3x7-pcfv affects).
+
 ## The tool image
 
 [`images/Containerfile`](../tools/shadowbench/cases/images/Containerfile)

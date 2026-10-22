@@ -39,12 +39,16 @@ jobs:
           python -m pip install --no-deps --no-build-isolation -e ./scanner-source
       # Audit what was installed (the editable pinned scanner is unpublished
       # source, so its PyPI namesake is skipped) and every hash-locked set it
-      # came from. migration/requirements.source.lock is provenance, never
-      # installed, and keeps its historical pins.
+      # came from, and the cases track's installer toolchain: uv and the
+      # setuptools it builds sdists with run as root in install_tools.sh. The
+      # locks of the tools under test pin what is measured and only ever run
+      # in the sandbox. migration/requirements.source.lock is provenance,
+      # never installed, and keeps its historical pins.
       - name: Audit the hash-locked dependencies
         run: |
           pip-audit --skip-editable --progress-spinner off
-          for lock in requirements.lock requirements-ci.lock requirements-build.lock; do
+          for lock in requirements.lock requirements-ci.lock requirements-build.lock \
+            tools/shadowbench/cases/locks/uv.txt tools/shadowbench/cases/locks/build.txt; do
             pip-audit --require-hashes --strict --progress-spinner off --disable-pip -r "$lock"
           done
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2

@@ -36,9 +36,10 @@ an AI assistant act on text it reads there.
   (`verify-freeze`), and the cases corpus is rebuilt and compared case by
   case (`verify`).
 - **Dependency audit.** Every install is hash-locked and binary-only, and CI
-  runs `pip-audit` on the installed environment and on each lock it was
-  installed from, on every push and pull request and daily on `main`, so a
-  newly published advisory fails `main`'s status within a day.
+  runs `pip-audit` on the installed environment, on each lock it was
+  installed from and on the cases track's installer locks (uv and setuptools),
+  on every push and pull request and daily on `main`, so a newly published
+  advisory fails `main`'s status within a day.
 - **Result binding.** The cases scorer refuses rows whose corpus digest, tool,
   status counts or file SHA-256 differ from the run manifest unless `--force`
   is given, and a forced score lists every override in `metrics.json` and the

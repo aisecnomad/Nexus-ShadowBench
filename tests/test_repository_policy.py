@@ -122,15 +122,27 @@ def test_every_scanner_checkout_uses_the_makefile_pin():
     assert refs and set(refs) == {pin.group(1)}
 
 
+# The cases track's installer and the build backend it builds sdists with: they run as root in
+# install_tools.sh, unlike the tools under test, whose locks pin what is measured.
+TOOLCHAIN_LOCKS = {"tools/shadowbench/cases/locks/uv.txt", "tools/shadowbench/cases/locks/build.txt"}
+
+
 def test_ci_audits_every_lock_it_installs():
     workflow = _yaml(GITHUB / "workflows" / "ci.yml")
     scripts = [step.get("run", "") for step in _steps(workflow)]
     installed = {lock for script in scripts for lock in re.findall(r"-r (requirements[\w-]*\.lock)", script)}
     audit = next(script for script in scripts if "pip-audit --skip-editable" in script)
-    audited = set(re.search(r"for lock in ([^;]+);", audit).group(1).split())
-    assert installed and installed == audited
+    audited = set(re.search(r"for lock in ([^;]+);", audit).group(1).replace("\\", " ").split())
+    assert installed and audited == installed | TOOLCHAIN_LOCKS
+    assert all((ROOT / lock).is_file() for lock in audited)
     assert "--require-hashes --strict" in audit
     assert "migration/requirements.source.lock" not in audited
+
+
+def test_the_toolchain_locks_are_the_installers_install_tools_uses():
+    script = (ROOT / "tools/shadowbench/cases/install_tools.sh").read_text(encoding="utf-8")
+    smoke = (GITHUB / "workflows" / "rescore.yml").read_text(encoding="utf-8")
+    assert '"$locks/build.txt"' in script and "-r tools/shadowbench/cases/locks/uv.txt" in smoke
 
 
 def test_script_injection_and_privileged_triggers_are_detected():

@@ -145,6 +145,16 @@ changed, no published number moved, and no published run was rerun.
 - Updated virtualenv from 21.14.8 to 21.14.9 in `requirements-ci.lock` for
   GHSA-c978-59m8-c77v, which that audit caught on `main`. The two releases
   declare the same dependencies, and both hashes were checked against PyPI.
+- Updated uv, the cases track's tool installer, from 0.9.5 to 0.13.4 in
+  `tools/shadowbench/cases/locks/uv.txt` (recompiled with the command in its
+  header; its 19 hashes are every artifact PyPI publishes for 0.13.4) and in
+  the tool image's digest-pinned `UV_IMAGE`. 0.9.5 is affected by
+  GHSA-pjjw-68hj-v9mw and GHSA-4gg8-gxpx-9rph (a wheel's RECORD entries or
+  entry-point names written outside the install prefix, by a process that
+  runs as root here), GHSA-pqhf-p39g-3x64 (ZIP parsing differentials) and
+  GHSA-hq85-5cpj-mr62 (an untrusted root in the vendored TLS bundle). CI now
+  audits `locks/uv.txt` and `locks/build.txt` with the repository's own
+  locks.
 
 ### Errata
 
