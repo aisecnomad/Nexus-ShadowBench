@@ -83,6 +83,7 @@ from typing import Any
 
 from tools.discovery_benchmark import taxonomy
 from tools.shadowbench.cases.adapters._probe import cli_version
+from tools.shadowbench.cases.adapters._report import read_text
 from tools.shadowbench.cases.contract import (
     AdapterResult,
     Entity,
@@ -157,9 +158,9 @@ def _server_map(path: Path, fmt: str, key: str) -> dict[str, Any] | None:
     """The server block the tool would read from ``path``; None when unreadable or absent."""
     try:
         if fmt == "toml":
-            data: Any = tomllib.loads(path.read_text(encoding="utf-8", errors="ignore"))
+            data: Any = tomllib.loads(read_text(path, errors="ignore"))
         else:
-            data = json.loads(path.read_text(encoding="utf-8", errors="ignore"))
+            data = json.loads(read_text(path, errors="ignore"))
     except (OSError, ValueError):
         return None
     block = data.get(key) if isinstance(data, dict) else None
@@ -186,7 +187,7 @@ def _client_config(client: str, home: Path, root: Path) -> Path | None:
 def _sarif_results(path: Path) -> list[tuple[str, str, str]] | None:
     """(rule id, message, relative uri) per result; None when the file is unreadable."""
     try:
-        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc = json.loads(read_text(path))
     except (OSError, ValueError):
         return None
     if not isinstance(doc, dict):
@@ -307,7 +308,7 @@ class AgentDiscover:
             if parsed is None:
                 return AdapterResult("error", note="layer1_code.sarif is unreadable", raw=raw)
             results = parsed
-            raw["layer1_code.sarif"] = sarif_path.read_text(encoding="utf-8")[:RAW_LIMIT]
+            raw["layer1_code.sarif"] = read_text(sarif_path)[:RAW_LIMIT]
         elif (report.get("summary") or {}).get("detection_coverage", {}).get("layer1"):
             return AdapterResult("error", note="layer1 reported findings but wrote no SARIF", raw=raw)
         home = case.home if case.home is not None else work

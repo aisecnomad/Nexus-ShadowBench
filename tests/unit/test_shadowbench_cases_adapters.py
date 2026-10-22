@@ -21,6 +21,9 @@ import pytest
 
 from tools.discovery_benchmark import taxonomy
 from tools.shadowbench.cases import fetch_code, generate
+from tools.shadowbench.cases.adapters import _report
+from tools.shadowbench.cases.adapters import agentdiscover as agentdiscover_adapter
+from tools.shadowbench.cases.adapters import shadowscan as shadowscan_adapter
 from tools.shadowbench.cases.adapters.registry import load_adapters
 from tools.shadowbench.cases.adapters.shadowscan import ADAPTER as SHADOWSCAN
 from tools.shadowbench.cases.adapters.shadowscan import convert_aws
@@ -1031,3 +1034,43 @@ def test_fetch_refetches_a_checkout_it_cannot_vouch_for(
     # A checkout from the fetcher before filter drivers were turned off has no override.
     assert not kept_after(lambda: (dest / ".git" / "info" / "attributes").unlink())
     assert (dest / ".git" / "info" / "attributes").read_text(encoding="utf-8") == "* !filter\n"
+
+
+# --- review regression: a tool controls the size of every file it writes --------------------------
+
+
+def test_report_reads_match_read_text_and_stop_at_the_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "report.txt"
+    path.write_bytes(b'{"a": 1}\r\nb\rc\n\xff')
+    assert _report.read_text(path, errors="replace") == path.read_text(encoding="utf-8", errors="replace")
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", path.stat().st_size)
+    assert _report.read_text(path, errors="replace").startswith('{"a": 1}\n')
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", path.stat().st_size - 1)
+    with pytest.raises(_report.ReportTooLarge, match="longer than the"):
+        _report.read_text(path)
+    assert issubclass(_report.ReportTooLarge, OSError)  # every adapter already turns OSError into an error
+
+
+def test_oversized_reports_are_errors_not_parsed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Adapters read whole tool-written files as root; a 4 GiB report could exhaust the runner."""
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
+    for sub in ("vet", "aig"):
+        (tmp_path / sub).mkdir()
+    big = "[" + ",".join(['{"name": "x"}'] * 20) + "]"
+    work = _work(tmp_path)
+    (work / "vet.json").write_text(big, encoding="utf-8")
+    vet_case = _case(tmp_path / "vet", "endpoint", "home")
+    vet = ADAPTERS["vet"].normalize(vet_case, work, [RunResult(0, "", "", 1.0)])
+    assert vet.status == "error" and "longer than the 64 bytes" in vet.note
+    (work / "aig.txt").write_text(AIG_LINE * 5, encoding="utf-8")
+    case = _case(tmp_path / "aig", "network", "active", services=SERVICES)
+    aig = ADAPTERS["ai-infra-guard"].normalize(case, work, [RunResult(0, AIG_BANNER, "", 1.0)])
+    assert aig.status == "error" and "longer than the 64 bytes" in aig.note
+    sarif = work / "layer1_code.sarif"
+    sarif.write_text(json.dumps({"runs": [{"results": [{"ruleId": "x" * 80}]}]}), encoding="utf-8")
+    assert agentdiscover_adapter._sarif_results(sarif) is None
+    assert agentdiscover_adapter._server_map(sarif, "json", "mcpServers") is None
+    with pytest.raises(_report.ReportTooLarge):
+        shadowscan_adapter._load(sarif)

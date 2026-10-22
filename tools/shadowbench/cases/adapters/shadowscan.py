@@ -62,6 +62,7 @@ from pathlib import Path
 from typing import Any
 
 from tools.shadowbench.cases.adapters._probe import run_probe
+from tools.shadowbench.cases.adapters._report import read_text
 from tools.shadowbench.cases.contract import (
     AdapterResult,
     Entity,
@@ -91,7 +92,7 @@ ROLE_IDS = {
 
 
 def _load(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(read_text(path))
 
 
 def _values(path: Path) -> list[dict[str, Any]]:

@@ -289,6 +289,66 @@
       "reason": "Regression tests for the review fixes: a second run of a tool on one repository and bad run timings are refused.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/11",
       "sha256": "9294626b05f6448cb6a72d8b24a88196c60c9de69772e831b2ea55b273f3f60d"
+    },
+    {
+      "bytes": 1257,
+      "from_sha256": "325974bf89321e84d6d7825082e4db9bf244a2dc2a29c165f7c295c02f2a83a1",
+      "git_blob": "16fcd29fe5f2338a9d5cc9acba1eac2ed2c06345",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/__init__.py",
+      "reason": "Add the adapter rule that a file the tool wrote is read only through _report.read_text, since the tool controls its size and the adapter parses it as root.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "af2b45ad069ef084b3e844174da65df8247192484fd9b1d9115bd1deb05ca35f"
+    },
+    {
+      "bytes": 18770,
+      "from_sha256": "8224e549737184c6e731d6ca2c700f9e192edc19884daab4b333f3c0a9a0ce31",
+      "git_blob": "a68e9fc97c8d4e9535c2773c78cdf6131d8bb577",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/agentdiscover.py",
+      "reason": "Read the files the tool wrote through adapters/_report.read_text, which stops at MAX_REPORT_BYTES (256 MiB) and raises ReportTooLarge (an OSError, already turned into an error result) instead of reading a tool-sized file whole as root; under the limit it returns what read_text did.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "39bc22b71836ed85e22b68d6f47699d6f18435abb5f11d7e08c743a7241b5cbf"
+    },
+    {
+      "bytes": 16811,
+      "from_sha256": "3494a2802c0781f341cb300bdf4907dfd720098ef7c8a6d06ee76026b4c9f93f",
+      "git_blob": "4a79cef5efcc310d523c0242c2352de35ef8ce65",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/ai_infra_guard.py",
+      "reason": "Read the files the tool wrote through adapters/_report.read_text, which stops at MAX_REPORT_BYTES (256 MiB) and raises ReportTooLarge (an OSError, already turned into an error result) instead of reading a tool-sized file whole as root; under the limit it returns what read_text did.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "9af3bd847ef31b1b3c364807e126342e6b09321416c8b17df30c33a404922798"
+    },
+    {
+      "bytes": 24692,
+      "from_sha256": "ea89f65370b37e788aff85dbf48881fa41463c5b96c21a88aa95bf275777a0d2",
+      "git_blob": "4c9c13db27edf46ac41d76e48b630c8617cc4830",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/shadowscan.py",
+      "reason": "Read the files the tool wrote through adapters/_report.read_text, which stops at MAX_REPORT_BYTES (256 MiB) and raises ReportTooLarge (an OSError, already turned into an error result) instead of reading a tool-sized file whole as root; under the limit it returns what read_text did.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "d44fb84dadd4b361aa92f9ba271fc3bd2b41ca4750bf6646d3729717a02703f5"
+    },
+    {
+      "bytes": 12440,
+      "from_sha256": "d0e1b81cdef49c5cf8ae76fac80037e5ca3c631d444114acc86b5a12e6e04a39",
+      "git_blob": "9034c2c21962038e64e6de68b5efce9ecf361eb8",
+      "mode": "100644",
+      "path": "tools/shadowbench/cases/adapters/vet.py",
+      "reason": "Read the files the tool wrote through adapters/_report.read_text, which stops at MAX_REPORT_BYTES (256 MiB) and raises ReportTooLarge (an OSError, already turned into an error result) instead of reading a tool-sized file whole as root; under the limit it returns what read_text did.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "620ff437674e4ca84f83a2436883e00690488eada8578d8258e792011c52a75a"
+    },
+    {
+      "bytes": 49032,
+      "from_sha256": "d24ca56397cf3d0563f535eb1b628cc1f70f43fddbb64972a93ebdeccda3ac3a",
+      "git_blob": "1d88d61cb843a890b9a341041da8fb176e957e8d",
+      "mode": "100644",
+      "path": "tests/unit/test_shadowbench_cases_adapters.py",
+      "reason": "Regression tests: _report.read_text matches read_text under its limit and raises ReportTooLarge over it; oversized vet, AI-Infra-Guard, AgentDiscover and ShadowScan reports are errors, not parsed.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
+      "sha256": "fe0220ba92222d95f9aaabff7786f635259d03b97684bd380beda5c13bea35be"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

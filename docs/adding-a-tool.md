@@ -109,6 +109,11 @@ Entity keys must use the contract's tool-neutral forms: `app:<id>`,
   `_probe.run_probe` (or its helpers `cli_version` and
   `distribution_version`), which scrub the environment and, as root, drop to
   the stage's identity in fresh namespaces.
+- **Bounded reads.** Read a file the tool wrote only through
+  `_report.read_text`. The tool controls its size up to the stage's file-size
+  limit (4 GiB), and the adapter parses it as root in the runner; a report
+  over `MAX_REPORT_BYTES` (256 MiB) raises `ReportTooLarge`, an `OSError`, which
+  the usual `except OSError` turns into an `error` result.
 - **Withheld decoys.** When your conversion drops records a decoy comes from,
   declare the prefixes in `withheld_decoys` (the ShadowScan adapter does so
   for AWS IAM roles). The scorer then leaves those decoys out of the tool's
@@ -210,7 +215,7 @@ class MyTool:
             return AdapterResult("error", note=f"timeout after {run.seconds:.0f}s", raw=raw)
         report = work / "mytool.json"
         try:
-            items = json.loads(report.read_text(encoding="utf-8"))
+            items = json.loads(read_text(report))  # adapters/_report.py
         except (OSError, ValueError):
             return AdapterResult("error", note=f"exit {run.code}: no readable report", raw=raw)
         if not isinstance(items, list) or not all(isinstance(i, dict) for i in items):

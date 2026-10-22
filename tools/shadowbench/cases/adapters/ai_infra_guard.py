@@ -94,6 +94,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from tools.shadowbench.cases.adapters._probe import run_probe
+from tools.shadowbench.cases.adapters._report import read_text
 from tools.shadowbench.cases.contract import (
     AdapterResult,
     Entity,
@@ -357,7 +358,7 @@ class AIInfraGuardAdapter:
         written = ""
         if output.is_file():
             try:
-                written = output.read_text(encoding="utf-8", errors="replace")
+                written = read_text(output, errors="replace")
             except OSError as exc:
                 return AdapterResult(status="error", note=f"cannot read {OUTPUT}: {exc}")
         # The -o file holds every result line; stdout may have lost its head to the stage's tail limit.

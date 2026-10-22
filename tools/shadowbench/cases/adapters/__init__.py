@@ -16,4 +16,6 @@ Rules every adapter follows:
 * ``version()`` runs a tool's binary only through ``_probe.run_probe``: a
   scrubbed environment, a throwaway home and a timeout, and as root a drop to
   the stage's unprivileged identity with ``/root`` and ``/home`` hidden.
+* A file the tool wrote is read only through ``_report.read_text``: the tool
+  controls its size, and the adapter parses it as root in the runner.
 """

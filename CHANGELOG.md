@@ -203,6 +203,18 @@ and the code-surface 2026-10-09 metrics still re-score byte for byte, and
   audits `locks/uv.txt` and `locks/build.txt` with the repository's own
   locks.
 
+### Bounded reads of tool reports
+
+Cases-track adapters read the files a tool wrote, whose size the tool controls
+up to the stage's 4 GiB file-size limit, whole with `read_text` and
+`json.loads`, as root in the runner. They now read them through
+`adapters/_report.read_text`, which stops at 256 MiB (`MAX_REPORT_BYTES`) and
+raises `ReportTooLarge`, an `OSError` every adapter already turns into an
+`error` result. Under the limit it returns exactly what `read_text` did.
+AgentDiscover, AI-Infra-Guard, ShadowScan and vet use it; the adapter rules in
+`adapters/__init__.py` and [adding-a-tool.md](docs/adding-a-tool.md) require
+it.
+
 ### Errata
 
 - Added `docs/errata.md` for stale statements in byte-bound files: the four
