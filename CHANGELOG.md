@@ -157,6 +157,20 @@ changed, no published number moved, and no published run was rerun.
   companion docs that described the old baseline selection now describe
   `BASELINE_RUN`.
 
+### Continuous integration
+
+- **Companion tests** also runs daily on `main` and on demand, so an
+  advisory published after a merge fails `main`'s status within a day
+  rather than on the next pull request, and a newer push to a pull request
+  cancels its superseded run.
+- A `tests on Python 3.14` job installs the same binary-only locks on the
+  newest supported CPython and runs the harness tests; the required `tests`
+  job keeps gating on 3.11 under its existing name.
+- CodeQL also analyses the workflows (`actions`), which hold the OIDC
+  identity that signs results.
+- `tests/test_repository_policy.py` checks that every workflow checkout of
+  ShadowScan uses the Makefile's `SCANNER_COMMIT`.
+
 ### README
 
 - Retitled the README "ShadowBench", replaced the SVG banner with a photo

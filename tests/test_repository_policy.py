@@ -79,6 +79,18 @@ def test_unpinned_actions_are_detected():
     assert not _PINNED.match("actions/checkout@main")
 
 
+def test_every_scanner_checkout_uses_the_makefile_pin():
+    pin = re.search(r"^SCANNER_COMMIT := ([0-9a-f]{40})$", (ROOT / "Makefile").read_text(), re.M)
+    assert pin is not None
+    refs = [
+        step["with"].get("ref")
+        for path in WORKFLOWS
+        for step in _steps(_yaml(path))
+        if step.get("with", {}).get("repository") == "aisecnomad/Nexus-ShadowScan"
+    ]
+    assert refs and set(refs) == {pin.group(1)}
+
+
 def test_ci_audits_every_lock_it_installs():
     workflow = _yaml(GITHUB / "workflows" / "ci.yml")
     scripts = [step.get("run", "") for step in _steps(workflow)]

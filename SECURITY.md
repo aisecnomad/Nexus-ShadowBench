@@ -32,7 +32,8 @@ an AI assistant act on text it reads there.
   case (`verify`).
 - **Dependency audit.** Every install is hash-locked and binary-only, and CI
   runs `pip-audit` on the installed environment and on each lock it was
-  installed from, so a newly published advisory fails the next CI run.
+  installed from, on every push and pull request and daily on `main`, so a
+  newly published advisory fails `main`'s status within a day.
 - **Result binding.** The cases scorer refuses rows whose corpus digest, tool,
   status counts or file SHA-256 differ from the run manifest unless `--force`
   is given, and a forced score lists every override in `metrics.json` and the
