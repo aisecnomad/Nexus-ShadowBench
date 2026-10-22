@@ -90,3 +90,10 @@ repos:
         # path/family/digest entries in tools/secret_allowlist.json are
         # approved. The script also rejects stale approvals on partial runs.
         types: [text]
+      - id: no-hardcoded-secrets-extra
+        name: Check for the secret families and encodings check_secrets.py misses
+        entry: python tools/check_secrets_extra.py
+        language: system
+        # Every file: gzip members and UTF-16 text are what it adds, and
+        # pre-commit does not classify them as text.
+        types: [file]

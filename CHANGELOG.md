@@ -160,6 +160,26 @@ and the code-surface 2026-10-09 metrics still re-score byte for byte, and
   0.9482 instead of 0.9476). The threat model now lists the answer key's
   reachability from inside the cases sandbox as a residual risk.
 
+### Secret checks beside `check_secrets.py`
+
+`tools/check_secrets.py` is bound in `MIGRATION.json` and not amendable, and
+it missed whole families and encodings, so `tools/check_secrets_extra.py`
+runs beside it in CI, `make secrets` and pre-commit:
+
+- families it does not know: Anthropic OAuth (`sk-ant-oat01-`), OpenRouter
+  (`sk-or-v1-`, which the OpenAI rule does not reach), Groq, xAI, Replicate
+  and Perplexity keys, PyPI, npm and Docker tokens, Slack app tokens and
+  webhook URLs, Google OAuth client secrets and access tokens, SendGrid keys;
+- every family in what it cannot read: it decodes all bytes as UTF-8 and drops
+  the rest, so a token in a gzip member or in UTF-16 or UTF-32 text passed
+  unseen. Gzip is inflated up to 256 MiB; a corrupt, truncated (zlib raises
+  nothing for one) or larger member is reported, not skipped.
+
+Reports, exit codes and approvals (`tools/secret_allowlist_extra.json`, by
+path, family and SHA-256, stale entries failing closed) follow
+`check_secrets.py`. Nothing tracked matched, including the two committed
+`.jsonl.gz` result files, so the allowlist starts empty.
+
 ### Harness amendments
 
 - Added `AMENDMENTS.json`, an append-only ledger for changes to migrated

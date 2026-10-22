@@ -58,7 +58,11 @@ an AI assistant act on text it reads there.
   machine with no credentials, as each track's README requires.
 - **Secret checks.** `tools/check_secrets.py` scans every tracked file and
   accepts only exact reviewed approvals (path, credential family and SHA-256).
-  A clean result does not prove that no secret is present.
+  It is bound in `MIGRATION.json`, so `tools/check_secrets_extra.py` runs beside
+  it: AI provider, package registry, container, Slack app and webhook, Google
+  OAuth and SendGrid credentials it does not know, and every family in gzip
+  members and UTF-16 or UTF-32 text, which it reads as undecodable bytes and
+  passes. A clean result does not prove that no secret is present.
 - **Supply chain.** Python dependencies install from hash locks with
   `--require-hashes --only-binary=:all:`. Cases-track PyPI tools install from
   committed universal hash locks (`--require-hashes --no-deps`); Go tools build

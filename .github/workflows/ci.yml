@@ -79,6 +79,7 @@ jobs:
           ruff format --check tests tools benchmarks
           MYPYPATH=scanner-source mypy tools benchmarks
           git ls-files -z | xargs -0 python tools/check_secrets.py
+          git ls-files -z | xargs -0 python tools/check_secrets_extra.py
 
   # The locks and the Makefile support CPython 3.11 to 3.14; the job above
   # gates on the oldest, this one installs the same binary-only locks on the

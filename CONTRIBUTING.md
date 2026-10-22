@@ -130,7 +130,7 @@ runs the same gates locally, in the same order:
 | Lint | `ruff check tests tools benchmarks` | No errors |
 | Format | `ruff format --check tests tools benchmarks` | No changes |
 | Types | `MYPYPATH=scanner-source mypy tools benchmarks` | No errors |
-| Secrets | `git ls-files -z \| xargs -0 python tools/check_secrets.py` | Every tracked file checked; only exact reviewed approvals accepted |
+| Secrets | `make secrets` (`tools/check_secrets.py` and `tools/check_secrets_extra.py` on every tracked file) | Every tracked file checked; only exact reviewed approvals accepted |
 | Published paths | `make paths` (`python -m tools.shadowbench.scrub check` over every committed results directory) | No home, temporary or profile path left, other than paths the corpora themselves contain |
 
 Some tests start loopback servers or synthetic subprocesses and need a host

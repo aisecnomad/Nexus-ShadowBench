@@ -121,8 +121,8 @@ ShadowScan ran) in the run's README and the pull request.
   Never rewrite any other field
   ([supply-chain.md](supply-chain.md#scrubbing-machine-paths)).
 - **Credentials or credential-shaped strings.** Run
-  `git ls-files -z | xargs -0 python tools/check_secrets.py` before
-  committing. Rows can echo synthetic tokens from the corpus; such a value
+  `make secrets` (`tools/check_secrets.py` and `tools/check_secrets_extra.py`)
+  before committing. Rows can echo synthetic tokens from the corpus; such a value
   may be committed only with an exact-path, exact-digest approval in
   `tools/secret_allowlist.json` and a stated reason.
 - **Checkouts, estate copies or tool installations.**
