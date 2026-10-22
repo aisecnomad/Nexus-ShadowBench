@@ -576,12 +576,14 @@ def test_mock_services_refuse_bad_lengths_quietly(
 # --- the stage keeps only the tail of what a tool prints -------------------------------------------
 
 _FLOOD = """
-import json, resource, sys
+import json, sys
 from tools.shadowbench.cases import stage
 code = "import sys\\nline = b'x' * 1023 + b'\\\\n'\\nfor _ in range(300_000): sys.stdout.buffer.write(line)\\nprint('END')"
 inv = {"argv": [sys.executable, "-c", code], "cwd": "/", "env": {"PATH": "/usr/bin:/bin"}, "timeout": 120, "stdin": None}
 result = stage._run(inv)
-print(json.dumps({"rss_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // 1024,
+# VmHWM, not ru_maxrss: Linux carries ru_maxrss across execve, so it would report the test runner's peak
+hwm = next(int(line.split()[1]) for line in open("/proc/self/status") if line.startswith("VmHWM:"))
+print(json.dumps({"rss_mib": hwm // 1024,
                   "len": len(result["stdout"]), "end": result["stdout"][-4:], "code": result["code"]}))
 """
 
