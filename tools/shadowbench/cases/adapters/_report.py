@@ -12,8 +12,10 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-MAX_REPORT_BYTES = 256 << 20
-"""The longest report an adapter reads; the reports of the committed runs are a few MiB at most."""
+MAX_REPORT_BYTES = 32 << 20
+"""The longest report an adapter reads. ``json.loads`` peaks at several times its input (about 180 MiB
+for 32 MiB of report rows), and the reports of the committed runs are a few MiB at most."""
+_CHUNK = 1 << 20
 
 
 class ReportTooLarge(OSError):
@@ -23,9 +25,17 @@ class ReportTooLarge(OSError):
 def read_text(path: Path, *, errors: str = "strict", limit: int | None = None) -> str:
     """``path.read_text(encoding="utf-8", errors=errors)``, reading at most ``limit`` bytes."""
     cap = MAX_REPORT_BYTES if limit is None else limit
+    chunks: list[bytes] = []
+    size = 0
     with path.open("rb") as handle:
-        data = handle.read(cap + 1)
-    if len(data) > cap:
-        raise ReportTooLarge(f"{path.name} is longer than the {cap} bytes an adapter reads of a report")
+        # In chunks: read(cap + 1) would allocate the whole cap for every report, however small.
+        while chunk := handle.read(min(_CHUNK, cap + 1 - size)):
+            chunks.append(chunk)
+            size += len(chunk)
+            if size > cap:
+                raise ReportTooLarge(
+                    f"{path.name} is longer than the {cap} bytes an adapter reads of a report"
+                )
+    data = b"".join(chunks)
     # As read_text decodes: universal newlines, so what adapters keep is unchanged.
     return io.TextIOWrapper(io.BytesIO(data), encoding="utf-8", errors=errors).read()

@@ -74,8 +74,10 @@ environment, throwaway home, timeout) unless ``tools.json`` pins a version.
 
 from __future__ import annotations
 
+import functools
 import json
 import re
+import stat
 import tomllib
 from collections.abc import Mapping
 from pathlib import Path
@@ -167,6 +169,13 @@ def _server_map(path: Path, fmt: str, key: str) -> dict[str, Any] | None:
     return block if isinstance(block, dict) else None
 
 
+@functools.lru_cache(maxsize=256)
+def _has_servers(path: str, identity: tuple[int, int, int], fmt: str, key: str) -> bool:
+    """Whether ``path`` holds a non-empty server map, once per file identity (inode, size, mtime):
+    a tool can report any number of servers that send the lookup through the same few files."""
+    return bool(_server_map(Path(path), fmt, key))
+
+
 def _client_config(client: str, home: Path, root: Path) -> Path | None:
     """Replay the tool's lookup: the first candidate file for ``client`` with a non-empty server map."""
     spec = CLIENT_CONFIGS.get(client)
@@ -176,10 +185,14 @@ def _client_config(client: str, home: Path, root: Path) -> Path | None:
     first_existing: Path | None = None
     for candidate in candidates:
         path = home / candidate[2:] if candidate.startswith("~/") else root / candidate
-        if not path.is_file():
+        try:
+            info = path.stat()
+        except OSError:
+            continue
+        if not stat.S_ISREG(info.st_mode):
             continue
         first_existing = first_existing or path
-        if _server_map(path, fmt, key):
+        if _has_servers(str(path), (info.st_ino, info.st_size, info.st_mtime_ns), fmt, key):
             return path
     return first_existing
 

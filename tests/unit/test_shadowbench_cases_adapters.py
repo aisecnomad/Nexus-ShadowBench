@@ -12,7 +12,9 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import time
+import types
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -1071,6 +1073,68 @@ def test_oversized_reports_are_errors_not_parsed(tmp_path: Path, monkeypatch: py
     sarif = work / "layer1_code.sarif"
     sarif.write_text(json.dumps({"runs": [{"results": [{"ruleId": "x" * 80}]}]}), encoding="utf-8")
     assert agentdiscover_adapter._sarif_results(sarif) is None
-    assert agentdiscover_adapter._server_map(sarif, "json", "mcpServers") is None
+    config = work / "mcp.json"  # parses to a server map whenever it is read whole
+    config.write_text(json.dumps({"mcpServers": {"x": {"command": "y" * 80}}}), encoding="utf-8")
+    assert agentdiscover_adapter._server_map(config, "json", "mcpServers") is None
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 1 << 20)
+    assert agentdiscover_adapter._server_map(config, "json", "mcpServers")
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
     with pytest.raises(_report.ReportTooLarge):
         shadowscan_adapter._load(sarif)
+
+
+def test_a_small_report_is_read_without_reserving_the_cap(tmp_path: Path) -> None:
+    """read(cap + 1) allocated the whole cap for every report: under an address-space limit a
+    few-byte report raised MemoryError."""
+    small = tmp_path / "small.json"
+    small.write_text('{"ok": true}\n', encoding="utf-8")
+    probe = (
+        "import resource, sys\n"
+        "from pathlib import Path\n"
+        "from tools.shadowbench.cases.adapters import _report\n"
+        "vm = next(int(l.split()[1]) for l in open('/proc/self/status') if l.startswith('VmSize')) * 1024\n"
+        "resource.setrlimit(resource.RLIMIT_AS, (vm + (64 << 20), vm + (64 << 20)))\n"
+        "print(_report.read_text(Path(sys.argv[1]), limit=1 << 30).strip())\n"
+    )
+    done = subprocess.run([sys.executable, "-c", probe, str(small)], cwd=ROOT, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == '{"ok": true}'
+
+
+def test_the_shadowscan_code_surface_refuses_an_oversized_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The code surface hands report.json to the code-surface adapter, which reads it whole."""
+    monkeypatch.setattr(_report, "MAX_REPORT_BYTES", 64)
+    work = _work(tmp_path)
+    (work / "report.json").write_text(json.dumps({"findings": [], "pad": "x" * 100}), encoding="utf-8")
+    case = types.SimpleNamespace(surface="code", home=None)
+    result = SHADOWSCAN.normalize(case, work, [RunResult(0, "", "", 1.0)])
+    assert result.status == "error" and "longer than 64 bytes" in result.note
+
+
+def test_agentdiscover_reads_each_config_once_however_many_servers_name_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Path] = []
+    real = agentdiscover_adapter._server_map
+
+    def counted(path: Path, fmt: str, key: str) -> Any:
+        calls.append(path)
+        return real(path, fmt, key)
+
+    monkeypatch.setattr(agentdiscover_adapter, "_server_map", counted)
+    agentdiscover_adapter._has_servers.cache_clear()
+    client, (candidates, fmt, key) = next(iter(agentdiscover_adapter.CLIENT_CONFIGS.items()))
+    first = candidates[0]
+    home, root = tmp_path / "home", tmp_path / "root"
+    path = home / first[2:] if first.startswith("~/") else root / first
+    path.parent.mkdir(parents=True)
+    body = {key: {"x": {"command": "y"}}}
+    path.write_text(json.dumps(body) if fmt == "json" else f'[{key}.x]\ncommand = "y"\n', encoding="utf-8")
+    for _ in range(500):
+        assert agentdiscover_adapter._client_config(client, home, root) == path
+    assert calls == [path]
+    path.write_text(json.dumps({key: {}}) if fmt == "json" else f"[{key}]\n", encoding="utf-8")
+    agentdiscover_adapter._client_config(client, home, root)  # a rewritten file is read again
+    assert calls == [path, path]

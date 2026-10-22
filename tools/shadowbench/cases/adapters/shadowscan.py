@@ -61,6 +61,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from tools.shadowbench.cases.adapters import _report
 from tools.shadowbench.cases.adapters._probe import run_probe
 from tools.shadowbench.cases.adapters._report import read_text
 from tools.shadowbench.cases.contract import (
@@ -477,6 +478,11 @@ class ShadowScanAdapter:
         if not report_path.exists():
             return AdapterResult("error", note=f"exit {run.code}: {tail(run.stderr or run.stdout)}")
         if case.surface == "code":
+            # The code-surface adapter reads report.json itself, unbounded: refuse a tool-sized one first.
+            if report_path.stat().st_size > _report.MAX_REPORT_BYTES:
+                return AdapterResult(
+                    "error", note=f"report.json is longer than {_report.MAX_REPORT_BYTES} bytes"
+                )
             return self._normalize_code(work, run)
         try:
             report = _load(report_path)

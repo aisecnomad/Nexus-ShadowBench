@@ -203,17 +203,28 @@ and the code-surface 2026-10-09 metrics still re-score byte for byte, and
   audits `locks/uv.txt` and `locks/build.txt` with the repository's own
   locks.
 
-### Bounded reads of tool reports
+### Bounded reads of tool output
 
-Cases-track adapters read the files a tool wrote, whose size the tool controls
-up to the stage's 4 GiB file-size limit, whole with `read_text` and
-`json.loads`, as root in the runner. They now read them through
-`adapters/_report.read_text`, which stops at 256 MiB (`MAX_REPORT_BYTES`) and
-raises `ReportTooLarge`, an `OSError` every adapter already turns into an
-`error` result. Under the limit it returns exactly what `read_text` did.
-AgentDiscover, AI-Infra-Guard, ShadowScan and vet use it; the adapter rules in
-`adapters/__init__.py` and [adding-a-tool.md](docs/adding-a-tool.md) require
-it.
+A hostile tool could exhaust memory as root in two places. Cases-track
+adapters read the files a tool wrote, whose size the tool controls up to the
+stage's 4 GiB file-size limit, whole with `read_text` and `json.loads` in the
+runner; and the stage held everything a tool printed (`communicate`) before
+keeping the last 2,000,000 characters. No committed metric changes.
+
+- `adapters/_report.read_text` reads at most `MAX_REPORT_BYTES` (32 MiB;
+  `json.loads` peaks near 180 MiB on that much report) in 1 MiB chunks, not
+  one allocation of the whole cap, and raises `ReportTooLarge`, an `OSError`
+  every adapter already turns into an `error` result. Under the limit it
+  returns exactly what `read_text` did. AgentDiscover, AI-Infra-Guard,
+  ShadowScan and vet use it; ShadowScan's code surface, which hands
+  `report.json` to the code-surface adapter, refuses a longer one first; and
+  AgentDiscover parses each client configuration once per file however many
+  reported servers send its lookup there. The adapter rules in
+  `adapters/__init__.py` and [adding-a-tool.md](docs/adding-a-tool.md) require
+  it ([erratum E9](docs/errata.md) for the cases README).
+- The stage reads each invocation's stdout and stderr on threads and keeps only
+  their tails (a 300 MB flood now peaks under 150 MiB, against 902 MiB), with
+  the same deadline: the tool must exit and its pipes close within its timeout.
 
 ### Errata
 
