@@ -409,6 +409,26 @@
       "reason": "Regression tests: _report.read_text matches read_text under its limit, raises over it and reserves no cap for a small report; oversized vet, AI-Infra-Guard, AgentDiscover and ShadowScan (including its code surface) reports are errors; AgentDiscover parses a configuration once per file identity.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
       "sha256": "68fffb1b1dce748d5c2562a6baa0c6b8df3a1caf257002d73fa4662f2c90190d"
+    },
+    {
+      "bytes": 118885,
+      "from_sha256": "f67a67bf85d78fd186242eeaaed3c297073501938ac6c85620f75743992603eb",
+      "git_blob": "58d7ab5a37a2420b9ad522d1c7774432bb779cfe",
+      "mode": "100644",
+      "path": "requirements-ci.lock",
+      "reason": "Update filelock from 4.2.0 to 4.2.1 (GHSA-2g95-wg33-c5x2, GHSA-v4x8-3wr5-3wq8, GHSA-crv4-6mhj-j5jh, GHSA-9vhv-jxww-xfm5, GHSA-jqc4-5cvw-7w85, GHSA-567q-5qvw-pf92), setuptools from 84.0.0 to 84.1.0 (GHSA-xmj3-9gf7-h52w) and virtualenv from 21.14.9 to 21.14.10 (GHSA-4f8h-vr72-p32c, CVE-2026-113713), which failed the strict pip-audit gate on main's daily run of 2026-10-24; Requires-Dist and Requires-Python are unchanged between each pair of releases and every distribution hash was checked against PyPI.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/15",
+      "sha256": "373eddf7b7048410c6aeb7b82a24f61762e7d67768760a47150b276ac72e5629"
+    },
+    {
+      "bytes": 2264,
+      "from_sha256": "d18ba0d37420ffc5f67b4326680f3ec17d656c7a0dcdff3d68fc7decc352e2fd",
+      "git_blob": "05be4b1481fa1365a005ffa69f5a1cde8ee62d11",
+      "mode": "100644",
+      "path": "requirements-build.lock",
+      "reason": "Update setuptools from 84.0.0 to 84.1.0 for GHSA-xmj3-9gf7-h52w, matching requirements-ci.lock; Requires-Dist and Requires-Python are unchanged and both distribution hashes were checked against PyPI.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/15",
+      "sha256": "e502deb11cafa01bf92e994ff58d7bf270727cf875aad8a7c9f325233c3cd8a6"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

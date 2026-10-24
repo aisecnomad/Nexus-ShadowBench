@@ -269,6 +269,15 @@ path, family and SHA-256, stale entries failing closed) follow
   GHSA-hq85-5cpj-mr62 (an untrusted root in the vendored TLS bundle). CI now
   audits `locks/uv.txt` and `locks/build.txt` with the repository's own
   locks.
+- Updated filelock from 4.2.0 to 4.2.1 (GHSA-2g95-wg33-c5x2,
+  GHSA-v4x8-3wr5-3wq8, GHSA-crv4-6mhj-j5jh, GHSA-9vhv-jxww-xfm5,
+  GHSA-jqc4-5cvw-7w85, GHSA-567q-5qvw-pf92) and virtualenv from 21.14.9 to
+  21.14.10 (GHSA-4f8h-vr72-p32c) in `requirements-ci.lock`, and setuptools
+  from 84.0.0 to 84.1.0 (GHSA-xmj3-9gf7-h52w) there and in
+  `requirements-build.lock`. The daily audit failed `main` on 2026-10-24
+  with these eight advisories. Each pair of releases declares the same
+  dependencies and Python range, and every hash is the full set PyPI
+  publishes for the release.
 
 ### Bounded reads of tool output
 
