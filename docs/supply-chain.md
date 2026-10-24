@@ -134,7 +134,9 @@ Sigstore.
    not verify for the `attest.yml` workflow on `main` of this repository
    issued by GitHub Actions' OIDC issuer, or when cosign is missing for a
    bundle that is present. `--require-signatures` also fails an unsigned
-   attestation. In CI, `--since` the commit a change builds on also fails
+   attestation and requires manifests for all three historical result sets,
+   including when `attestations/` is absent or empty. Attestation directories,
+   manifests and bundles must not be symlinks. In CI, `--since` the commit a change builds on also fails
    when a committed manifest or bundle was removed or changed, so a signed
    directory cannot be downgraded to unsigned by deleting its bundle.
 
@@ -150,6 +152,10 @@ python -m tools.attest verify
 A signature says which workflow run, on which commit of `main`, saw these
 bytes, and the transparency log says when. It does not say the run was
 honest, independent or correct.
+
+The [historical signing checkpoint](historical-attestations.md) records the
+prepared manifests and the checks still required before enabling signature
+enforcement. No signatures have been generated at that checkpoint.
 
 ## Scrubbing machine paths
 

@@ -1,0 +1,18 @@
+{
+ "files": {
+  "REPORT.md": "aec536de88b75cb36f0afec7138b4d1ba823c810c56a46a35a9cc715df0accdb",
+  "agentdiscover.jsonl": "6e297a6aea478b4ed07def5bbb6318f6f73ce4c42c89194b0bf34ff0eeabf756",
+  "agentmesh-discovery.jsonl": "e923dc23b0518e7864b33afac19dd264d503e007d438c86b47ca666d19fcd0e4",
+  "ai-infra-guard.jsonl": "fd682422346dfcc5174e08bae52c8e9e517a6b1270783c64531d1efb7c6faf67",
+  "cisco-mcp-scanner.jsonl": "e0e69c0bb956b92a5085eb3aa8267c8be4f3ef5fd661718ae6b289c97aebf2af",
+  "fleet-ai-tools.jsonl": "861420b91b704f54cdc1e277b42f776df13c0a9fa2579b557b542c228363250b",
+  "manifest.json": "f25833a81cc600922c0acb5b7743d4204b2c5addf8f53afd3295bc215411e72a",
+  "metrics.json": "c94c6e3ee787758b5a62a02bc0ab0b5de2dedc3e4bdc9287e56068f1a0a044a4",
+  "numbat.jsonl": "7ee422e2fc923447c81dbcc33e1efcc02d335f7fb6a7e6848099881314f8db30",
+  "shadowscan.jsonl": "1ad6883feab9759b6b35486f35629caaebb58326fe92b811c7c9b1e61cc129ea",
+  "snyk-agent-scan.jsonl": "29dab436e0cc1aac5694b0602c926dca1305c784b846d260edeec2a571fb5d4c",
+  "vet.jsonl": "af077e274c0c6df6cf113f76eaf57e2c643cd758feb48648e9216ee0d68a2cd5"
+ },
+ "schema": 1,
+ "subject": "benchmarks/shadowbench/cases/results/2026-10-11"
+}

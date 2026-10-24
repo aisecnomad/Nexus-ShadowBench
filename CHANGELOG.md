@@ -14,6 +14,12 @@ changed, no published number moved, and no published run was rerun.
 
 ### Hardening, provenance and interoperability
 
+- **Historical signing preparation.** Add reproducible digest manifests for
+  the three preserved result sets and a signing checkpoint. Strict attestation
+  verification now rejects missing historical manifests, even with an empty
+  attestation directory, and refuses attestation symlinks and unreadable
+  inputs. Signature bundles and CI enforcement remain pending real signing
+  and verification; no historical result or metric changed.
 - **Canonical keys.** `tools/shadowbench/keys.py` maps every spelling of one
   entity its platform treats as the same to one key (GUID case, `localhost`,
   URL forms of a service, `./`, `~/` and `\` in paths, ARN partition, service

@@ -1,0 +1,10 @@
+{
+ "files": {
+  "REPORT.md": "cfaa3806edcec6a8a68a9e7e231c79b47964e48af459dca89e4d1efab168f50f",
+  "metrics.json": "b6554fa74af2afe0b6c0509efaf5a0fbda80a431a151bcf9938155c25372ab49",
+  "runs.json": "31c3381ca49e2008c62761ed1b1ad1d10272db3566a292fde900508f6eabc034",
+  "tools.json": "e97a3246cc241f1856c7bd898fee235a6d2d395b5f25ef16dc33d4af21c077e6"
+ },
+ "schema": 1,
+ "subject": "benchmarks/shadow-ai-discovery/results/2026-10-09"
+}
