@@ -11,6 +11,7 @@ Code · Identity · LLM gateways · Low-code · SaaS · Cloud · Endpoints · Ne
 <a href="https://scorecard.dev/viewer/?uri=github.com/aisecnomad/Nexus-ShadowBench"><img src="https://api.scorecard.dev/projects/github.com/aisecnomad/Nexus-ShadowBench/badge" alt="OpenSSF Scorecard"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
 <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%E2%80%933.14-blue.svg" alt="Python 3.11-3.14"></a>
+<a href="https://github.com/aisecnomad/Nexus-ShadowBench/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/coverage-tracked-brightgreen.svg" alt="Coverage tracked"></a>
 <a href="#limitations-and-the-road-to-independence"><img src="https://img.shields.io/badge/labels-author--written%2C%20not%20independent-orange.svg" alt="Labels: author-written, not independent"></a>
 </p>
 
@@ -20,6 +21,12 @@ Code · Identity · LLM gateways · Low-code · SaaS · Cloud · Endpoints · Ne
 > adapter, with AI assistance. Results describe tool behaviour on these
 > inputs: not field precision or recall, not a vendor verdict, no grades.
 > Everything needed to rerun it on your own corpus is committed and hashed.
+
+## Independence and the path to an open standard
+
+ShadowBench is **not yet independent**. The same maintainer wrote ShadowScan, the corpora, the labels, the harnesses and every adapter (with AI assistance). Results describe tool behaviour on author-written inputs; they are not field precision or recall and not a vendor verdict.
+
+The highest-value contribution this project can receive is an **independently authored and labeled corpus** (or an independent review of an existing one) produced by someone with no stake in any tool under test. Labels must be fixed before any tool runs. See [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md#benchmark-integrity-and-conflict-of-interest) and the [corpus proposal form](https://github.com/aisecnomad/Nexus-ShadowBench/issues/new?template=corpus_proposal.yml).
 
 ## The Why: an open standard for discovery claims
 

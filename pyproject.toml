@@ -26,26 +26,14 @@ exclude = [
 # tooling code legitimately holds fake credentials, runs the CLI as a
 # subprocess, writes to temp paths and uses `random` for fixture data.
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "BLE", "S", "RUF100", "PGH004"]
-# Deliberate ignores, not debt. SIM102/SIM103/SIM105/SIM108 and C408 only
-# propose equivalent rewrites (collapsed guards, `return cond`,
-# contextlib.suppress, ternaries, dict literals); the longer forms stay.
-# UP042 is not behaviour-preserving: StrEnum changes what `str()` and
-# f-strings yield for the models.py enums, which serialise via `.value`.
-ignore = ["SIM108", "SIM102", "SIM103", "C408", "SIM105", "UP042", "S101"]
+ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests hold long literal fixtures (source snippets, tokens, JSON records).
-# The bandit rules target shipped code: a test's hard-coded token is the
-# point of the test, and the harnesses run the CLI as a subprocess by design.
-"tests/**" = ["E501", "S"]
+"tests/**" = ["S"]
 "tools/**" = ["S"]
 "benchmarks/**" = ["S"]
-# Benchmark case templates embed source files from other languages verbatim.
-"tools/benchmark/*_cases.py" = ["E501"]
-"benchmarks/*/corpus.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-# Preserve imported source formatting when the scanner is in a separate checkout.
 known-first-party = ["benchmarks", "shadowscan", "tools"]
 
 [tool.pytest.ini_options]
@@ -55,7 +43,19 @@ pythonpath = ["."]
 # as production_budgets would otherwise be ignored without a warning. No `-q`
 # here: every documented command already passes one, and a second hides the
 # pass/skip summary line.
-addopts = "--strict-markers --strict-config"
+addopts = "--strict-markers --strict-config --cov=tools --cov=benchmarks --cov-report=term-missing:skip-covered --cov-fail-under=0"
+
+[tool.coverage.run]
+source = ["tools", "benchmarks"]
+branch = true
+omit = ["*/tests/*", "*/scanner-source/*", "*/benchmarks/*/artifacts/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -94,4 +94,3 @@ module = [
     "azure.identity",
 ]
 ignore_missing_imports = true
-
