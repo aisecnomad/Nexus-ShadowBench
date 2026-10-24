@@ -18,7 +18,10 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    # Every workflow names its runner image: ubuntu-latest moves to a new OS
+    # unannounced, under the byte-for-byte re-scores and the sandbox, so a move
+    # is a reviewed change (tests/test_repository_policy.py).
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -87,7 +90,7 @@ jobs:
   # required `tests` check keeps its name.
   tests-latest-python:
     name: tests on Python 3.14
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

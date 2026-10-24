@@ -409,6 +409,26 @@
       "reason": "Regression tests: _report.read_text matches read_text under its limit, raises over it and reserves no cap for a small report; oversized vet, AI-Infra-Guard, AgentDiscover and ShadowScan (including its code surface) reports are errors; AgentDiscover parses a configuration once per file identity.",
       "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/pull/14",
       "sha256": "68fffb1b1dce748d5c2562a6baa0c6b8df3a1caf257002d73fa4662f2c90190d"
+    },
+    {
+      "bytes": 119114,
+      "from_sha256": "f67a67bf85d78fd186242eeaaed3c297073501938ac6c85620f75743992603eb",
+      "git_blob": "e38357310c27e14b56f477fd65f994c75ab98658",
+      "mode": "100644",
+      "path": "requirements-ci.lock",
+      "reason": "Address the dependency-audit failure in run 40090476686: copy ShadowScan main filelock 4.2.2 and virtualenv 21.14.11, and use the cases build-toolchain setuptools 84.2.1 security update; verify every release artifact SHA-256 against the PyPI JSON API. No benchmark tool or historical evidence changes.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/actions/runs/40090476686",
+      "sha256": "f06e37387a776aea10ba4402c4ba5ed2e8dab3eccce8ddd6c9e4e4e7f0d0d441"
+    },
+    {
+      "bytes": 2568,
+      "from_sha256": "d18ba0d37420ffc5f67b4326680f3ec17d656c7a0dcdff3d68fc7decc352e2fd",
+      "git_blob": "d453392a3a281e745263cbb0f2de3d380f8ec0af",
+      "mode": "100644",
+      "path": "requirements-build.lock",
+      "reason": "Address GHSA-xmj3-9gf7-h52w reported by dependency-audit run 40090476686: update the active companion build backend from setuptools 84.0.0 to the cases build-toolchain 84.2.1 and verify its wheel and sdist SHA-256 against PyPI. The scanner commit and historical source lock remain unchanged.",
+      "reference": "https://github.com/aisecnomad/Nexus-ShadowBench/actions/runs/40090476686",
+      "sha256": "a8f49a302faae60cede24aba54b9312e1bfc87776e2f0f901fe2a7c85f9671c6"
     }
   ],
   "note": "Append-only record of changes to migrated harness code and tests. Evidence is never amended; see tools/verify_migration.py.",

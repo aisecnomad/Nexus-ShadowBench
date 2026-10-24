@@ -3,8 +3,10 @@
 Issue forms and Dependabot apply labels that GitHub silently skips when the
 label does not exist, so both may only use labels from .github/labels.yml,
 which the Labels workflow syncs to the tracker. Every workflow pins each
-action to a full commit SHA, declares its token permissions and checks out
-without persisting credentials.
+action to a full commit SHA and each job to a named runner image, declares
+its token permissions, checks out without persisting credentials and expands
+no expression inside a script. `make audit` audits the locks CI audits, and
+every suppressed broad `except` or security rule carries its reason.
 """
 
 from __future__ import annotations
@@ -78,8 +80,18 @@ def _triggers(workflow: dict[Any, Any]) -> set[str]:
     return {on} if isinstance(on, str) else set(on or ())
 
 
-_INJECTABLE = re.compile(r"\$\{\{\s*(?:github\.event\.|github\.head_ref|inputs\.)")
+# Any expression in a script, not only the contexts known to carry untrusted text: a branch name
+# (github.ref_name) can hold `$(...)`, and a step output or env value can carry whatever produced it.
+_INJECTABLE = re.compile(r"\$\{\{")
 _OIDC_JOBS = {("attest.yml", "attest"), ("scorecard.yml", "analysis")}
+
+
+def _scripts(step: dict[str, Any]) -> list[str]:
+    """What a step runs as code: its shell script, or an actions/github-script script."""
+    scripts = [step.get("run", "")]
+    if str(step.get("uses", "")).startswith("actions/github-script@"):
+        scripts.append(str(step.get("with", {}).get("script", "")))
+    return scripts
 
 
 @pytest.mark.parametrize("path", WORKFLOWS, ids=lambda path: path.name)
@@ -100,7 +112,8 @@ def test_workflows_avoid_privileged_triggers_blanket_tokens_and_script_injection
         if job.get("permissions", {}).get("id-token") == "write":
             assert (path.name, name) in _OIDC_JOBS, f"{path.name}:{name} may not mint OIDC tokens"
     for step in _steps(workflow):
-        assert not _INJECTABLE.search(step.get("run", "")), f"{path.name}: {step.get('name')}"
+        for script in _scripts(step):
+            assert not _INJECTABLE.search(script), f"{path.name}: {step.get('name')}"
 
 
 def test_unpinned_actions_are_detected():
@@ -127,16 +140,37 @@ def test_every_scanner_checkout_uses_the_makefile_pin():
 TOOLCHAIN_LOCKS = {"tools/shadowbench/cases/locks/uv.txt", "tools/shadowbench/cases/locks/build.txt"}
 
 
+def _audited(script: str) -> set[str]:
+    """The locks a `for lock in ...; do pip-audit ...` loop audits."""
+    loop = re.search(r"for lock in ([^;]+);", script)
+    assert loop is not None, "no `for lock in ...` audit loop"
+    return set(loop.group(1).replace("\\", " ").split())
+
+
+def _ci_audit() -> str:
+    scripts = [step.get("run", "") for step in _steps(_yaml(GITHUB / "workflows" / "ci.yml"))]
+    return next(script for script in scripts if "pip-audit --skip-editable" in script)
+
+
 def test_ci_audits_every_lock_it_installs():
     workflow = _yaml(GITHUB / "workflows" / "ci.yml")
     scripts = [step.get("run", "") for step in _steps(workflow)]
     installed = {lock for script in scripts for lock in re.findall(r"-r (requirements[\w-]*\.lock)", script)}
-    audit = next(script for script in scripts if "pip-audit --skip-editable" in script)
-    audited = set(re.search(r"for lock in ([^;]+);", audit).group(1).replace("\\", " ").split())
+    audit = _ci_audit()
+    audited = _audited(audit)
     assert installed and audited == installed | TOOLCHAIN_LOCKS
     assert all((ROOT / lock).is_file() for lock in audited)
     assert "--require-hashes --strict" in audit
     assert "migration/requirements.source.lock" not in audited
+
+
+def test_make_audit_audits_what_ci_audits():
+    """`make check` stands in for CI locally, so a lock CI audits and `make audit` skips passes there."""
+    recipe = re.search(r"^audit:.*\n((?:\t.*\n)+)", (ROOT / "Makefile").read_text(encoding="utf-8"), re.M)
+    assert recipe is not None, "no audit target in the Makefile"
+    assert "pip-audit --skip-editable" in recipe.group(1)
+    assert "--require-hashes --strict" in recipe.group(1)
+    assert _audited(recipe.group(1)) == _audited(_ci_audit())
 
 
 def test_the_toolchain_locks_are_the_installers_install_tools_uses():
@@ -148,6 +182,62 @@ def test_the_toolchain_locks_are_the_installers_install_tools_uses():
 def test_script_injection_and_privileged_triggers_are_detected():
     assert _INJECTABLE.search('echo "${{ github.event.pull_request.title }}"')
     assert _INJECTABLE.search("python -m tools.attest digest ${{inputs.results}}")
+    assert _INJECTABLE.search('git push origin "${{ github.ref_name }}"')
+    assert _INJECTABLE.search("echo ${{ steps.meta.outputs.tag }}")
     assert not _INJECTABLE.search('python -m tools.attest digest "$RESULTS"')
+    script = {
+        "uses": "actions/github-script@" + "0" * 40,
+        "with": {"script": "${{ github.event.issue.title }}"},
+    }
+    assert any(_INJECTABLE.search(text) for text in _scripts(script))
     assert _triggers(yaml.safe_load("on: pull_request_target")) == {"pull_request_target"}
     assert _triggers(yaml.safe_load("on: {push: {}, workflow_run: {}}")) == {"push", "workflow_run"}
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda path: path.name)
+def test_jobs_run_on_a_named_runner_image(path: Path):
+    """A `-latest` label moves to a new OS image unannounced, under the byte-for-byte re-scores and
+    the sandbox; moving the image is a reviewed change like moving a lock."""
+    for name, job in _yaml(path)["jobs"].items():
+        if "uses" in job:
+            continue
+        runs_on = job.get("runs-on")
+        labels = [runs_on] if isinstance(runs_on, str) else list(runs_on or ())
+        assert labels, f"{path.name}:{name} has no runs-on"
+        assert not [label for label in labels if str(label).endswith("-latest")], f"{path.name}:{name}"
+
+
+# A suppressed broad `except` or security rule is a reviewed decision, and pyproject.toml says the
+# reason is written beside it (`noqa: BLE001 - <reason>`). Ruff's E, W, SIM and the other rules
+# need none.
+_NOQA = re.compile(r"#\s*noqa:\s*([A-Z]+[0-9]+(?:\s*,\s*[A-Z]+[0-9]+)*)(.*)")
+_REVIEWED = re.compile(r"(?:BLE|S)[0-9]+")
+
+
+def _unexplained_suppressions(line: str) -> list[str]:
+    match = _NOQA.search(line)
+    if match is None or re.match(r"\s+-\s+\S", match.group(2)):
+        return []
+    return [code for code in re.split(r"\s*,\s*", match.group(1)) if _REVIEWED.fullmatch(code)]
+
+
+def test_broad_except_and_security_suppressions_carry_a_reason():
+    artifacts = ROOT / "benchmarks" / "shadowbench" / "estate" / "artifacts"
+    unexplained = []
+    for top in ("tools", "tests", "benchmarks"):
+        for path in sorted((ROOT / top).rglob("*.py")):
+            if artifacts in path.parents:
+                continue
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if codes := _unexplained_suppressions(line):
+                    unexplained.append(f"{path.relative_to(ROOT)}:{number}: {', '.join(codes)}")
+    assert unexplained == []
+
+
+def test_unexplained_suppressions_are_detected():
+    noqa = "# " + "noqa"  # spelt apart, so these fixtures are not suppressions in this file
+    assert _unexplained_suppressions(f"except Exception:  {noqa}: BLE001") == ["BLE001"]
+    assert _unexplained_suppressions(f"run(cmd)  {noqa}: S603, E501") == ["S603"]
+    assert _unexplained_suppressions(f"except Exception:  {noqa}: BLE001 - report every row") == []
+    assert _unexplained_suppressions(f"x = 1  {noqa}: E501") == []
+    assert _unexplained_suppressions(f"with suppress():  {noqa}: SIM105") == []

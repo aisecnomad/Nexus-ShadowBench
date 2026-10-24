@@ -20,6 +20,10 @@ changed, no published number moved, and no published run was rerun.
   attestation directory, and refuses attestation symlinks and unreadable
   inputs. Signature bundles and CI enforcement remain pending real signing
   and verification; no historical result or metric changed.
+- **Dependency audit hygiene.** Refresh active CI/build lock pins for
+  filelock, virtualenv and setuptools with registry-verified hashes and
+  recorded amendments. Align `make audit` with CI's installer-toolchain
+  locks. Historical tool locks and evidence remain unchanged.
 - **Canonical keys.** `tools/shadowbench/keys.py` maps every spelling of one
   entity its platform treats as the same to one key (GUID case, `localhost`,
   URL forms of a service, `./`, `~/` and `\` in paths, ARN partition, service
@@ -324,6 +328,32 @@ keeping the last 2,000,000 characters. No committed metric changes.
   identity that signs results.
 - `tests/test_repository_policy.py` checks that every workflow checkout of
   ShadowScan uses the Makefile's `SCANNER_COMMIT`.
+- **Named runner image.** Every job runs on `ubuntu-24.04` instead of
+  `ubuntu-latest`, which GitHub began moving to Ubuntu 26 on 2026-10-19,
+  under the byte-for-byte re-scores and the sandbox. Moving the image is now
+  a reviewed change, and the policy tests reject a `-latest` label.
+- **Security lint that applies.** `pyproject.toml` selected bandit (`S`)
+  but turned it off for `tests/**`, `tools/**` and `benchmarks/**`, which
+  hold every Python file here, so it checked nothing. It now applies to the
+  live harness, which runs as root and parses what tools write. Its
+  by-design exceptions are scoped per file with their reasons: starting
+  fixed programs without a shell, the sandbox's fixed mount points, and the
+  seeded bootstrap. Frozen files stay exempt, since a finding there could
+  never be fixed. The one finding, Git's SHA-1 blob id in
+  `tools/verify_migration.py`, now says `usedforsecurity=False`. Stale
+  references to ShadowScan's files in its comments are corrected.
+- The policy tests also check that `make audit` audits exactly the locks
+  CI audits, that every `noqa` for a broad `except` or a bandit rule
+  carries its reason (as `pyproject.toml` has always said), and that no
+  workflow script expands any `${{ }}` expression, where they previously
+  caught only `github.event.*`, `github.head_ref` and `inputs.*`. A branch
+  name (`github.ref_name`) or a step output can carry shell syntax too.
+  `actions/github-script` scripts are checked as well.
+- `python -m tools.verify_migration --amend` takes several paths and
+  verifies the tree once all are recorded. Amending one at a time failed
+  whenever a change edited two bound files, such as both locks or an
+  adapter and its test, because each saw the other as unrecorded. A
+  refused file records none of the others.
 
 ### Anchoring the provenance records
 

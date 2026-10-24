@@ -384,7 +384,11 @@ python -m tools.verify_migration    # now reports "amended": <n>
 
 `--amend` appends an entry to [`AMENDMENTS.json`](../AMENDMENTS.json) with the
 SHA-256 the file changes from (its migrated bytes or its previous amendment)
-and the bytes, Git blob, mode and SHA-256 it changes to. Commit the edit and
+and the bytes, Git blob, mode and SHA-256 it changes to. When a change edits
+several bound files, such as an adapter and its test, name them all in one
+call (`--amend PATH PATH ...`): the tree is verified once every entry is
+appended, so amending them one at a time fails on the file not yet recorded,
+and a refused file records none of the others. Commit the edit and
 the ledger together; if the file changes again in review, amend it again
 (the chain is append-only) or, before merge, drop the entry and record it
 once more. The verifier refuses entries for evidence and for the code that

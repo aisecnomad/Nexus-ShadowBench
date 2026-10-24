@@ -81,9 +81,10 @@ breaks one is not merged, however good the code is.
    file, not an edit. The exceptions are live harness code and tests
    (`tools/shadowbench/`, `tools/discovery_benchmark/` and `tests/`) and the
    copied `requirements-ci.lock` and `requirements-build.lock`, which may
-   change only through a recorded amendment: edit the file, then run
-   `python -m tools.verify_migration --amend PATH --reason "..." --reference
-   <pull request URL>`, which appends the old and new SHA-256 to
+   change only through a recorded amendment: edit the files, then run
+   `python -m tools.verify_migration --amend PATH [PATH ...] --reason "..."
+   --reference <pull request URL>`, naming every bound file the change
+   edits, which appends the old and new SHA-256 of each to
    `AMENDMENTS.json`. Corpora, labels, freezes, results, the cases generator
    and its families, the labeler, the taxonomies, the legacy harnesses and
    the original runtime lock at `migration/requirements.source.lock` are

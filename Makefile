@@ -37,7 +37,8 @@ install: ## Install the hash-locked dependencies and the pinned scanner checkout
 .PHONY: audit
 audit: ## Audit the installed environment and every hash-locked dependency set, as CI does
 	pip-audit --skip-editable --progress-spinner off
-	set -e; for lock in requirements.lock requirements-ci.lock requirements-build.lock; do \
+	set -e; for lock in requirements.lock requirements-ci.lock requirements-build.lock \
+		tools/shadowbench/cases/locks/uv.txt tools/shadowbench/cases/locks/build.txt; do \
 		pip-audit --require-hashes --strict --progress-spinner off --disable-pip -r "$$lock"; \
 	done
 
