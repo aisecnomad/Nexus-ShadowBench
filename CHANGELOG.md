@@ -8,6 +8,16 @@ recorded here.
 
 ## Unreleased
 
+### Required historical result signatures
+
+- Require genuine Sigstore bundles for all three preserved result manifests
+  in local verification, the existing CI gate and repository-level tests.
+- Verify historical attestations in a separate CI job so dependency install
+  or audit failures cannot skip signature checks. Install the pinned cosign
+  version for the Python 3.14 tests too.
+- Keep this enforcement change in draft until the real signing artifacts
+  have passed cryptographic, workflow-identity and source-provenance checks.
+
 ### Parser property tests and local coverage
 
 - Add Hypothesis properties for canonical migration paths and strict JSON

@@ -173,6 +173,61 @@ def test_make_audit_audits_what_ci_audits():
     assert _audited(recipe.group(1)) == _audited(_ci_audit())
 
 
+def test_historical_signature_verification_is_strict_and_independent_of_dependency_audits():
+    workflow = _yaml(GITHUB / "workflows" / "ci.yml")
+    job = workflow["jobs"]["attestations"]
+    assert not job.get("needs"), "a dependency job failure must not skip attestation verification"
+    assert "if" not in job and not job.get("continue-on-error")
+    steps = job["steps"]
+    scripts = [step.get("run", "") for step in steps]
+    assert all("pip" not in script for script in scripts), "verification needs no Python dependencies"
+    verification = [step for step in steps if "-m tools.attest verify" in step.get("run", "")]
+    assert len(verification) == 1
+    step = verification[0]
+    assert "if" not in step and not step.get("continue-on-error")
+    assert step["run"].startswith("python -m tools.attest verify --require-signatures ")
+    assert '--since "$BASE_SHA"' in step["run"] and "||" not in step["run"]
+
+    # Both explicit CI invocation and the Makefile used by weekly rescores must be strict.
+    invocations = [
+        line.strip()
+        for step in _steps(workflow)
+        for line in step.get("run", "").splitlines()
+        if "-m tools.attest verify" in line
+    ]
+    assert len(invocations) == 2 and all("--require-signatures" in line for line in invocations)
+    recipe = re.search(r"^verify:.*\n((?:\t.*\n)+)", (ROOT / "Makefile").read_text(encoding="utf-8"), re.M)
+    assert recipe is not None
+    assert "-m tools.attest verify --require-signatures" in recipe.group(1)
+
+
+def test_every_signature_verification_job_installs_the_signing_workflows_cosign_version():
+    workflow = _yaml(GITHUB / "workflows" / "ci.yml")
+    signing_steps = _yaml(GITHUB / "workflows" / "attest.yml")["jobs"]["attest"]["steps"]
+    signing_installer = next(
+        step for step in signing_steps if step.get("uses", "").startswith("sigstore/cosign-installer@")
+    )
+    # The repository-level pytest regression verifies actual committed signatures on both Pythons.
+    for name in ("attestations", "tests", "tests-latest-python"):
+        steps = workflow["jobs"][name]["steps"]
+        installers = [
+            (index, step)
+            for index, step in enumerate(steps)
+            if step.get("uses", "").startswith("sigstore/cosign-installer@")
+        ]
+        assert len(installers) == 1, name
+        index, installer = installers[0]
+        assert "if" not in installer and not installer.get("continue-on-error"), name
+        assert installer["uses"] == signing_installer["uses"], name
+        assert installer["with"]["cosign-release"] == signing_installer["with"]["cosign-release"], name
+        verification = next(
+            i
+            for i, step in enumerate(steps)
+            if "-m tools.attest verify" in step.get("run", "") or "-m pytest" in step.get("run", "")
+        )
+        assert index < verification, name
+
+
 def test_the_toolchain_locks_are_the_installers_install_tools_uses():
     script = (ROOT / "tools/shadowbench/cases/install_tools.sh").read_text(encoding="utf-8")
     smoke = (GITHUB / "workflows" / "rescore.yml").read_text(encoding="utf-8")

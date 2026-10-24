@@ -362,10 +362,14 @@ def test_cosign_rejects_a_signature_from_another_identity(repo: Path, tmp_path: 
     assert len(problems) == 1 and "cosign verify-blob failed" in problems[0]
 
 
-def test_the_repository_attestations_verify() -> None:
-    summary, problems = attest.verify(ROOT)
+def test_the_repository_attestations_require_all_historical_signatures() -> None:
+    summary, problems = attest.verify(ROOT, require_signatures=True)
     assert problems == []
-    assert summary["attestations"] == len(attest.REQUIRED_SUBJECTS)
+    assert summary == {
+        "attestations": len(attest.REQUIRED_SUBJECTS),
+        "signed": len(attest.REQUIRED_SUBJECTS),
+        "unsigned": [],
+    }
     subjects = {
         json.loads(path.read_bytes())["subject"]
         for path in (ROOT / attest.ATTESTATIONS).glob("*.json")

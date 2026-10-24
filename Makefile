@@ -49,7 +49,7 @@ audit: ## Audit the installed environment and every hash-locked dependency set, 
 verify: ## Check migrated files against MIGRATION.json and attested results against their Sigstore bundles
 	$(PYTHON) -m tools.verify_migration $(if $(wildcard $(SCANNER_DIR)/.git),--source $(SCANNER_DIR)) \
 		$(if $(SINCE),--since $(SINCE))
-	$(PYTHON) -m tools.attest verify $(if $(SINCE),--since $(SINCE))
+	$(PYTHON) -m tools.attest verify --require-signatures $(if $(SINCE),--since $(SINCE))
 
 .PHONY: test
 test: ## Run the harness test suite
