@@ -14,6 +14,10 @@ changed, no published number moved, and no published run was rerun.
 
 ### Hardening, provenance and interoperability
 
+- **Dependency audit hygiene.** Refresh active CI/build lock pins for
+  filelock, virtualenv and setuptools with registry-verified hashes and
+  recorded amendments. Align `make audit` with CI's installer-toolchain
+  locks. Historical tool locks and evidence remain unchanged.
 - **Canonical keys.** `tools/shadowbench/keys.py` maps every spelling of one
   entity its platform treats as the same to one key (GUID case, `localhost`,
   URL forms of a service, `./`, `~/` and `\` in paths, ARN partition, service
