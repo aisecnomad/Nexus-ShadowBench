@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import subprocess
 
 import pytest
 
-from tools.verify_migration import ROOT, SOURCE_COMMIT, amend, amendable, check_source, verify
+from tools import verify_migration
+from tools.verify_migration import (
+    ROOT,
+    SOURCE_COMMIT,
+    amend,
+    amend_files,
+    amendable,
+    check_source,
+    main,
+    verify,
+)
 
 
 def _tree(tmp_path):
@@ -147,8 +158,8 @@ def _identity(data: bytes) -> dict[str, object]:
     }
 
 
-def _harness_tree(tmp_path):
-    files = {HARNESS: b"VALUE = 1\n", EVIDENCE: b'{"f1": 0.5}\n'}
+def _harness_tree(tmp_path, extra=None):
+    files = {HARNESS: b"VALUE = 1\n", EVIDENCE: b'{"f1": 0.5}\n', **(extra or {})}
     entries = []
     for name, data in files.items():
         path = tmp_path / name
@@ -443,3 +454,49 @@ def test_a_missing_migrated_file_fails_closed_and_amend_leaves_the_ledger(tmp_pa
     with pytest.raises(ValueError, match="missing"):
         amend(HARNESS, "r", "x", root=tmp_path)
     assert not (tmp_path / "AMENDMENTS.json").exists()
+
+
+HARNESS_TEST = "tests/unit/test_demo.py"
+
+
+def test_files_changed_together_are_amended_together(tmp_path):
+    _harness_tree(tmp_path, {HARNESS_TEST: b"def test(): pass\n"})
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 2\n")
+    (tmp_path / HARNESS_TEST).write_bytes(b"def test(): assert True\n")
+    # One at a time, each sees the other as unrecorded and records nothing.
+    with pytest.raises(ValueError, match="bytes or mode changed"):
+        amend(HARNESS, "r", "x", root=tmp_path)
+    assert not (tmp_path / "AMENDMENTS.json").exists()
+    entries = amend_files(
+        [HARNESS, HARNESS_TEST], "harden and test", "https://example.invalid/pr/3", root=tmp_path
+    )
+    assert [entry["path"] for entry in entries] == [HARNESS, HARNESS_TEST]
+    assert _ledger(tmp_path)["amendments"] == entries
+    assert verify(tmp_path)["amended"] == 2
+
+
+@pytest.mark.parametrize(
+    ("names", "message"),
+    [
+        ([], "at least one file"),
+        ([HARNESS, HARNESS], "named more than once"),
+        ([HARNESS, EVIDENCE], "never amendable"),
+        ([HARNESS, HARNESS_TEST], "unchanged"),
+    ],
+)
+def test_a_refused_file_records_none_of_the_others(tmp_path, names, message):
+    _harness_tree(tmp_path, {HARNESS_TEST: b"def test(): pass\n"})
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 2\n")
+    with pytest.raises(ValueError, match=message):
+        amend_files(names, "r", "x", root=tmp_path)
+    assert not (tmp_path / "AMENDMENTS.json").exists()
+
+
+def test_the_cli_amends_several_files_in_one_call(tmp_path, monkeypatch, capsys):
+    _harness_tree(tmp_path, {HARNESS_TEST: b"def test(): pass\n"})
+    (tmp_path / HARNESS).write_bytes(b"VALUE = 2\n")
+    (tmp_path / HARNESS_TEST).write_bytes(b"def test(): assert True\n")
+    monkeypatch.setattr(verify_migration, "amend_files", functools.partial(amend_files, root=tmp_path))
+    assert main(["--amend", HARNESS, HARNESS_TEST, "--reason", "r", "--reference", "x"]) == 0
+    printed = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert [entry["path"] for entry in printed] == [HARNESS, HARNESS_TEST]

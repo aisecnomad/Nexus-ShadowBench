@@ -9,7 +9,8 @@ are identity-bound in `MIGRATION.json`; preserve their historical bytes. Live
 harness code and tests under `tools/shadowbench/`, `tools/discovery_benchmark/`
 and `tests/`, and the copied `requirements-ci.lock` and
 `requirements-build.lock`, may change only with a recorded amendment
-(`python -m tools.verify_migration --amend PATH --reason ... --reference ...`);
+(`python -m tools.verify_migration --amend PATH [PATH ...] --reason ... --reference ...`,
+naming every bound file one change edits);
 evidence and the code that generates or labels it are never amendable.
 Make future experiments in new paths with new provenance and result directories.
 Do not relabel historical measurements as independent review or field accuracy.
