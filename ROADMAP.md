@@ -14,9 +14,10 @@ or the [supply-chain notes](docs/supply-chain.md) already documents.
   2026-10-11 runs and the code-surface 2026-10-09 metrics re-scoring byte for
   byte in the weekly clean-room workflow, and the harness tests green against
   the pinned scanner.
-- **Sign the runs of record.** Dispatch the Attest results workflow for the
-  cases and estate 2026-10-11 and code-surface 2026-10-09 directories and
-  commit the bundles, then make `tools.attest verify --require-signatures`
+- **Sign the runs of record.** Use the reviewed Attest results workflow
+  bootstrap on `main`, or dispatch it for the cases and estate 2026-10-11
+  and code-surface 2026-10-09 directories. Verify and commit the real
+  bundles, then make `tools.attest verify --require-signatures`
   the CI default. The [signing checkpoint](docs/historical-attestations.md)
   records prepared manifests and the remaining verification requirements;
   prepared manifests alone are not signed results.
