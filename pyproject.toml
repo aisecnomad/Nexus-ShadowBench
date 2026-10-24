@@ -77,6 +77,18 @@ pythonpath = ["."]
 # pass/skip summary line.
 addopts = "--strict-markers --strict-config"
 
+[tool.coverage.run]
+source = ["tools", "benchmarks"]
+branch = true
+omit = ["*/tests/*", "*/scanner-source/*", "*/benchmarks/*/artifacts/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -113,4 +125,3 @@ module = [
     "azure.identity",
 ]
 ignore_missing_imports = true
-

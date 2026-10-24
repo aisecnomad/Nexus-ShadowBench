@@ -8,6 +8,19 @@ recorded here.
 
 ## Unreleased
 
+### Parser property tests and local coverage
+
+- Add Hypothesis properties for canonical migration paths and strict JSON
+  parsing, available through `make fuzz` and the normal test suite.
+- Reject JSON numeric overflow such as `1e999` in provenance inputs, including
+  nested values; previously only the `NaN` and `Infinity` spellings were
+  rejected. Finite float decoding remains supported.
+- Add opt-in branch coverage reports through `make coverage`; coverage is a
+  local diagnostic, with no published percentage or minimum gate yet.
+- Add an independence invitation and a checklist for branch protection and
+  OpenSSF Best Practices preparation. Existing governance, evidence rules,
+  historical changelog entries and lint exceptions remain intact.
+
 Documentation and project standards, then harness hardening, provenance and
 interoperability. No corpus, label, freeze, recorded prediction or result
 changed, no published number moved, and no published run was rerun.

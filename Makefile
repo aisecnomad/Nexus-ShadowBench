@@ -55,6 +55,14 @@ verify: ## Check migrated files against MIGRATION.json and attested results agai
 test: ## Run the harness test suite
 	$(PYTHON) -m pytest -q
 
+.PHONY: coverage
+coverage: ## Run tests with coverage report
+	$(PYTHON) -m pytest --cov=tools --cov=benchmarks --cov-report=term-missing --cov-report=html -q
+
+.PHONY: fuzz
+fuzz: ## Run Hypothesis fuzz targets (parsers and validators)
+	$(PYTHON) -m pytest tests/test_fuzz_parsers.py -q --hypothesis-show-statistics
+
 .PHONY: lint
 lint: ## Run the ruff linter
 	ruff check tests tools benchmarks

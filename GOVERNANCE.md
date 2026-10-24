@@ -22,6 +22,29 @@ no AI review counted as an approval. While the maintainer is the only account
 with write access, a maintainer-authored change waits for a second eligible
 human reviewer.
 
+## Repository hygiene and process maturity
+
+### Branch protection
+
+Recommended settings for `main` are required pull requests, passing status
+checks (`tests`, `tests on Python 3.14` and CodeQL), conversation resolution,
+and at least one approving review from an eligible non-author. Restrictions
+should apply to administrators and other bypass actors too. Enabling these
+settings requires repository administration access; verify their current
+state against the repository's rules. This checklist alone does not establish
+that they are enabled.
+
+The [review and merge policy](CONTRIBUTING.md#review-and-merge-policy) remains
+authoritative. Required status checks alone do not enforce its human review
+requirement.
+
+### OpenSSF Best Practices preparation
+
+[The preparation checklist](docs/openssf-best-practices.md) links repository
+controls and records gaps to investigate before a formal self-assessment at
+<https://www.bestpractices.dev>. It does not claim an awarded badge or a
+percentage of criteria met.
+
 ## Roles
 
 | Role | Responsibilities | Current holders |

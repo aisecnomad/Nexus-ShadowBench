@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import stat
 import subprocess
@@ -99,7 +100,18 @@ def _load_json(path: Path, what: str) -> Any:
     def finite(_: str) -> Any:
         raise ValueError(f"non-finite {what} JSON value")
 
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique, parse_constant=finite)
+    def finite_float(value: str) -> float:
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError(f"non-finite {what} JSON value")
+        return number
+
+    return json.loads(
+        path.read_text(encoding="utf-8"),
+        object_pairs_hook=unique,
+        parse_constant=finite,
+        parse_float=finite_float,
+    )
 
 
 def _manifest(root: Path) -> dict[str, Any]:
