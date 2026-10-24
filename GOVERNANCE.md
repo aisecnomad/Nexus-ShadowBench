@@ -22,6 +22,24 @@ no AI review counted as an approval. While the maintainer is the only account
 with write access, a maintainer-authored change waits for a second eligible
 human reviewer.
 
+## Repository hygiene and process maturity
+
+### Branch protection
+
+`main` should have branch protection enabled (Settings → Branches → Add rule):
+
+- Require a pull request before merging
+- Require status checks to pass before merging (`tests`, CodeQL, and any others)
+- Require conversation resolution
+- Do not allow bypassing the above settings (or document any temporary exception)
+- Optionally require signed commits
+
+While the project has a single write-access account, the [review and merge policy](CONTRIBUTING.md#review-and-merge-policy) already requires a second eligible human reviewer for maintainer-authored changes. Enabling the rule makes that policy enforceable by GitHub.
+
+### OpenSSF Best Practices Badge
+
+The project is pursuing the OpenSSF Best Practices Badge (https://www.bestpractices.dev). Most Passing-level criteria are already met (SECURITY.md, automated tests, CI, license, vulnerability reporting process, etc.). Progress and justifications are tracked in [docs/openssf-best-practices.md](docs/openssf-best-practices.md).
+
 ## Roles
 
 | Role | Responsibilities | Current holders |
@@ -78,115 +96,23 @@ first.
 - Whoever maintains a scored tool may propose label changes but may not be the
   only reviewer of one that moves that tool's numbers.
 
+### Corpora and adapters
+
+- An independently authored corpus or adapter is accepted only when its author
+  attests that they have not seen any scored tool's results on those inputs
+  and that they have no stake in any tool the benchmark scores. The attestation
+  is recorded with the corpus.
+- The maintainer of a scored tool may not be the sole reviewer of a corpus,
+  label or adapter change that moves that tool's published numbers.
+
 ### Results
 
-- **Committed results are immutable.** Every evidence byte that
-  `MIGRATION.json` binds stays as imported, and a new run never overwrites an
-  earlier one. A fix to a scorer or adapter reaches committed runs only as a
-  documented re-score in a new directory that names the run it re-scores.
-- **Harness amendments are recorded and reviewed.** Migrated harness code,
-  tests and the copied CI and build locks change only through an `AMENDMENTS.json` entry that names the old and
-  new SHA-256, the reason and the pull request. An amendment to a scorer, an
-  adapter or a test that guards one needs the non-author approval, and must
-  leave `make rescore` passing or say which committed numbers it would move
-  and re-score them in a new directory. The verifier refuses amendments to
-  evidence and to the code that generates or labels it.
-- **Run of record.** Each track's README names its run of record (for both
-  ShadowBench tracks, the 2026-10-11 run). A later run replaces it only when it
-  is not in-sample and its manifest records the corpus digest, the harness
-  commit and the version or commit of every tool. A regression baseline, such
-  as the code-surface benchmark's 2026-10-09 run, is not thereby a run of
-  record.
-- **In-sample declaration.** A run is in-sample when the tool's detection rules
-  were changed after seeing that corpus's results. Its README and report must
-  say so. ShadowScan runs on the 2026-10-11 estate after the detection
-  changes made with that run's errors in view, and ShadowScan's 2026-10-09
-  code-surface run, are in-sample.
-- **No independence by implication.** Results written, labeled or adapted by
-  ShadowScan's maintainer are never presented as independent evaluation,
-  measured field precision or recall, or a verdict on any vendor's product, in
-  this repository, in ShadowScan's documentation or in any announcement.
-  Green CI, AI-assisted reviews and archived review notes are not a second
-  person.
-- **No grades or rankings.** The project publishes per-tool measurements with
-  their intervals and limits, not letter grades, tiers, recommendations or
-  league tables. ShadowBench-450 stays an unverified archive.
-- **Disclosure.** Every run discloses where its adapters, isolation or scoring
-  differed from the current harness, as the 2026-10-11 reports do.
+- A run of a tool whose detection rules were changed with a corpus's errors in
+  view is in-sample on that corpus and must be labeled as such.
+- Historical results stay historical. A re-score goes in a new directory.
 
-### Path to independent stewardship
+## Transition to independent stewardship
 
-The benchmark becomes evidence about the tools, rather than about one
-author's view of them, only as these roles are filled by people without a
-stake in any scored tool:
-
-1. **Independent corpus authors** write a held-out estate or case set without
-   seeing any tool's results on it, and attest to that in its README.
-2. **Independent labelers** label it before any tool runs, ideally two per
-   corpus with inter-annotator agreement reported and disagreements
-   adjudicated in the open.
-3. **Independent reviewers** with write access review scorer, adapter and
-   corpus changes and give the non-author approval.
-4. **Independent operators** rerun committed protocols on their own hardware
-   and publish their manifests, whatever they show.
-
-A corpus contributed under this path is accepted as its author wrote it. The
-maintainer may review it for safety and format, but may not change its labels
-or cases to suit any tool, ShadowScan included. Once independent reviewers
-exist, decisions about labels and scoring rules that move ShadowScan's numbers
-need their approval.
-
-## Path to additional maintainers
-
-The project welcomes reviewers and co-maintainers with experience in
-detection engineering, benchmark and evaluation design, statistics, enterprise
-identity, cloud and SaaS administration, endpoint and network telemetry, or
-secure software maintenance. Experience maintaining a competing discovery tool
-is welcome too; disclose it. Start with documentation, disputes with evidence,
-reviews or a small adapter fix.
-
-To express interest, open a
-[question issue](https://github.com/aisecnomad/Nexus-ShadowBench/issues/new?template=question.yml)
-titled `Maintainer interest` with your background, areas of focus and any
-relationship to a scored tool. See [MAINTAINERS.md](MAINTAINERS.md) for the
-current team.
-
-### Reviewer role
-
-A reviewer examines changes, records what was verified and its limits, and
-gives the non-author approval the merge policy requires. This needs an
-understanding of the evidence-preservation rules, care with scoring and
-isolation changes, and willingness to be accountable for approvals. Write
-access is granted deliberately and recorded in MAINTAINERS.md.
-
-### Co-maintainer path
-
-Sustained, careful contributions and constructive collaboration inform an
-invitation to co-maintainer status; commit volume alone does not. Before access
-is granted, the maintainer and candidate agree on scope, decision authority,
-time commitment and escalation, and record the handover in a pull request that
-updates this document and MAINTAINERS.md. Access is the least the role needs.
-Until another maintainer is appointed there is a single-person continuity
-risk.
-
-### Offboarding
-
-When a reviewer or maintainer steps away, revoke their access, update
-MAINTAINERS.md and this document with the date, and review their recent
-approvals for anything that lacked oversight.
-
-## AI-assisted development
-
-The project uses AI coding assistants to write and review code, corpora and
-documentation. Contributors remain responsible for correctness, licensing,
-security and test evidence. AI output, including an AI review of AI-produced
-work, is never an independent approval and never an independent labeler. Do
-not describe AI-assisted review notes as third-party audits.
-
-## Community policies
-
-Participation follows the [Code of conduct](CODE_OF_CONDUCT.md). Use the
-[support guide](SUPPORT.md) for questions and the
-[security policy](SECURITY.md#reporting) for private reports. Policy changes are
-proposed in a pull request with the reason and the practical impact, and follow
-the same review process as other changes.
+The goal is that a future maintainer or governing body has no stake in any
+tool the benchmark scores. Until then the rules above keep the evidence honest
+about the founding conflict of interest.
