@@ -128,7 +128,13 @@ Sigstore.
    on that job only). The bundle `attestations/<slug>.sigstore.json` holds the
    signature, a Fulcio certificate naming the workflow, and the Rekor
    transparency-log entry. The workflow verifies it and uploads both files;
-   the maintainer commits them.
+   the maintainer commits them. A push to `main` that changes `attest.yml`
+   also signs missing bundles for the three preserved runs and requires
+   strict verification before upload. Existing bundles are retained, and
+   changes to committed bindings fail before signing. This supports a
+   reviewed bootstrap merge without requiring a manual workflow dispatch.
+   Artifacts can contain retained signatures from older runs; the signing
+   provenance comes from each verified certificate, not its upload time.
 3. `python -m tools.attest verify`, part of `make verify` and CI, fails when
    an attested directory gained, lost or changed a file, when a bundle does
    not verify for the `attest.yml` workflow on `main` of this repository

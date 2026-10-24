@@ -27,14 +27,24 @@ not establish a green full-suite result.
 
 ## Complete signing
 
-1. Dispatch the existing [Attest results workflow](../.github/workflows/attest.yml)
-   on `main` once for each directory in the table. Record each run's URL,
-   run ID, attempt, `head_sha`, ref, event, conclusion and artifact ID. The
-   workflow must be `attest.yml`, the event `workflow_dispatch`, and the ref
-   `refs/heads/main`. Review the source at each recorded `head_sha`.
+1. Merge the reviewed change to the
+   [Attest results workflow](../.github/workflows/attest.yml) into `main`.
+   A push that changes that workflow signs missing bundles for all three
+   directories in the table, then requires strict verification before
+   uploading its artifact. The trigger is restricted to `main` and that
+   workflow path; it does not sign on a pull-request branch. Alternatively,
+   dispatch the workflow on `main` once for each directory. Record each
+   run's URL, run ID, attempt, `head_sha`, ref, event, conclusion and artifact
+   ID. The workflow must be `attest.yml`, the event must match the observed
+   `push` or `workflow_dispatch` run, and the ref must be `refs/heads/main`.
+   Review the source at each recorded `head_sha`.
 2. Download each successful run's `attestation` artifact. Compare the
    generated manifest byte for byte with the corresponding prepared
-   manifest before adding its `.sigstore.json` bundle. An artifact download
+   manifest before adding its `.sigstore.json` bundle. The workflow refuses
+   changed committed bindings and retains existing bundles rather than
+   re-signing them. A later artifact may therefore contain signatures from
+   earlier runs: record each certificate's actual signing run and source
+   revision separately from the artifact's upload run. An artifact download
    or a green workflow alone is not signature verification.
 3. Run `python -m tools.attest verify --require-signatures --since <base-commit>`
    with the pinned cosign version from the workflow. Require exit 0,
@@ -64,9 +74,12 @@ not establish a green full-suite result.
    dependency-audit failure cannot skip it. Update the roadmap and this
    checkpoint with actual signing run evidence, then mark the PR ready.
 
-The signing workflow can run before this draft merges: the prepared manifests
-are deterministic and the results being signed are already on `main`. No
-benchmark rerun or historical evidence edit is needed.
+The workflow change and strict-enforcement change are staged separately.
+Merge the reviewed workflow change first, collect and verify its real bundles,
+then add those bundles and their provenance to the enforcement change. Keep
+enforcement in draft until its strict checks pass. No benchmark rerun or
+historical evidence edit is needed. A bootstrap PR or mocked workflow-routing
+test is not evidence that any signature exists.
 
 ## Separate dependency-audit failure
 
