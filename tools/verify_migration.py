@@ -11,7 +11,8 @@ code that generates cases, labels ground truth or defines the taxonomies are
 not amendable.
 
 ``python -m tools.verify_migration`` verifies; ``python -m tools.verify_migration
---amend PATH --reason TEXT --reference URL`` appends an entry for a changed file.
+--amend PATH [PATH ...] --reason TEXT --reference URL`` appends an entry for each changed file,
+and must name every migrated file a change edits, since the tree is verified once all are recorded.
 
 Two checks anchor the records themselves, which the default check takes as
 given. ``--source DIR`` requires every manifest entry to name the Git blob and
@@ -207,7 +208,8 @@ def _ledger(root: Path, manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _identity(path: Path) -> tuple[int, str, str, bool]:
     """Size, SHA-256, Git blob and executable bit of a regular file."""
     data = path.read_bytes()
-    blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+    # Git's object id, compared with what Git records; the SHA-256 is what binds the bytes.
+    blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data, usedforsecurity=False).hexdigest()
     return len(data), hashlib.sha256(data).hexdigest(), blob, bool(path.stat().st_mode & 0o111)
 
 
@@ -349,30 +351,47 @@ def verify(root: Path = ROOT, *, source: Path | None = None, since: str | None =
 
 def amend(name: str, reason: str, reference: str, root: Path = ROOT) -> dict[str, Any]:
     """Append an AMENDMENTS.json entry recording the current bytes of an amendable migrated file."""
+    return amend_files([name], reason, reference, root)[0]
+
+
+def amend_files(names: list[str], reason: str, reference: str, root: Path = ROOT) -> list[dict[str, Any]]:
+    """Append one AMENDMENTS.json entry per file, in the order given, for files changed together.
+
+    The tree is verified once every entry is appended, so files a change edits together are recorded
+    together; when a file is refused, or the tree then fails verification, the ledger is left as it was.
+    """
     if not reason.strip() or not reference.strip():
         raise ValueError("an amendment needs a reason and a reference")
+    if not names:
+        raise ValueError("name at least one file to amend")
     manifest = _manifest(root)
     amended = _ledger(root, manifest)
     migrated = {entry["path"]: entry for entry in manifest["files"]}
-    name = _path(name).as_posix()
-    if name not in migrated:
-        raise ValueError(f"not a migrated file: {name}")
-    if not amendable(name):
-        raise ValueError(f"evidence is never amendable: {name}")
-    previous = amended.get(name, migrated[name])
-    size, sha256, blob, executable = _identity(_regular(root, name))
-    if sha256 == previous["sha256"]:
-        raise ValueError(f"unchanged since its last recorded bytes: {name}")
-    entry = {
-        "bytes": size,
-        "from_sha256": previous["sha256"],
-        "git_blob": blob,
-        "mode": "100755" if executable else "100644",
-        "path": name,
-        "reason": reason.strip(),
-        "reference": reference.strip(),
-        "sha256": sha256,
-    }
+    entries: list[dict[str, Any]] = []
+    for raw in names:
+        name = _path(raw).as_posix()
+        if name not in migrated:
+            raise ValueError(f"not a migrated file: {name}")
+        if not amendable(name):
+            raise ValueError(f"evidence is never amendable: {name}")
+        if any(entry["path"] == name for entry in entries):
+            raise ValueError(f"named more than once: {name}")
+        previous = amended.get(name, migrated[name])
+        size, sha256, blob, executable = _identity(_regular(root, name))
+        if sha256 == previous["sha256"]:
+            raise ValueError(f"unchanged since its last recorded bytes: {name}")
+        entries.append(
+            {
+                "bytes": size,
+                "from_sha256": previous["sha256"],
+                "git_blob": blob,
+                "mode": "100755" if executable else "100644",
+                "path": name,
+                "reason": reason.strip(),
+                "reference": reference.strip(),
+                "sha256": sha256,
+            }
+        )
     ledger_path = root / "AMENDMENTS.json"
     before = ledger_path.read_bytes() if amended or ledger_path.exists() else None
     if before is not None:
@@ -386,7 +405,7 @@ def amend(name: str, reason: str, reference: str, root: Path = ROOT) -> dict[str
             ),
             "amendments": [],
         }
-    ledger["amendments"].append(entry)
+    ledger["amendments"].extend(entries)
     ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     try:
         verify(root)
@@ -397,15 +416,20 @@ def amend(name: str, reason: str, reference: str, root: Path = ROOT) -> dict[str
         else:
             ledger_path.write_bytes(before)
         raise
-    return entry
+    return entries
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m tools.verify_migration",
-        description="Verify migrated files against MIGRATION.json and AMENDMENTS.json, or amend one.",
+        description="Verify migrated files against MIGRATION.json and AMENDMENTS.json, or amend some.",
     )
-    parser.add_argument("--amend", metavar="PATH", help="record the current bytes of a changed harness file")
+    parser.add_argument(
+        "--amend",
+        metavar="PATH",
+        nargs="+",
+        help="record the current bytes of changed harness files; name every file one change edits",
+    )
     parser.add_argument("--reason", default="", help="why the file changed (with --amend)")
     parser.add_argument("--reference", default="", help="pull request or issue URL (with --amend)")
     parser.add_argument(
@@ -422,7 +446,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.amend:
         try:
-            print(json.dumps(amend(args.amend, args.reason, args.reference), sort_keys=True))
+            for entry in amend_files(args.amend, args.reason, args.reference):
+                print(json.dumps(entry, sort_keys=True))
         except ValueError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1

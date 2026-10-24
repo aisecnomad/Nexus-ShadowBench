@@ -36,7 +36,7 @@ live harness code or tests (`tools/shadowbench/`, `tools/discovery_benchmark/`,
 `requirements-build.lock`. Each entry names the SHA-256 the file changes from (its migrated
 bytes or its previous amendment), the bytes, Git blob, mode and SHA-256 it
 changes to, a reason and a reference. `python -m tools.verify_migration
---amend PATH` appends one. Evidence, the cases generator and families, the
+--amend PATH [PATH ...]` appends one per file. Evidence, the cases generator and families, the
 labeler, the taxonomies, the legacy harnesses and the original runtime
 lock can never be amended.
 
