@@ -128,12 +128,19 @@ Sigstore.
    on that job only). The bundle `attestations/<slug>.sigstore.json` holds the
    signature, a Fulcio certificate naming the workflow, and the Rekor
    transparency-log entry. The workflow verifies it and uploads both files;
-   the maintainer commits them.
-3. `python -m tools.attest verify`, part of `make verify` and CI, fails when
+   the maintainer commits them. A push to `main` that changes `attest.yml`
+   also signs missing bundles for the three preserved runs and requires
+   strict verification before upload. Existing bundles are retained, and
+   changes to committed bindings fail before signing. This supports a
+   reviewed bootstrap merge without requiring a manual workflow dispatch.
+   Artifacts can contain retained signatures from older runs; the signing
+   provenance comes from each verified certificate, not its upload time.
+3. `python -m tools.attest verify --require-signatures`, used by `make verify`
+   and CI, fails when
    an attested directory gained, lost or changed a file, when a bundle does
    not verify for the `attest.yml` workflow on `main` of this repository
    issued by GitHub Actions' OIDC issuer, or when cosign is missing for a
-   bundle that is present. `--require-signatures` also fails an unsigned
+   bundle that is present. The required flag also fails an unsigned
    attestation and requires manifests for all three historical result sets,
    including when `attestations/` is absent or empty. Attestation directories,
    manifests and bundles must not be symlinks. In CI, `--since` the commit a change builds on also fails
@@ -146,16 +153,18 @@ Anyone can check a signed run without trusting this repository's CI:
 cosign verify-blob --bundle attestations/<slug>.sigstore.json \
     --certificate-identity-regexp '^https://github\.com/aisecnomad/Nexus-ShadowBench/\.github/workflows/attest\.yml@refs/heads/main$' \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com attestations/<slug>.json
-python -m tools.attest verify
+python -m tools.attest verify --require-signatures
 ```
 
 A signature says which workflow run, on which commit of `main`, saw these
 bytes, and the transparency log says when. It does not say the run was
 honest, independent or correct.
 
-The [historical signing checkpoint](historical-attestations.md) records the
-prepared manifests and the checks still required before enabling signature
-enforcement. No signatures have been generated at that checkpoint.
+The [historical signing checkpoint](historical-attestations.md) records all
+three verified bundles, their exact signing run and source revision, and
+15 real-bundle rejection checks. CI verifies them in an independent job as
+well as the required tests job; dependency-audit failures cannot skip the
+independent check. Both supported test jobs install the pinned cosign.
 
 ## Scrubbing machine paths
 

@@ -15,8 +15,13 @@ recorded here.
 - Verify historical attestations in a separate CI job so dependency install
   or audit failures cannot skip signature checks. Install the pinned cosign
   version for the Python 3.14 tests too.
-- Keep this enforcement change in draft until the real signing artifacts
-  have passed cryptographic, workflow-identity and source-provenance checks.
+- Import all three genuine bundles from signing run `40128040686`, after
+  verifying their signatures, transparency evidence and exact workflow/source
+  provenance. All 15 real-bundle tampering checks reject; manifest bytes and
+  historical results remain unchanged. Record the evidence in
+  [the signing checkpoint](docs/historical-attestations.md).
+- Explicitly select Bash for the signing workflow so pipeline failures stop
+  execution with the same shell settings exercised by its regression tests.
 
 ### Parser property tests and local coverage
 
@@ -37,12 +42,20 @@ changed, no published number moved, and no published run was rerun.
 
 ### Hardening, provenance and interoperability
 
+- **Historical signing bootstrap.** A protected merge changing `attest.yml`
+  now triggers the existing main-only signing job for the three fixed
+  historical result directories. It checks committed bindings before signing,
+  preserves existing bundles, and requires all signatures to verify before
+  uploading the artifact. Manual dispatch still selects one requested directory.
+  This adds a way to produce real workflow artifacts; it does not itself
+  supply signature bundles or claim historical signing is complete.
 - **Historical signing preparation.** Add reproducible digest manifests for
   the three preserved result sets and a signing checkpoint. Strict attestation
   verification now rejects missing historical manifests, even with an empty
   attestation directory, and refuses attestation symlinks and unreadable
-  inputs. Signature bundles and CI enforcement remain pending real signing
-  and verification; no historical result or metric changed.
+  inputs. At this preparation stage, signature bundles and CI enforcement
+  remained pending real signing and verification; the required-signatures
+  entry above records their completion. No historical result or metric changed.
 - **Dependency audit hygiene.** Refresh active CI/build lock pins for
   filelock, virtualenv and setuptools with registry-verified hashes and
   recorded amendments. Align `make audit` with CI's installer-toolchain

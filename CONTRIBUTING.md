@@ -40,8 +40,8 @@ touches a scorer, a corpus or an adapter; those changes move published numbers.
 Use CPython 3.11 to 3.14 and Git on Linux. The cases track's runner needs Linux
 namespaces, `gcc` and `prlimit` (util-linux); scoring, verification and the
 test suite do not run any third-party discovery tool. Verifying signed results
-(`make verify`) needs [cosign](https://github.com/sigstore/cosign) v3 once an
-attestation with a Sigstore bundle is committed; CI installs it. Fork the repository if you need a branch you can
+(`make verify`) needs [cosign](https://github.com/sigstore/cosign) v3.1.4;
+all three historical signatures are required and CI installs it. Fork the repository if you need a branch you can
 push, then, in a local checkout:
 
 ```bash
@@ -126,7 +126,7 @@ runs the same gates locally, in the same order:
 |---|---|---|
 | Dependencies | `make audit` (`pip-audit` on the environment and on each hash-locked set) | No known vulnerability |
 | Evidence identity | `python -m tools.verify_migration` | All 555 migrated files match their recorded identity or their latest amendment |
-| Result attestations | `python -m tools.attest verify` (part of `make verify`) | Every attested results directory holds exactly its attested files; every Sigstore bundle verifies (needs cosign v3 once a bundle is committed) |
+| Result attestations | `python -m tools.attest verify --require-signatures` (part of `make verify`) | All three historical manifests and genuine bundles are required; every attested directory matches and every bundle verifies with cosign v3.1.4 |
 | Tests | `python -m pytest -q` | All pass |
 | Lint | `ruff check tests tools benchmarks` | No errors |
 | Format | `ruff format --check tests tools benchmarks` | No changes |

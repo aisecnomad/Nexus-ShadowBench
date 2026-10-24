@@ -1,0 +1,224 @@
+{
+  "artifact": {
+    "id": 12573639685,
+    "name": "attestation",
+    "sha256": "1f778c283919f206dcca21d321b79ec304b6e8c454e8f11bff7b504c437154b4"
+  },
+  "bundles": [
+    {
+      "bundle_sha256": "19a4f5d7a7d969e9eb17d86eea6a7144d337e8cee2f1cb0284c0e9ff9ee92a73",
+      "certificate_not_after": "2026-10-24T20:13:21+00:00",
+      "certificate_not_before": "2026-10-24T20:03:21+00:00",
+      "certificate_sha256": "e6e6b473daf7a885616a1566d916b9c3684542132a67a4562b3dc6354143e76e",
+      "extensions": {
+        "build_config_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_config_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_signer_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_signer_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_trigger": "push",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "legacy_issuer": "https://token.actions.githubusercontent.com",
+        "legacy_ref": "refs/heads/main",
+        "legacy_repository": "aisecnomad/Nexus-ShadowBench",
+        "legacy_sha": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "legacy_trigger": "push",
+        "legacy_workflow_name": "Attest results",
+        "owner_id": "193167434",
+        "owner_uri": "https://github.com/aisecnomad",
+        "run_invocation_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/actions/runs/40128040686/attempts/1",
+        "runner_environment": "github-hosted",
+        "source_repository_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "source_repository_id": "1426826719",
+        "source_repository_ref": "refs/heads/main",
+        "source_repository_uri": "https://github.com/aisecnomad/Nexus-ShadowBench",
+        "token_subject": "repo:aisecnomad@193167434/Nexus-ShadowBench@1426826719:ref:refs/heads/main",
+        "visibility": "public"
+      },
+      "manifest": "benchmarks__shadow-ai-discovery__results__2026-10-09.json",
+      "manifest_sha256": "f27c5653422500ccbb5791733535f71e11a906e7e0832c7a41931c39954c088b",
+      "rejection_tests": {
+        "altered_manifest": {
+          "exit_code": 1
+        },
+        "altered_signature": {
+          "exit_code": 1
+        },
+        "missing_transparency": {
+          "exit_code": 1
+        },
+        "wrong_identity": {
+          "exit_code": 1
+        },
+        "wrong_issuer": {
+          "exit_code": 1
+        }
+      },
+      "sans": [
+        "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main"
+      ],
+      "transparency": [
+        {
+          "has_inclusion_proof": true,
+          "integrated_time": "1792872203",
+          "log_id": {
+            "keyId": "wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="
+          },
+          "log_index": "3442643666"
+        }
+      ],
+      "verified": {
+        "exit_code": 0,
+        "stderr": "Verified OK",
+        "stdout": ""
+      }
+    },
+    {
+      "bundle_sha256": "a9eda343eb1dd12d19d3356734a3ca6544ca9986f605ca290cddf2fcc8799619",
+      "certificate_not_after": "2026-10-24T20:13:12+00:00",
+      "certificate_not_before": "2026-10-24T20:03:12+00:00",
+      "certificate_sha256": "e7d90bd15010424f2c9e23face739f0dfa2d05ebfa52676a05051d815d37f6a0",
+      "extensions": {
+        "build_config_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_config_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_signer_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_signer_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_trigger": "push",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "legacy_issuer": "https://token.actions.githubusercontent.com",
+        "legacy_ref": "refs/heads/main",
+        "legacy_repository": "aisecnomad/Nexus-ShadowBench",
+        "legacy_sha": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "legacy_trigger": "push",
+        "legacy_workflow_name": "Attest results",
+        "owner_id": "193167434",
+        "owner_uri": "https://github.com/aisecnomad",
+        "run_invocation_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/actions/runs/40128040686/attempts/1",
+        "runner_environment": "github-hosted",
+        "source_repository_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "source_repository_id": "1426826719",
+        "source_repository_ref": "refs/heads/main",
+        "source_repository_uri": "https://github.com/aisecnomad/Nexus-ShadowBench",
+        "token_subject": "repo:aisecnomad@193167434/Nexus-ShadowBench@1426826719:ref:refs/heads/main",
+        "visibility": "public"
+      },
+      "manifest": "benchmarks__shadowbench__cases__results__2026-10-11.json",
+      "manifest_sha256": "0b94e4b9f7cfbff5f0030be5ee463198da7543dbbc06c2a99791e246bf97f61d",
+      "rejection_tests": {
+        "altered_manifest": {
+          "exit_code": 1
+        },
+        "altered_signature": {
+          "exit_code": 1
+        },
+        "missing_transparency": {
+          "exit_code": 1
+        },
+        "wrong_identity": {
+          "exit_code": 1
+        },
+        "wrong_issuer": {
+          "exit_code": 1
+        }
+      },
+      "sans": [
+        "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main"
+      ],
+      "transparency": [
+        {
+          "has_inclusion_proof": true,
+          "integrated_time": "1792872193",
+          "log_id": {
+            "keyId": "wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="
+          },
+          "log_index": "3442639241"
+        }
+      ],
+      "verified": {
+        "exit_code": 0,
+        "stderr": "Verified OK",
+        "stdout": ""
+      }
+    },
+    {
+      "bundle_sha256": "5f07929fbf546b00ed3c3657f1e0c321a8cd6d7b8e29746c32bc6c114977f413",
+      "certificate_not_after": "2026-10-24T20:13:18+00:00",
+      "certificate_not_before": "2026-10-24T20:03:18+00:00",
+      "certificate_sha256": "6621d245291503e606a967c102d1e1769e37e63a84682e4fd9e1dfe5032bb575",
+      "extensions": {
+        "build_config_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_config_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_signer_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "build_signer_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main",
+        "build_trigger": "push",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "legacy_issuer": "https://token.actions.githubusercontent.com",
+        "legacy_ref": "refs/heads/main",
+        "legacy_repository": "aisecnomad/Nexus-ShadowBench",
+        "legacy_sha": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "legacy_trigger": "push",
+        "legacy_workflow_name": "Attest results",
+        "owner_id": "193167434",
+        "owner_uri": "https://github.com/aisecnomad",
+        "run_invocation_uri": "https://github.com/aisecnomad/Nexus-ShadowBench/actions/runs/40128040686/attempts/1",
+        "runner_environment": "github-hosted",
+        "source_repository_digest": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+        "source_repository_id": "1426826719",
+        "source_repository_ref": "refs/heads/main",
+        "source_repository_uri": "https://github.com/aisecnomad/Nexus-ShadowBench",
+        "token_subject": "repo:aisecnomad@193167434/Nexus-ShadowBench@1426826719:ref:refs/heads/main",
+        "visibility": "public"
+      },
+      "manifest": "benchmarks__shadowbench__estate__results__2026-10-11.json",
+      "manifest_sha256": "95f0d4bbd69280baf39fd116e7c83de1e6ce42a33f46d0f8756440ded135d959",
+      "rejection_tests": {
+        "altered_manifest": {
+          "exit_code": 1
+        },
+        "altered_signature": {
+          "exit_code": 1
+        },
+        "missing_transparency": {
+          "exit_code": 1
+        },
+        "wrong_identity": {
+          "exit_code": 1
+        },
+        "wrong_issuer": {
+          "exit_code": 1
+        }
+      },
+      "sans": [
+        "https://github.com/aisecnomad/Nexus-ShadowBench/.github/workflows/attest.yml@refs/heads/main"
+      ],
+      "transparency": [
+        {
+          "has_inclusion_proof": true,
+          "integrated_time": "1792872200",
+          "log_id": {
+            "keyId": "wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="
+          },
+          "log_index": "3442642291"
+        }
+      ],
+      "verified": {
+        "exit_code": 0,
+        "stderr": "Verified OK",
+        "stdout": ""
+      }
+    }
+  ],
+  "cosign_version": "v3.1.4",
+  "custom_trusted_root": false,
+  "insecure_verification_flags": [],
+  "schema": 1,
+  "signing_run": {
+    "attempt": 1,
+    "conclusion": "success",
+    "event": "push",
+    "head_sha": "c1fd03bf4cd4e3a46a40a39804a5c5939f50f954",
+    "id": 40128040686,
+    "ref": "refs/heads/main",
+    "workflow": ".github/workflows/attest.yml"
+  },
+  "verified_on": "2026-10-24"
+}
