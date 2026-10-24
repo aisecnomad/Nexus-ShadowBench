@@ -26,6 +26,16 @@ def _workflow() -> dict[str, Any]:
     return yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
 
 
+def _shell_args(workflow: dict[str, Any], step: dict[str, Any]) -> list[str]:
+    """Use GitHub's explicit bash invocation only when the workflow selects it."""
+    shell = workflow.get("defaults", {}).get("run", {}).get("shell")
+    job = workflow["jobs"]["attest"]
+    shell = job.get("defaults", {}).get("run", {}).get("shell", shell)
+    shell = step.get("shell", shell)
+    assert shell == "bash", "signing steps must explicitly select bash with pipefail"
+    return ["bash", "--noprofile", "--norc", "-eo", "pipefail"]
+
+
 def test_signing_trigger_and_permissions_stay_narrow() -> None:
     workflow = _workflow()
     triggers = workflow.get("on", workflow.get(True))
@@ -33,6 +43,7 @@ def test_signing_trigger_and_permissions_stay_narrow() -> None:
     assert triggers["push"] == {"branches": ["main"], "paths": [".github/workflows/attest.yml"]}
     assert triggers["workflow_dispatch"]["inputs"]["results"]["required"] is True
     assert workflow["permissions"] == {"contents": "read"}
+    assert workflow["defaults"]["run"]["shell"] == "bash"
     job = workflow["jobs"]["attest"]
     assert job["if"] == "github.ref == 'refs/heads/main'"
     assert job["permissions"] == {"contents": "read", "id-token": "write"}
@@ -43,6 +54,23 @@ def test_signing_trigger_and_permissions_stay_narrow() -> None:
     assert steps[-1]["with"]["path"] == "attestations/"
     assert all(not step.get("continue-on-error", False) for step in steps)
     assert "tools.attest verify" in steps[-2]["run"]
+
+
+def test_every_signing_step_shell_stops_after_a_failed_pipeline(tmp_path: Path) -> None:
+    workflow = _workflow()
+    for step in workflow["jobs"]["attest"]["steps"]:
+        if "run" not in step:
+            continue
+        done = subprocess.run(
+            [*_shell_args(workflow, step), "-c", "false | true\nprintf 'continued\\n'"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        assert done.returncode != 0, step["name"]
+        assert done.stdout == "", step["name"]
 
 
 _DOUBLE = """import json
@@ -99,11 +127,12 @@ def _run_scripts(
         "FAIL_PHASE": fail_phase,
     }
     codes = []
-    for step in _workflow()["jobs"]["attest"]["steps"]:
+    workflow = _workflow()
+    for step in workflow["jobs"]["attest"]["steps"]:
         if "run" not in step:
             continue
         done = subprocess.run(
-            ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+            [*_shell_args(workflow, step), "-c", step["run"]],
             cwd=tmp_path,
             env=env,
             capture_output=True,
