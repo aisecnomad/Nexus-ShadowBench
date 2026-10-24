@@ -11,7 +11,7 @@ Code · Identity · LLM gateways · Low-code · SaaS · Cloud · Endpoints · Ne
 <a href="https://scorecard.dev/viewer/?uri=github.com/aisecnomad/Nexus-ShadowBench"><img src="https://api.scorecard.dev/projects/github.com/aisecnomad/Nexus-ShadowBench/badge" alt="OpenSSF Scorecard"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
 <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%E2%80%933.14-blue.svg" alt="Python 3.11-3.14"></a>
-<a href="https://github.com/aisecnomad/Nexus-ShadowBench/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/coverage-tracked-brightgreen.svg" alt="Coverage tracked"></a>
+<a href="docs/openssf-best-practices.md#local-coverage"><img src="https://img.shields.io/badge/coverage-local%20report-blue.svg" alt="Coverage: local report"></a>
 <a href="#limitations-and-the-road-to-independence"><img src="https://img.shields.io/badge/labels-author--written%2C%20not%20independent-orange.svg" alt="Labels: author-written, not independent"></a>
 </p>
 

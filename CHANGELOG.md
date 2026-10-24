@@ -8,7 +8,18 @@ recorded here.
 
 ## Unreleased
 
-- **Repository hygiene (top-0.1% track).** Added Hypothesis fuzz targets for the migration path validator and strict JSON loader (`tests/test_fuzz_parsers.py`, `make fuzz`). Enabled coverage tracking with pytest-cov (`make coverage`, config in `pyproject.toml`). Added an explicit Independence section to the README and a coverage badge. Documented branch-protection recommendations and OpenSSF Best Practices Badge progress in `GOVERNANCE.md` and `docs/openssf-best-practices.md`.
+### Parser property tests and local coverage
+
+- Add Hypothesis properties for canonical migration paths and strict JSON
+  parsing, available through `make fuzz` and the normal test suite.
+- Reject JSON numeric overflow such as `1e999` in provenance inputs, including
+  nested values; previously only the `NaN` and `Infinity` spellings were
+  rejected. Finite float decoding remains supported.
+- Add opt-in branch coverage reports through `make coverage`; coverage is a
+  local diagnostic, with no published percentage or minimum gate yet.
+- Add an independence invitation and a checklist for branch protection and
+  OpenSSF Best Practices preparation. Existing governance, evidence rules,
+  historical changelog entries and lint exceptions remain intact.
 
 Documentation and project standards, then harness hardening, provenance and
 interoperability. No corpus, label, freeze, recorded prediction or result
@@ -16,6 +27,10 @@ changed, no published number moved, and no published run was rerun.
 
 ### Hardening, provenance and interoperability
 
+- **Dependency audit hygiene.** Refresh active CI/build lock pins for
+  filelock, virtualenv and setuptools with registry-verified hashes and
+  recorded amendments. Align `make audit` with CI's installer-toolchain
+  locks. Historical tool locks and evidence remain unchanged.
 - **Canonical keys.** `tools/shadowbench/keys.py` maps every spelling of one
   entity its platform treats as the same to one key (GUID case, `localhost`,
   URL forms of a service, `./`, `~/` and `\` in paths, ARN partition, service
@@ -312,30 +327,79 @@ keeping the last 2,000,000 characters. No committed metric changes.
 - **Companion tests** also runs daily on `main` and on demand, so an
   advisory published after a merge fails `main`'s status within a day
   rather than on the next pull request, and a newer push to a pull request
-  cancels the earlier run. The job fetches the commit a change builds on and
-  passes it as `--since` so `MIGRATION.json` is unchanged, the ledger only
-  appended to and no committed attestation is rewritten or dropped.
-- **CodeQL** and **Scorecard** run on `main` and on pull requests; Scorecard
-  publishes its results. Both pin every action by full commit SHA and set
-  `persist-credentials: false`.
-- **Labels** creates or updates the labels in `.github/labels.yml` on `main`.
-- **Rescore** (weekly and on demand) installs from scratch, verifies, rebuilds
-  the cases corpus, re-scores the cases and estate 2026-10-11 runs and the
-  code-surface 2026-10-09 metrics, and runs two tools from their locks in the
-  sandbox on every endpoint and runtime case. It fails on harness problems and
-  reports drift from the 2026-10-11 run.
-- **Attest results** (on demand) signs a results directory with Sigstore.
+  cancels its superseded run.
+- A `tests on Python 3.14` job installs the same binary-only locks on the
+  newest supported CPython and runs the harness tests; the required `tests`
+  job keeps gating on 3.11 under its existing name.
+- CodeQL also analyses the workflows (`actions`), which hold the OIDC
+  identity that signs results.
+- `tests/test_repository_policy.py` checks that every workflow checkout of
+  ShadowScan uses the Makefile's `SCANNER_COMMIT`.
+- **Named runner image.** Every job runs on `ubuntu-24.04` instead of
+  `ubuntu-latest`, which GitHub began moving to Ubuntu 26 on 2026-10-19,
+  under the byte-for-byte re-scores and the sandbox. Moving the image is now
+  a reviewed change, and the policy tests reject a `-latest` label.
+- **Security lint that applies.** `pyproject.toml` selected bandit (`S`)
+  but turned it off for `tests/**`, `tools/**` and `benchmarks/**`, which
+  hold every Python file here, so it checked nothing. It now applies to the
+  live harness, which runs as root and parses what tools write. Its
+  by-design exceptions are scoped per file with their reasons: starting
+  fixed programs without a shell, the sandbox's fixed mount points, and the
+  seeded bootstrap. Frozen files stay exempt, since a finding there could
+  never be fixed. The one finding, Git's SHA-1 blob id in
+  `tools/verify_migration.py`, now says `usedforsecurity=False`. Stale
+  references to ShadowScan's files in its comments are corrected.
+- The policy tests also check that `make audit` audits exactly the locks
+  CI audits, that every `noqa` for a broad `except` or a bandit rule
+  carries its reason (as `pyproject.toml` has always said), and that no
+  workflow script expands any `${{ }}` expression, where they previously
+  caught only `github.event.*`, `github.head_ref` and `inputs.*`. A branch
+  name (`github.ref_name`) or a step output can carry shell syntax too.
+  `actions/github-script` scripts are checked as well.
+- `python -m tools.verify_migration --amend` takes several paths and
+  verifies the tree once all are recorded. Amending one at a time failed
+  whenever a change edited two bound files, such as both locks or an
+  adapter and its test, because each saw the other as unrecorded. A
+  refused file records none of the others.
 
-### Documentation
+### Anchoring the provenance records
 
-- Added `docs/key-canonicalization.md`, `docs/framework-mappings.md` and
-  `docs/aibom.md`.
-- Expanded the threat model with the answer-key reachability residual, the
-  session-keyring residual, host-socket residual, and the two scoring rules
-  that flatter the 2026-10-09 numbers.
-- Recorded the 2026-10-21 adversarial review and its 41 upheld findings.
+The default checks took `MIGRATION.json`, the ledger and the attestation
+files as given, so an edit to evidence that also rewrote its record, a
+rewritten ledger entry or a deleted Sigstore bundle all verified.
 
-## 2026-10-20
+- `python -m tools.verify_migration --source DIR` checks every record's Git
+  blob and mode against the pinned source commit in the ShadowScan checkout
+  at DIR (all 555 match); `--since REF` requires `MIGRATION.json` to be
+  byte-identical to REF's and REF's ledger to be a prefix of today's. A
+  migrated file that went missing is now reported as such, and leaves the
+  ledger untouched when `--amend` fails.
+- `python -m tools.attest verify --since REF` fails when a manifest or bundle
+  committed at REF is gone or changed. Subjects must be spelled canonically
+  (`benchmarks/x/./r` and `benchmarks//x/r` named one directory under three
+  slugs).
+- CI passes `--source scanner-source` and, on pull requests and pushes to
+  `main`, `--since` the commit the change builds on; `make verify` does the
+  same with a scanner checkout present and `SINCE=<commit>`.
+- `scrub` finds and replaces paths inside `file://` URIs (SARIF writes every
+  location so) and reads `.sarif` and upper-case suffixes in a directory.
+- `tests/test_repository_policy.py` also refuses `pull_request_target` and
+  `workflow_run` triggers, blanket `permissions` strings, a workflow-level or
+  unexpected `id-token: write`, unpinned reusable workflows, and
+  `${{ github.event.* }}`, `${{ github.head_ref }}` or `${{ inputs.* }}`
+  expanded inside a `run:` script.
 
-Initial companion. Migrated from Nexus-ShadowScan `0792106b` with full
-evidence identity (`MIGRATION.json`).
+### README
+
+- Retitled the README "ShadowBench", replaced the SVG banner with a photo
+  banner (`docs/assets/shadowbench-banner.jpg`, 1600 px), and cut the README
+  from 595 to 171 lines; the detail it held is in `docs/`.
+
+## e027b98: extraction from Nexus ShadowScan
+
+Preserved 555 original files from Nexus ShadowScan commit
+[`0792106b`](https://github.com/aisecnomad/Nexus-ShadowScan/tree/0792106b8d2cc09517f7f4ee2eeabf4f8eb8da2d)
+with their source path, Git blob, mode and SHA-256 in `MIGRATION.json`.
+Kept the runtime lock's aiohttp advisory update separate from the retained
+original lock, and added strict migration verification and the companion
+CI job. No benchmark result was regenerated.

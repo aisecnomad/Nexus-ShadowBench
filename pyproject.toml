@@ -14,26 +14,58 @@ exclude = [
 
 [tool.ruff.lint]
 # BLE: a broad `except` that does not re-raise is flagged; an intentional one
-# carries `# noqa: BLE001 - <reason>` (tests/test_repository_consistency.py
+# carries `# noqa: BLE001 - <reason>` (tests/test_repository_policy.py
 # requires the reason). RUF100: a `noqa` that suppresses nothing is flagged.
 # PGH004: a `noqa` must name its codes; a blanket one would silence every
 # rule on its line, or in its file, without the reason the tests require.
-# S (flake8-bandit): a security scanner should be held to the rule set it
-# would apply to anything it scans. Every suppression in the package carries
-# a reason, so each is a reviewed decision rather than an unexamined gap, and
-# a new occurrence fails CI. S101 is off because `assert` is how the tests
-# assert; the rest are scoped to the shipped package below, since test and
-# tooling code legitimately holds fake credentials, runs the CLI as a
-# subprocess, writes to temp paths and uses `random` for fixture data.
+# S (flake8-bandit): the live harness runs as root, installs third-party tools
+# and parses what they write, so it is held to the rule set a security scanner
+# would apply to anything it scans. A suppression is a reviewed decision: an
+# inline `# noqa: S... - <reason>` (the same test requires the reason) or a
+# per-file ignore below with its reason. S101 is off because `assert` is how
+# the tests assert.
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "BLE", "S", "RUF100", "PGH004"]
-ignore = ["S101"]
+# Deliberate ignores, not debt. SIM102/SIM103/SIM105/SIM108 and C408 only
+# propose equivalent rewrites (collapsed guards, `return cond`,
+# contextlib.suppress, ternaries, dict literals); the longer forms stay.
+# UP042 is not behaviour-preserving: StrEnum changes what `str()` and
+# f-strings yield for the models.py enums, which serialise via `.value`.
+ignore = ["SIM108", "SIM102", "SIM103", "C408", "SIM105", "UP042", "S101"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S"]
-"tools/**" = ["S"]
+# Tests hold long literal fixtures (source snippets, tokens, JSON records); a
+# test's hard-coded synthetic token is the point of the test, and tests run
+# the CLIs as subprocesses by design.
+"tests/**" = ["E501", "S"]
+# Bytes that never change (MIGRATION.json, tools/verify_migration.py): the
+# preserved results and their harnesses, the legacy harnesses that hash their
+# own sources into recorded freezes, the original secret scanner, and the
+# cases families, whose command lines and addresses are authored case text.
+# A finding in them could never be fixed, only suppressed.
 "benchmarks/**" = ["S"]
+"tools/__init__.py" = ["S"]
+"tools/benchmark/**" = ["S"]
+"tools/benchmark_realworld/**" = ["S"]
+"tools/check_secrets.py" = ["S"]
+"tools/shadowbench450_archive.py" = ["S"]
+"tools/shadowbench/cases/families/**" = ["S"]
+# The live harness starts fixed programs (git, unshare, docker, uv, cosign
+# and the tools under test) from argument lists, never through a shell; the
+# runner sets PATH for the stage itself.
+"tools/**" = ["S603", "S607"]
+# These name the sandbox's own fixed mount points and hidden paths (/tmp,
+# /var/tmp, /dev/shm); no file is created at a predictable name.
+"tools/shadowbench/cases/{runner,stage}.py" = ["S108"]
+"tools/shadowbench/cases/adapters/_probe.py" = ["S108"]
+# Bootstrap resampling must be reproducible from its recorded seed, not
+# unpredictable.
+"tools/shadowbench/cases/score.py" = ["S311"]
+# Benchmark case templates embed source files from other languages verbatim.
+"tools/benchmark/*_cases.py" = ["E501"]
+"benchmarks/*/corpus.py" = ["E501"]
 
 [tool.ruff.lint.isort]
+# Preserve imported source formatting when the scanner is in a separate checkout.
 known-first-party = ["benchmarks", "shadowscan", "tools"]
 
 [tool.pytest.ini_options]
@@ -43,7 +75,7 @@ pythonpath = ["."]
 # as production_budgets would otherwise be ignored without a warning. No `-q`
 # here: every documented command already passes one, and a second hides the
 # pass/skip summary line.
-addopts = "--strict-markers --strict-config --cov=tools --cov=benchmarks --cov-report=term-missing:skip-covered --cov-fail-under=0"
+addopts = "--strict-markers --strict-config"
 
 [tool.coverage.run]
 source = ["tools", "benchmarks"]
@@ -70,13 +102,12 @@ warn_return_any = true
 warn_unreachable = true
 disallow_untyped_defs = true
 check_untyped_defs = true
-# First-party imports and stubbed libraries (types-PyYAML, types-requests from
-# the dev extra) are checked. The override below covers regex, boto3/botocore
-# and oci, which ship neither stubs nor a py.typed marker, and the optional
-# cloud SDKs google-auth and azure-identity, which are typed and are checked
-# wherever they are installed (CI installs requirements.lock) but which
-# `make install-dev` leaves out, so `make typecheck` must pass without them
-# (tests/test_optional_sdk_typecheck.py).
+# First-party imports and stubbed libraries (types-PyYAML and types-requests,
+# from requirements-ci.lock) are checked. The harness reaches the modules in
+# the override below only through the pinned scanner (MYPYPATH=scanner-source):
+# regex, boto3/botocore and oci ship neither stubs nor a py.typed marker, and
+# google-auth and azure-identity are typed, so they are checked wherever
+# requirements.lock installed them (make install, CI) and skipped elsewhere.
 ignore_missing_imports = false
 
 [[tool.mypy.overrides]]
