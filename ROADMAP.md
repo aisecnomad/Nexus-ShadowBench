@@ -17,7 +17,9 @@ or the [supply-chain notes](docs/supply-chain.md) already documents.
 - **Sign the runs of record.** Dispatch the Attest results workflow for the
   cases and estate 2026-10-11 and code-surface 2026-10-09 directories and
   commit the bundles, then make `tools.attest verify --require-signatures`
-  the CI default.
+  the CI default. The [signing checkpoint](docs/historical-attestations.md)
+  records prepared manifests and the remaining verification requirements;
+  prepared manifests alone are not signed results.
 - Benchmark the next discovery tools through the amendment path: a new
   adapter module plus a recorded amendment to its track's registry (or, for
   the cases track, its installer, its lock and its layout test).

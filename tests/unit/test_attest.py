@@ -47,9 +47,84 @@ def test_an_untouched_unsigned_directory_verifies_unless_signatures_are_required
     assert problems == []
     assert summary == {"attestations": 1, "signed": 0, "unsigned": [SUBJECT]}
     _, problems = attest.verify(repo, require_signatures=True)
+    assert any("no Sigstore bundle" in problem for problem in problems)
+    assert all(any(subject in problem for problem in problems) for subject in attest.REQUIRED_SUBJECTS)
+
+
+@pytest.mark.parametrize("empty_directory", [False, True])
+def test_strict_verification_requires_historical_manifests_even_without_attestations(
+    repo: Path, empty_directory: bool
+) -> None:
+    if empty_directory:
+        (repo / attest.ATTESTATIONS).mkdir()
+    summary, problems = attest.verify(repo, require_signatures=True)
+    assert summary["signed"] == 0
     assert problems == [
-        "benchmarks__x__results__2026-10-21.json: no Sigstore bundle (benchmarks__x__results__2026-10-21.sigstore.json)"
+        f"{subject}: required historical results attestation is missing"
+        for subject in attest.REQUIRED_SUBJECTS
     ]
+    # Existing one-at-a-time signing remains available until all runs are signed.
+    assert attest.verify(repo)[1] == []
+
+
+def test_cli_strict_verification_fails_without_manifests(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(attest, "ROOT", repo)
+    assert attest.main(["verify", "--require-signatures"]) == 1
+    captured = capsys.readouterr()
+    assert all(subject in captured.err for subject in attest.REQUIRED_SUBJECTS)
+    assert json.loads(captured.out)["signed"] == 0
+
+
+def _historical_manifests(repo: Path, monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    """Synthetic manifests and a stub verifier, never historical signing evidence."""
+    manifests = []
+    for subject in attest.REQUIRED_SUBJECTS:
+        directory = repo / subject
+        directory.mkdir(parents=True)
+        (directory / "metrics.json").write_text('{"fixture": true}\n', encoding="utf-8")
+        path = attest.write_digest(repo, subject)
+        path.with_name(f"{path.stem}.sigstore.json").write_text("{}\n", encoding="utf-8")
+        manifests.append(path)
+    monkeypatch.setattr(attest, "cosign_verify", lambda *args: None)
+    return manifests
+
+
+@pytest.mark.parametrize("missing", attest.REQUIRED_SUBJECTS)
+def test_strict_verification_requires_every_historical_subject(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, missing: str
+) -> None:
+    manifests = _historical_manifests(repo, monkeypatch)
+    assert attest.verify(repo, require_signatures=True) == (
+        {"attestations": 3, "signed": 3, "unsigned": []},
+        [],
+    )
+    path = next(path for path in manifests if path.stem == attest.slug(missing))
+    path.unlink()
+    path.with_name(f"{path.stem}.sigstore.json").unlink()
+    _, problems = attest.verify(repo, require_signatures=True)
+    assert problems == [f"{missing}: required historical results attestation is missing"]
+
+
+def test_strict_verification_rejects_a_missing_historical_bundle(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = _historical_manifests(repo, monkeypatch)[0]
+    path.with_name(f"{path.stem}.sigstore.json").unlink()
+    summary, problems = attest.verify(repo, require_signatures=True)
+    assert summary["signed"] == 2
+    assert len(problems) == 1 and "no Sigstore bundle" in problems[0]
+
+
+def test_strict_verification_rejects_changed_evidence_even_when_the_signature_verifies(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _historical_manifests(repo, monkeypatch)
+    subject = attest.REQUIRED_SUBJECTS[0]
+    (repo / subject / "metrics.json").write_text('{"fixture": "changed"}\n', encoding="utf-8")
+    _, problems = attest.verify(repo, require_signatures=True)
+    assert problems == [f"{subject}: metrics.json: changed"]
 
 
 @pytest.mark.parametrize(
@@ -102,6 +177,75 @@ def test_symlinks_are_refused(repo: Path, tmp_path: Path) -> None:
         _attest(repo)
 
 
+@pytest.mark.parametrize("entry", ["directory", "manifest", "bundle"])
+def test_attestation_symlinks_are_refused(repo: Path, tmp_path: Path, entry: str) -> None:
+    path = _attest(repo)
+    bundle = path.with_name(f"{path.stem}.sigstore.json")
+    bundle.write_text("{}\n", encoding="utf-8")
+    original = path.parent if entry == "directory" else path if entry == "manifest" else bundle
+    external = tmp_path / "outside"
+    original.rename(external)
+    original.symlink_to(external, target_is_directory=entry == "directory")
+    _, problems = attest.verify(repo)
+    assert any("symlink" in problem for problem in problems)
+    if entry in {"directory", "manifest"}:
+        with pytest.raises(attest.AttestationError, match="symlink"):
+            _attest(repo)
+
+
+def test_unreadable_attestation_directory_fails(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _attest(repo)
+    original = Path.iterdir
+
+    def iterdir(path: Path) -> Any:
+        if path == repo / attest.ATTESTATIONS:
+            raise PermissionError("fixture read denied")
+        return original(path)
+
+    monkeypatch.setattr(Path, "iterdir", iterdir)
+    _, problems = attest.verify(repo)
+    assert len(problems) == 1 and "cannot read directory" in problems[0]
+
+
+def test_unreadable_manifest_fails(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    manifest = _attest(repo)
+    original = Path.read_bytes
+
+    def read_bytes(path: Path) -> bytes:
+        if path == manifest:
+            raise PermissionError("fixture read denied")
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    _, problems = attest.verify(repo)
+    assert len(problems) == 1 and "unreadable" in problems[0]
+
+
+def test_invalid_utf8_manifest_fails(repo: Path) -> None:
+    _attest(repo).write_bytes(b"\xff")
+    _, problems = attest.verify(repo)
+    assert len(problems) == 1 and "unreadable" in problems[0]
+
+
+def test_a_nonregular_bundle_fails_even_without_strict_mode(repo: Path) -> None:
+    path = _attest(repo)
+    path.with_name(f"{path.stem}.sigstore.json").mkdir()
+    _, problems = attest.verify(repo)
+    assert len(problems) == 1 and "bundle must be a regular file" in problems[0]
+
+
+def test_unreadable_result_subdirectory_fails(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _attest(repo)
+
+    def walk(path: Path, *, onerror: Any) -> list[Any]:
+        onerror(PermissionError(13, "fixture read denied", str(path / "raw")))
+        return []
+
+    monkeypatch.setattr(attest.os, "walk", walk)
+    _, problems = attest.verify(repo)
+    assert len(problems) == 1 and "cannot read results directory" in problems[0]
+
+
 def test_a_bundle_that_cannot_be_checked_fails(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = _attest(repo)
     path.with_name(f"{path.stem}.sigstore.json").write_text("{}", encoding="utf-8")
@@ -130,6 +274,55 @@ def test_a_bundle_cosign_accepts_counts_as_signed(repo: Path, monkeypatch: pytes
     assert command[command.index("--certificate-identity-regexp") + 1] == attest.DEFAULT_IDENTITY
     assert command[command.index("--certificate-oidc-issuer") + 1] == attest.DEFAULT_ISSUER
     assert command[command.index("--bundle") + 1] == str(bundle) and command[-1] == str(path)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["invalid signature", "certificate identity does not match", "certificate OIDC issuer does not match"],
+)
+def test_cosign_rejections_fail_closed(repo: Path, monkeypatch: pytest.MonkeyPatch, failure: str) -> None:
+    path = _attest(repo)
+    path.with_name(f"{path.stem}.sigstore.json").write_text("{}\n", encoding="utf-8")
+
+    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        # The verifier must always constrain both the workflow and the issuer.
+        assert command[command.index("--certificate-identity-regexp") + 1] == attest.DEFAULT_IDENTITY
+        assert command[command.index("--certificate-oidc-issuer") + 1] == attest.DEFAULT_ISSUER
+        return subprocess.CompletedProcess(command, 1, "", failure)
+
+    monkeypatch.setattr(attest.shutil, "which", lambda name: "/usr/bin/cosign")
+    monkeypatch.setattr(attest.subprocess, "run", run)
+    summary, problems = attest.verify(repo)
+    assert summary["signed"] == 0
+    assert problems == [f"{path.name}: cosign verify-blob failed: {failure}"]
+
+
+@pytest.mark.parametrize(
+    "failure", [OSError("fixture cannot start"), subprocess.TimeoutExpired("cosign", 300)]
+)
+def test_cosign_execution_errors_fail_closed(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, failure: Exception
+) -> None:
+    path = _attest(repo)
+    path.with_name(f"{path.stem}.sigstore.json").write_text("{}\n", encoding="utf-8")
+
+    def run(command: list[str], **kwargs: Any) -> None:
+        raise failure
+
+    monkeypatch.setattr(attest.shutil, "which", lambda name: "/usr/bin/cosign")
+    monkeypatch.setattr(attest.subprocess, "run", run)
+    summary, problems = attest.verify(repo)
+    assert summary["signed"] == 0
+    assert len(problems) == 1 and "cosign failed to run" in problems[0]
+
+
+@pytest.mark.skipif(shutil.which("cosign") is None, reason="needs cosign")
+def test_cosign_rejects_a_malformed_bundle(repo: Path) -> None:
+    path = _attest(repo)
+    path.with_name(f"{path.stem}.sigstore.json").write_text("{}\n", encoding="utf-8")
+    summary, problems = attest.verify(repo)
+    assert summary["signed"] == 0
+    assert len(problems) == 1 and "cosign verify-blob failed" in problems[0]
 
 
 def test_an_orphan_bundle_fails(repo: Path) -> None:
@@ -170,8 +363,15 @@ def test_cosign_rejects_a_signature_from_another_identity(repo: Path, tmp_path: 
 
 
 def test_the_repository_attestations_verify() -> None:
-    _, problems = attest.verify(ROOT)
+    summary, problems = attest.verify(ROOT)
     assert problems == []
+    assert summary["attestations"] == len(attest.REQUIRED_SUBJECTS)
+    subjects = {
+        json.loads(path.read_bytes())["subject"]
+        for path in (ROOT / attest.ATTESTATIONS).glob("*.json")
+        if not path.name.endswith(".sigstore.json")
+    }
+    assert subjects == set(attest.REQUIRED_SUBJECTS)
 
 
 @pytest.mark.parametrize(

@@ -27,6 +27,12 @@ changed, no published number moved, and no published run was rerun.
 
 ### Hardening, provenance and interoperability
 
+- **Historical signing preparation.** Add reproducible digest manifests for
+  the three preserved result sets and a signing checkpoint. Strict attestation
+  verification now rejects missing historical manifests, even with an empty
+  attestation directory, and refuses attestation symlinks and unreadable
+  inputs. Signature bundles and CI enforcement remain pending real signing
+  and verification; no historical result or metric changed.
 - **Dependency audit hygiene.** Refresh active CI/build lock pins for
   filelock, virtualenv and setuptools with registry-verified hashes and
   recorded amendments. Align `make audit` with CI's installer-toolchain

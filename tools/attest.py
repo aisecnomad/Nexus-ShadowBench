@@ -17,7 +17,8 @@ artifact.
   ``--issuer`` (GitHub Actions' OIDC issuer). A bundle that cannot be checked because cosign is not
   installed fails: an unverifiable signature is never reported as a good one.
 
-``--require-signatures`` also fails an attestation without a bundle. Without it an unsigned
+``--require-signatures`` also requires all three preserved runs of record and fails an attestation
+without a bundle. Without it an unsigned
 manifest still binds the files it lists, as ``MIGRATION.json`` binds the migrated ones, and the
 output says it is unsigned. ``--since REF`` also fails when a file that ``attestations/`` held at
 commit REF is gone or changed, so a signed directory cannot be downgraded to unsigned by deleting
@@ -48,6 +49,11 @@ DEFAULT_IDENTITY = (
     r"^https://github\.com/aisecnomad/Nexus-ShadowBench/\.github/workflows/attest\.yml@refs/heads/main$"
 )
 DEFAULT_ISSUER = "https://token.actions.githubusercontent.com"
+REQUIRED_SUBJECTS = (
+    "benchmarks/shadowbench/cases/results/2026-10-11",
+    "benchmarks/shadowbench/estate/results/2026-10-11",
+    "benchmarks/shadow-ai-discovery/results/2026-10-09",
+)
 _SLUG = re.compile(r"[A-Za-z0-9._-]+")
 
 
@@ -88,7 +94,11 @@ def _subject_dir(root: Path, subject: str) -> Path:
 def digests(directory: Path) -> dict[str, str]:
     """SHA-256 of every regular file under ``directory``, by POSIX relative path; refuses links."""
     out: dict[str, str] = {}
-    for top, dirs, files in os.walk(directory):
+
+    def unreadable(error: OSError) -> None:
+        raise AttestationError(f"{error.filename}: cannot read results directory: {error.strerror}")
+
+    for top, dirs, files in os.walk(directory, onerror=unreadable):
         for name in sorted(dirs + files):
             path = Path(top, name)
             if path.is_symlink():
@@ -112,15 +122,20 @@ def render(document: dict[str, Any]) -> bytes:
 
 def write_digest(root: Path, subject: str) -> Path:
     path = root / ATTESTATIONS / f"{slug(subject)}.json"
+    if path.parent.is_symlink() or path.is_symlink():
+        raise AttestationError(f"{path}: attestation paths must not be symlinks")
     path.parent.mkdir(exist_ok=True)
     path.write_bytes(render(manifest(root, subject)))
     return path
 
 
 def _load(path: Path) -> dict[str, Any]:
+    if path.is_symlink() or not path.is_file():
+        raise AttestationError(f"{path.name}: digest manifest must be a regular file, not a symlink")
     try:
-        document = json.loads(path.read_text(encoding="utf-8"))
-    except ValueError as exc:
+        raw = path.read_bytes()
+        document = json.loads(raw.decode("utf-8"))
+    except (OSError, ValueError) as exc:
         raise AttestationError(f"{path.name}: unreadable: {exc}") from exc
     if not isinstance(document, dict) or set(document) != {"schema", "subject", "files"}:
         raise AttestationError(f"{path.name}: expected exactly schema, subject and files")
@@ -128,7 +143,7 @@ def _load(path: Path) -> dict[str, Any]:
         raise AttestationError(f"{path.name}: unsupported schema or subject")
     if not isinstance(document["files"], dict) or not document["files"]:
         raise AttestationError(f"{path.name}: files must be a non-empty object")
-    if path.read_bytes() != render(document):
+    if raw != render(document):
         raise AttestationError(f"{path.name}: not in canonical form, so its bytes are not what was signed")
     if path.stem != slug(document["subject"]):
         raise AttestationError(f"{path.name}: names subject {document['subject']!r}, which is another file's")
@@ -139,7 +154,7 @@ def check_files(root: Path, document: dict[str, Any]) -> list[str]:
     """How the subject directory differs from the digests its manifest recorded."""
     try:
         now = digests(_subject_dir(root, document["subject"]))
-    except AttestationError as exc:
+    except (AttestationError, OSError) as exc:
         return [str(exc)]
     recorded: dict[str, str] = document["files"]
     problems = [f"{name}: missing" for name in sorted(set(recorded) - set(now))]
@@ -182,8 +197,12 @@ def removed_since(root: Path, ref: str) -> list[str]:
         path = root / name
         if path.is_symlink() or not path.is_file():
             problems.append(f"{name}: committed at {ref} and now removed")
-        elif path.read_bytes() != committed(root, ref, name):
-            problems.append(f"{name}: committed at {ref} and now changed")
+        else:
+            try:
+                if path.read_bytes() != committed(root, ref, name):
+                    problems.append(f"{name}: committed at {ref} and now changed")
+            except OSError as exc:
+                problems.append(f"{name}: cannot read committed attestation: {exc}")
     return problems
 
 
@@ -204,9 +223,20 @@ def verify(
             problems += removed_since(root, since)
         except ValueError as exc:
             problems.append(str(exc))
-    if not directory.is_dir():
+    if directory.is_symlink():
+        problems.append(f"{ATTESTATIONS}: directory must not be a symlink")
         return summary, problems
-    for path in sorted(directory.glob("*.json")):
+    try:
+        entries = sorted(directory.iterdir())
+    except FileNotFoundError:
+        entries = []
+    except OSError as exc:
+        problems.append(f"{ATTESTATIONS}: cannot read directory: {exc}")
+        return summary, problems
+    subjects: set[str] = set()
+    for path in entries:
+        if path.suffix != ".json":
+            continue
         if path.name.endswith(".sigstore.json"):
             continue
         summary["attestations"] += 1
@@ -215,21 +245,37 @@ def verify(
         except AttestationError as exc:
             problems.append(str(exc))
             continue
+        subjects.add(document["subject"])
         problems += [f"{document['subject']}: {p}" for p in check_files(root, document)]
         bundle = path.with_name(f"{path.stem}.sigstore.json")
-        if bundle.is_file():
+        if bundle.is_symlink():
+            problems.append(f"{bundle.name}: Sigstore bundle must not be a symlink")
+        elif bundle.is_file():
             problem = cosign_verify(path, bundle, identity, issuer)
             if problem:
                 problems.append(f"{path.name}: {problem}")
             else:
                 summary["signed"] += 1
+        elif bundle.exists():
+            problems.append(f"{bundle.name}: Sigstore bundle must be a regular file")
         else:
             summary["unsigned"].append(document["subject"])
             if require_signatures:
                 problems.append(f"{path.name}: no Sigstore bundle ({bundle.name})")
-    for bundle in sorted(directory.glob("*.sigstore.json")):
-        if not bundle.with_name(bundle.name.removesuffix(".sigstore.json") + ".json").is_file():
+    for bundle in entries:
+        if not bundle.name.endswith(".sigstore.json"):
+            continue
+        manifest_path = bundle.with_name(bundle.name.removesuffix(".sigstore.json") + ".json")
+        if bundle.is_symlink() and not manifest_path.is_file():
+            problems.append(f"{bundle.name}: Sigstore bundle must not be a symlink")
+        if not manifest_path.is_file():
             problems.append(f"{bundle.name}: a bundle without its digest manifest")
+    if require_signatures:
+        problems += [
+            f"{subject}: required historical results attestation is missing"
+            for subject in REQUIRED_SUBJECTS
+            if subject not in subjects
+        ]
     return summary, problems
 
 
@@ -239,7 +285,11 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("digest", help="write attestations/<slug>.json for a results directory")
     p.add_argument("subject", help="repository-relative results directory under benchmarks/")
     p = sub.add_parser("verify", help="check every attestation's files and signature")
-    p.add_argument("--require-signatures", action="store_true")
+    p.add_argument(
+        "--require-signatures",
+        action="store_true",
+        help="require signed manifests for all three preserved runs",
+    )
     p.add_argument("--identity", default=DEFAULT_IDENTITY, help="certificate identity regular expression")
     p.add_argument("--issuer", default=DEFAULT_ISSUER, help="certificate OIDC issuer")
     p.add_argument("--since", metavar="REF", help="also fail when a file attestations/ held at REF changed")
