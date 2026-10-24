@@ -32,8 +32,10 @@ changed, no published number moved, and no published run was rerun.
   historical result directories. It checks committed bindings before signing,
   preserves existing bundles, and requires all signatures to verify before
   uploading the artifact. Manual dispatch still selects one requested directory.
-  This adds a way to produce real workflow artifacts; it does not itself
-  supply signature bundles or claim historical signing is complete.
+  Signing runs on `main` go one at a time and are never cancelled in
+  progress, and every step runs under `bash -eo pipefail`, as the workflow
+  tests do. This adds a way to produce real workflow artifacts; it does not
+  itself supply signature bundles or claim historical signing is complete.
 - **Historical signing preparation.** Add reproducible digest manifests for
   the three preserved result sets and a signing checkpoint. Strict attestation
   verification now rejects missing historical manifests, even with an empty

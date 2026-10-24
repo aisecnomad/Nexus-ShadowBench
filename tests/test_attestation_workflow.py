@@ -45,6 +45,18 @@ def test_signing_trigger_and_permissions_stay_narrow() -> None:
     assert "tools.attest verify" in steps[-2]["run"]
 
 
+def test_signing_runs_are_serialized_and_use_the_tested_shell() -> None:
+    workflow = _workflow()
+    assert workflow["concurrency"] == {
+        "group": "${{ github.workflow }}-${{ github.ref }}",
+        "cancel-in-progress": False,
+    }
+    assert workflow["defaults"] == {"run": {"shell": "bash"}}
+    job = workflow["jobs"]["attest"]
+    assert "concurrency" not in job and "defaults" not in job
+    assert all("shell" not in step for step in job["steps"])
+
+
 _DOUBLE = """import json
 import os
 import sys
@@ -102,6 +114,7 @@ def _run_scripts(
     for step in _workflow()["jobs"]["attest"]["steps"]:
         if "run" not in step:
             continue
+        # What GitHub runs for the workflow's `shell: bash` default.
         done = subprocess.run(
             ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
             cwd=tmp_path,

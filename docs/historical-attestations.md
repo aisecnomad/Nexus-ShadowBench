@@ -33,7 +33,9 @@ not establish a green full-suite result.
    directories in the table, then requires strict verification before
    uploading its artifact. The trigger is restricted to `main` and that
    workflow path; it does not sign on a pull-request branch. Alternatively,
-   dispatch the workflow on `main` once for each directory. Record each
+   dispatch the workflow on `main` once for each directory, waiting for each
+   run to finish: runs on `main` go one at a time, and a newer run replaces
+   one still queued, which then ends as cancelled. Record each
    run's URL, run ID, attempt, `head_sha`, ref, event, conclusion and artifact
    ID. The workflow must be `attest.yml`, the event must match the observed
    `push` or `workflow_dispatch` run, and the ref must be `refs/heads/main`.

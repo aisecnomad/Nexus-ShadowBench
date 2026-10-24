@@ -135,6 +135,8 @@ Sigstore.
    reviewed bootstrap merge without requiring a manual workflow dispatch.
    Artifacts can contain retained signatures from older runs; the signing
    provenance comes from each verified certificate, not its upload time.
+   Runs on `main` sign one at a time and a run in progress is never
+   cancelled; a newer run replaces one still queued.
 3. `python -m tools.attest verify`, part of `make verify` and CI, fails when
    an attested directory gained, lost or changed a file, when a bundle does
    not verify for the `attest.yml` workflow on `main` of this repository

@@ -24,6 +24,23 @@ on:
 permissions:
   contents: read
 
+# Signing runs on main go one at a time, in order. A run in progress is never
+# cancelled, so none stops between signing (a public Rekor entry) and the
+# artifact upload; GitHub keeps one run queued behind it and a newer run
+# replaces it, so a replaced dispatch has to be run again. Each run still
+# signs whatever its commit lacks a bundle for: serializing orders the runs,
+# it does not deduplicate signatures.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# An explicit bash runs every step as bash --noprofile --norc -eo pipefail,
+# which tests/test_attestation_workflow.py also uses; the implicit default
+# omits pipefail.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   attest:
     if: github.ref == 'refs/heads/main'
